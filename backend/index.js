@@ -1,6 +1,6 @@
 import App from './src/app.js'
-import BodyParser from './utils/body-parser.js'
-import homeRoute from './routes/homeRoute.js'
+import BodyParser from './src/utils/body-parser.js'
+import homeRoute from './src/routes/homeRoute.js'
 const app = App()
 
 homeRoute(app)

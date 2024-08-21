@@ -1,6 +1,6 @@
 import { getHome, postHome } from '../controllers/homeController.js'
 import { userMiddleware } from '../middlewares/userMiddleware.js'
-import Router from '../src/router.js'
+import Router from '../router.js'
 
 const router = Router()
 
