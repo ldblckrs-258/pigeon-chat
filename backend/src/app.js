@@ -2,6 +2,8 @@ import { createServer } from 'http'
 import { match } from 'path-to-regexp'
 import requestDecorator from './request.js'
 import responseDecorator from './response.js'
+import dns from 'dns'
+import os from 'os'
 
 const App = () => {
   const routes = new Map()
@@ -174,8 +176,8 @@ const App = () => {
 
   /**
    * Xử lý yêu cầu HTTP.
-   * @param {object} request - Yêu cầu HTTP.
-   * @param {object} response - Phản hồi HTTP.
+   * @param {object} req - Yêu cầu HTTP.
+   * @param {object} res - Phản hồi HTTP.
    */
   const serverHandler = async (req, res) => {
     const sanitizedUrl = sanitizeUrl(req.url, req.method)
@@ -203,7 +205,14 @@ const App = () => {
   const run = (port) => {
     const server = createMyServer()
     server.listen(port, () => {
-      console.log(`Server running on port ${port}`)
+      console.log(`Local: http://localhost:${port}`)
+      dns.lookup(os.hostname(), { family: 4 }, (err, address) => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        console.log(`Network: http://${address}:${port}`)
+      })
     })
   }
 

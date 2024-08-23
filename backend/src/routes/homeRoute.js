@@ -1,16 +1,9 @@
-import { getHome, postHome } from '../controllers/homeController.js'
-import { userMiddleware } from '../middlewares/userMiddleware.js'
+import { getHome, sendAnEmail } from '../controllers/homeController.js'
 import Router from '../router.js'
 
 const router = Router()
 
-const homeRoute = (app) => {
-  router.get('/get', getHome)
-  router.use('/get', userMiddleware)
+router.get('/get', getHome)
+router.post('/send-email', sendAnEmail)
 
-  router.post('/post', postHome)
-
-  app.useRouter('/api', router)
-}
-
-export default homeRoute
+export default router
