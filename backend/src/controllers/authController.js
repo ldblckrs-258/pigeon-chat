@@ -11,7 +11,7 @@ config()
 const JWT_SECRET = process.env.JWT_SECRET
 
 /**
- * Controller đăng ký tài khoản
+ * Handler function đăng ký tài khoản
  * @param req.body.email - Email người dùng
  * @param req.body.password - Mật khẩu người dùng
  * @param req.body.name - Tên người dùng
@@ -31,7 +31,7 @@ export const register = async (req, res) => {
 }
 
 /**
- * Controller đăng nhập
+ * Handler function đăng nhập
  * @param req.body.email - Email người dùng
  * @param req.body.password - Mật khẩu người dùng
  */
@@ -67,7 +67,7 @@ export const login = async (req, res) => {
 }
 
 /**
- * Controller đăng xuất
+ * Handler function đăng xuất
  */
 export const logout = async (req, res) => {
   res.setHeader(
@@ -78,7 +78,7 @@ export const logout = async (req, res) => {
 }
 
 /**
- * Controller xác thực người dùng khi lân đầu truy cập
+ * Handler function xác thực người dùng khi lân đầu truy cập
  * @param {object} req.user - Thông tin người dùng đã được xác thực qua middleware
  */
 export const authenticate = async (req, res) => {
