@@ -11,9 +11,10 @@ const App = () => {
   const middlewaresForAll = []
 
   /**
-   * Đăng ký middleware cho một đường dẫn cụ thể và các phương thức HTTP.
+   * Đăng ký middlewares và controllers cho một đường dẫn cụ thể và các phương thức HTTP.
    * @param {string} path - Đường dẫn.
    * @param {...function} middlewares - Các middleware.
+   * @example app.use('/users', authMiddleware, secureMiddleware, getUsers)
    */
   const use = (path, ...middlewares) => {
     const possiblePaths = [
@@ -44,6 +45,7 @@ const App = () => {
    * Đăng ký router cho một đường dẫn cụ thể.
    * @param {string} path - Đường dẫn.
    * @param {object} router - Router.
+   * @example app.useRouter('/users', userRouter)
    */
   const useRouter = (path, router) => {
     const routerRoutes = router.getRoutes()
@@ -62,6 +64,7 @@ const App = () => {
    * Đăng ký handler cho phương thức GET.
    * @param {string} path - Đường dẫn.
    * @param {...function} handlers - Các handler.
+   * @example app.get('/users', getUsers)
    */
   const get = (path, ...handlers) => {
     const currentHandlers = routes.get(`${path}/GET`) || []
@@ -72,6 +75,7 @@ const App = () => {
    * Đăng ký handler cho phương thức POST.
    * @param {string} path - Đường dẫn.
    * @param {...function} handlers - Các handler.
+   * @example app.post('/users', createUser)
    */
   const post = (path, ...handlers) => {
     const currentHandlers = routes.get(`${path}/POST`) || []
@@ -82,6 +86,7 @@ const App = () => {
    * Đăng ký handler cho phương thức PUT.
    * @param {string} path - Đường dẫn.
    * @param {...function} handlers - Các handler.
+   * @example app.put('/users/:id', updateUser)
    */
   const put = (path, ...handlers) => {
     const currentHandlers = routes.get(`${path}/PUT`) || []
@@ -92,6 +97,7 @@ const App = () => {
    * Đăng ký handler cho phương thức PATCH.
    * @param {string} path - Đường dẫn.
    * @param {...function} handlers - Các handler.
+   * @example app.patch('/users/:id', updateUser)
    */
   const patch = (path, ...handlers) => {
     const currentHandlers = routes.get(`${path}/PATCH`) || []
@@ -102,6 +108,7 @@ const App = () => {
    * Đăng ký handler cho phương thức DELETE.
    * @param {string} path - Đường dẫn.
    * @param {...function} handlers - Các handler.
+   * @example app.del('/users/:id', deleteUser)
    */
   const del = (path, ...handlers) => {
     const currentHandlers = routes.get(`${path}/DELETE`) || []
