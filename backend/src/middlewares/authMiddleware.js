@@ -1,13 +1,7 @@
-import cookieParser from '../utils/cookie-parser.js'
 import { verifyJwt } from '../utils/jwt.js'
 import User from '../models/userModel.js'
 export const authMiddleware = async (req, res, next) => {
-  const cookie = req.headers.cookie
-  if (!cookie) {
-    res.status(401).json({ message: 'Unauthorized' })
-    return
-  }
-  const token = cookieParser(cookie, 'token')
+  const token = req.cookies.token
   if (!token) {
     res.status(401).json({ message: 'Unauthorized' })
     return
