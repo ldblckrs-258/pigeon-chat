@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSkVZoGW3vdRhfccLRhRbX_7DjzBqF0w6SB5g&s'
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
   }
 })
 
