@@ -22,8 +22,8 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'Server is running' })
 })
 
-app.use('/home', homeRoute)
-app.use('/auth', authRoute)
+app.use('/api/home', homeRoute)
+app.use('/api/auth', authRoute)
 
 // Start the server
 app.listen(PORT, async () => {

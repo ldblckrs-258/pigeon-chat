@@ -90,7 +90,9 @@ const verifyJwt = (token, secret) => {
 
   const currentTime = Math.floor(Date.now() / 1000)
   if (payload.exp && currentTime > payload.exp) {
-    throw new Error('Token has expired')
+    const error = new Error('Token expired')
+    error.name = 'TokenExpiredError'
+    throw error
   }
 
   return payload

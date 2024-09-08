@@ -1,152 +1,105 @@
-import User from '../models/userModel.js'
-import { createJwt, verifyJwt } from '../utils/jwt.js'
-import { sendEmail } from '../utils/send-email.js'
-import VerificationMail from '../static/verification-mail.js'
-import {
-  generateSalt,
-  hashPassword,
-  verifyPassword
-} from '../utils/password.js'
+import userService from '../services/userService.js'
+import authService from '../services/authService.js'
+import mailService from '../services/mailService.js'
 import { config } from 'dotenv'
 config()
 
-const JWT_SECRET = process.env.JWT_SECRET
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000/api'
 
-/**
- * Gửi email xác thực tài khoản
- * @param {string} name - Tên người dùng
- * @param {string} email - Email người dùng
- * @returns {Promise<void>}
- * @throws {Error}
- */
-const sendVerificationEmail = async (name, email) => {
-  try {
-    const token = createJwt(
-      {
-        email,
-        exp: Math.floor(Date.now() / 1000) + 60 * 5 // 5 minutes
-      },
-      JWT_SECRET
-    )
-    const url = `${CLIENT_URL}/verify-email?token=${token}`
-
-    const html = VerificationMail(name, url)
-    await sendEmail(email, 'Verify your email', html)
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-/**
- * Handler function đăng ký tài khoản
- * @param req.body.email - Email người dùng
- * @param req.body.password - Mật khẩu người dùng
- * @param req.body.name - Tên người dùng
- */
-export const register = async (req, res) => {
-  try {
-    const { email, password, name } = req.body
-    const salt = generateSalt()
-    const hash = hashPassword(password, salt)
-    const newUser = new User({ email, hashPassword: hash, salt, name })
-    await newUser.save()
-
-    await sendVerificationEmail(name, email)
-
-    res.status(201).json({
-      message:
-        'Register successfully, please check your email to verify your account'
-    })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
-  }
-}
-
-export const resendVerificationEmail = async (req, res) => {
-  try {
-    if (req.user.isVerified) {
-      res.status(400).json({ message: 'Email has been verified' })
-      return
+class AuthController {
+  sendVerifyEmail = async (email, name) => {
+    try {
+      const verifyToken = await authService.createVerifyToken(email)
+      const url = `${CLIENT_URL}/auth/verify-email?token=${verifyToken}`
+      await mailService.sendVerificationEmail(name, email, url)
+    } catch (error) {
+      console.error(error)
     }
+  }
 
-    await sendVerificationEmail(req.user.name, email)
-    res.status(200).json({ message: 'Verification email sent' })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+  register = async (req, res) => {
+    try {
+      const { email, password, name } = req.body
+      const user = await userService.createAccount(email, password, name)
+      await this.sendVerifyEmail(email, name)
+      res.json({
+        message:
+          'Registration successful, please check your email for verification',
+        user
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(400).json({ message: 'Registration failed, please try again' })
+    }
+  }
+
+  verifyEmail = async (req, res) => {
+    try {
+      const { token } = req.query
+      const payload = await authService.verifyJwt(token)
+      const user = await userService.getUserByEmail(payload.email)
+      if (!user) {
+        res.status(400).json({ message: 'Email verification failed' })
+        return
+      }
+      user.isVerified = true
+      await user.save()
+      res.json({ message: 'Your email has been verified' })
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        res.status(400).json({ message: 'Email verification link has expired' })
+        return
+      }
+      console.error(error)
+      res.status(400).json({ message: 'Email verification failed' })
+    }
+  }
+
+  resendVerifyEmail = async (req, res) => {
+    try {
+      const user = req.user
+      if (user.isVerified) {
+        res.status(400).json({ message: 'Email is already verified' })
+        return
+      }
+      await this.sendVerifyEmail(user.email, user.name)
+      res.json({
+        message:
+          'Verification email sent, please check your inbox or spam folder'
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(400).json({ message: 'Failed to send verification email' })
+    }
+  }
+
+  login = async (req, res) => {
+    try {
+      const { email, password } = req.body
+      const user = await userService.login(email, password)
+      if (!user) {
+        res.status(400).json({ message: 'Invalid email or password' })
+        return
+      }
+      const token = await authService.createJwt({ _id: user._id })
+      res.cookie('token', token, {
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      })
+      res.json({ message: 'Login successful', user })
+    } catch (error) {
+      res.status(400).json({ message: error?.message || 'Login failed' })
+    }
+  }
+
+  authenticate = async (req, res) => {
+    res.status(200).json({ message: 'Authenticated', user: req.user })
+  }
+
+  logout = async (req, res) => {
+    res.clearCookie('token').json({ message: 'Logout successful' })
   }
 }
 
-export const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.query
-    const { email } = verifyJwt(token, JWT_SECRET)
-    const user = await User.findOne({ email })
-    if (!user) {
-      res.status(404).json({ message: 'User not found' })
-      return
-    }
-
-    user.isVerified = true
-    await user.save()
-    res.status(200).json({ message: 'Email verified successfully' })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
-  }
-}
-
-/**
- * Handler function đăng nhập
- * @param req.body.email - Email người dùng
- * @param req.body.password - Mật khẩu người dùng
- */
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body
-    const user = await User.findOne({ email })
-    if (!user) {
-      res.status(404).json({ message: 'This email has not been registered' })
-      return
-    }
-
-    const isValid = verifyPassword(password, user.hashPassword, user.salt)
-    if (!isValid) {
-      res.status(401).json({ message: 'Invalid password' })
-      return
-    }
-
-    const token = createJwt(
-      {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        isVerified: user.isVerified,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60
-      },
-      JWT_SECRET
-    )
-    res.setHeader('Set-Cookie', `token=${token}; HttpOnly`)
-    res.status(200).json({ message: 'Login successfully' })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
-  }
-}
-
-/**
- * Handler function đăng xuất
- */
-export const logout = async (req, res) => {
-  res.setHeader(
-    'Set-Cookie',
-    `token=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly`
-  )
-  res.status(200).json({ message: 'Logout successfully' })
-}
-
-/**
- * Handler function xác thực người dùng khi lân đầu truy cập
- * @param {object} req.user - Thông tin người dùng đã được xác thực qua middleware
- */
-export const authenticate = async (req, res) => {
-  res.status(200).json({ message: 'Authenticated', user: req.user })
-}
+export default new AuthController()
