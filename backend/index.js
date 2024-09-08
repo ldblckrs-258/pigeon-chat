@@ -1,3 +1,5 @@
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 import express from 'express'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
@@ -5,6 +7,7 @@ import cors from 'cors'
 import { connectDb, disconnectDb } from './src/utils/mongodb.js'
 import { config } from 'dotenv'
 config()
+import handleSocketConnection from './src/socket/socket.js'
 import homeRoute from './src/routes/homeRoute.js'
 import authRoute from './src/routes/authRoute.js'
 
@@ -25,8 +28,18 @@ app.get('/', (req, res) => {
 app.use('/api/home', homeRoute)
 app.use('/api/auth', authRoute)
 
-// Start the server
-app.listen(PORT, async () => {
+const server = createServer(app)
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+})
+
+handleSocketConnection(io)
+
+server.listen(PORT, async () => {
   try {
     await connectDb()
     console.log(`Server is running on http://localhost:${PORT}`)
