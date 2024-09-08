@@ -275,27 +275,17 @@ export default function VerificationMail(name, URL) {
                                         color: white;
                                         cursor: auto;
                                         padding: 14px 18px;
+                                        text-decoration: none;
+                                        background: #7289da;
+                                        line-height: 100%;
+                                        font-family: Ubuntu, Helvetica, Arial, sans-serif;
+                                        font-size: 15px;
                                       "
                                       align="center"
                                       valign="middle"
                                       bgcolor="#7289DA"
                                     >
-                                      <p  
-                                        style="
-                                          text-decoration: none;
-                                          line-height: 100%;
-                                          background: #7289da;
-                                          color: white;
-                                          font-family: Ubuntu, Helvetica, Arial,
-                                            sans-serif;
-                                          font-size: 15px;
-                                          font-weight: normal;
-                                          text-transform: none;
-                                          margin: 0px;
-                                        "
-                                      >
                                         Verify Email
-                                      </p>
                                     </a>
                                   </td>
                                 </tr>
