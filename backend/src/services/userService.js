@@ -129,6 +129,22 @@ class UserService {
       console.error(error)
     }
   }
+
+  /**
+   * Lấy danh sách Id người dùng có tồn tại
+   * @param {Array} userIds - Danh sách ID người dùng
+   * @returns {Array} Danh sách ID người dùng có tồn tại
+   */
+  validateUserIds = async (userIds) => {
+    try {
+      const result = await User.find({ _id: { $in: userIds } }).select('_id')
+
+      if (!result) return []
+      return result.map((user) => user._id)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 }
 
 export default new UserService()
