@@ -1,13 +1,8 @@
 import ChatRoom, { CHAT_ROOM_TYPES } from '../models/chatRoomModel.js'
 import userService from './userService.js'
+import { ObjectId } from 'mongoose'
 
 class ChatRoomService {
-  /**
-   * Enums for chat room types
-   * @readonly
-   * @enum {String}
-   */
-
   /**
    * Tạo phòng chat
    * @param {String} userId - ID người dùng
@@ -15,17 +10,13 @@ class ChatRoomService {
    * @returns {Object} Thông tin phòng chat
    */
   createChatRoom = async (userId, receiverId) => {
-    try {
-      const newChatRoom = new ChatRoom({
-        type: CHAT_ROOM_TYPES.PRIVATE,
-        members: [userId, receiverId],
-        owners: [userId, receiverId]
-      })
-      await newChatRoom.save()
-      return newChatRoom
-    } catch (error) {
-      console.error(error)
-    }
+    const newChatRoom = new ChatRoom({
+      type: CHAT_ROOM_TYPES.PRIVATE,
+      members: [userId, receiverId],
+      owners: [userId, receiverId]
+    })
+    await newChatRoom.save()
+    return newChatRoom
   }
 
   /**
@@ -35,20 +26,16 @@ class ChatRoomService {
    * @returns {Object} Thông tin phòng chat
    */
   createGroupChatRoom = async (userId, memberIds) => {
-    try {
-      const newChatRoom = new ChatRoom({
-        type: CHAT_ROOM_TYPES.GROUP,
-        members: [userId, ...memberIds],
-        owners: [userId],
-        name: 'New Group Chat',
-        avatar:
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFei77t1O-6TTTENh63BsESAoRUaY8ttuxNw&s'
-      })
-      await newChatRoom.save()
-      return newChatRoom
-    } catch (error) {
-      console.error(error)
-    }
+    const newChatRoom = new ChatRoom({
+      type: CHAT_ROOM_TYPES.GROUP,
+      members: [userId, ...memberIds],
+      owners: [userId],
+      name: 'New Group Chat',
+      avatar:
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFei77t1O-6TTTENh63BsESAoRUaY8ttuxNw&s'
+    })
+    await newChatRoom.save()
+    return newChatRoom
   }
 
   /**
@@ -57,17 +44,13 @@ class ChatRoomService {
    * @returns {Array} Danh sách phòng chat
    */
   getChatRoomsByUserId = async (userId, type = null) => {
-    try {
-      const query = { members: userId }
+    const query = { members: userId }
 
-      if (type) query.type = type
+    if (type) query.type = type
 
-      const chatRooms = await ChatRoom.find(query)
+    const chatRooms = await ChatRoom.find(query)
 
-      return chatRooms
-    } catch (error) {
-      console.error(error)
-    }
+    return chatRooms
   }
 
   /**
@@ -77,15 +60,11 @@ class ChatRoomService {
    * @returns {Object} Thông tin phòng chat
    */
   getChatRoomByRoomId = async (userId, chatRoomId) => {
-    try {
-      const chatRoom = await ChatRoom.findOne({
-        _id: chatRoomId,
-        members: userId
-      })
-      return chatRoom
-    } catch (error) {
-      console.error(error)
-    }
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      members: userId
+    })
+    return chatRoom
   }
 
   /**
@@ -95,23 +74,19 @@ class ChatRoomService {
    * @param {Object} avatar - Avatar phòng chat
    * @returns {Object} Thông tin phòng chat
    */
-  updateChatRoom = async (chatRoomId, name, avatar) => {
-    try {
-      const chatRoom = await ChatRoom.findOne({
-        _id: chatRoomId,
-        type: CHAT_ROOM_TYPES.GROUP,
-        owners: userId
-      })
-      if (!chatRoom) return
+  updateChatRoom = async (userId, chatRoomId, name, avatar) => {
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      type: CHAT_ROOM_TYPES.GROUP,
+      owners: userId
+    })
+    if (!chatRoom) return null
 
-      if (name) chatRoom.name = name
-      if (avatar) chatRoom.avatar = avatar
+    if (name) chatRoom.name = name
+    if (avatar) chatRoom.avatar = avatar
 
-      await chatRoom.save()
-      return chatRoom
-    } catch (error) {
-      console.error(error)
-    }
+    await chatRoom.save()
+    return chatRoom
   }
 
   /**
@@ -122,25 +97,27 @@ class ChatRoomService {
    * @returns {Object} Thông tin phòng chat
    */
   addMemberToChatRoom = async (userId, chatRoomId, memberIds) => {
-    try {
-      const validUserIds = userService.validateUserIds(memberIds)
-      if (!validUserIds) return
+    const validUserIds = await userService.validateUserIds(memberIds)
+    if (!validUserIds) throw new Error('Invalid user ids')
 
-      const chatRoom = await ChatRoom.findOne({
-        _id: chatRoomId,
-        type: CHAT_ROOM_TYPES.GROUP,
-        owners: userId
-      })
-      if (!chatRoom) return
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      type: CHAT_ROOM_TYPES.GROUP,
+      owners: userId
+    })
+    if (!chatRoom) return null
 
-      chatRoom.members = Array.from(
-        new Set([...chatRoom.members, ...validUserIds])
-      )
-
-      await chatRoom.save()
-    } catch (error) {
-      console.error(error)
+    if (chatRoom.members.length + validUserIds.length > 50) {
+      throw new Error('Members exceed limit')
     }
+
+    const newMembers = validUserIds.filter(
+      (memberId) => !chatRoom.members.includes(memberId)
+    )
+    chatRoom.members = [...chatRoom.members, ...newMembers]
+
+    await chatRoom.save()
+    return chatRoom
   }
 
   /**
@@ -151,23 +128,27 @@ class ChatRoomService {
    * @returns {Object} Thông tin phòng chat
    */
   removeMemberFromChatRoom = async (userId, chatRoomId, targetId) => {
-    try {
-      const chatRoom = await ChatRoom.findOne({
-        _id: chatRoomId,
-        type: CHAT_ROOM_TYPES.GROUP,
-        owners: userId
-      })
-      if (!chatRoom) return
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      type: CHAT_ROOM_TYPES.GROUP,
+      owners: userId
+    })
+    if (!chatRoom) return null
 
-      chatRoom.members = chatRoom.members.filter(
-        (memberId) => memberId !== targetId
-      )
+    chatRoom.members = chatRoom.members.filter(
+      (memberId) => !memberId.equals(targetId)
+    )
 
-      await chatRoom.save()
+    if (!chatRoom.members.length) {
+      await chatRoom.deleteOne()
       return chatRoom
-    } catch (error) {
-      console.error(error)
     }
+
+    chatRoom.owners = chatRoom.owners.filter(
+      (ownerId) => !ownerId.equals(targetId)
+    )
+    await chatRoom.save()
+    return chatRoom
   }
 
   /**
@@ -176,19 +157,15 @@ class ChatRoomService {
    * @param {String} chatRoomId - ID phòng chat
    */
   deleteChatRoom = async (userId, chatRoomId) => {
-    try {
-      const chatRoom = await ChatRoom.findOne({
-        _id: chatRoomId,
-        owners: userId
-      })
-      if (!chatRoom) return
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      owners: userId
+    })
+    if (!chatRoom) return null
 
-      await chatRoom.remove()
+    await chatRoom.deleteOne()
 
-      return chatRoom
-    } catch (error) {
-      console.error(error)
-    }
+    return chatRoom
   }
 
   /**
@@ -198,22 +175,32 @@ class ChatRoomService {
    */
 
   leaveChatRoom = async (userId, chatRoomId) => {
-    try {
-      const chatRoom = await ChatRoom.findOne({
-        _id: chatRoomId,
-        members: userId
-      })
-      if (!chatRoom) return
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      type: CHAT_ROOM_TYPES.GROUP,
+      members: userId
+    })
+    if (!chatRoom) return null
 
-      chatRoom.members = chatRoom.members.filter(
-        (memberId) => memberId !== userId
-      )
+    chatRoom.members = chatRoom.members.filter(
+      (memberId) => !memberId.equals(userId)
+    )
 
-      await chatRoom.save()
+    if (!chatRoom.members.length) {
+      await chatRoom.deleteOne()
       return chatRoom
-    } catch (error) {
-      console.error(error)
     }
+
+    chatRoom.owners = chatRoom.owners.filter(
+      (ownerId) => !ownerId.equals(userId)
+    )
+
+    if (!chatRoom.owners.length) {
+      chatRoom.owners = [chatRoom.members[0]]
+    }
+
+    await chatRoom.save()
+    return chatRoom
   }
 }
 

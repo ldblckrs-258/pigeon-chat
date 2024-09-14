@@ -21,6 +21,12 @@ class AuthController {
     try {
       const { email, password, name } = req.body
       const user = await userService.createAccount(email, password, name)
+
+      if (!user) {
+        res.status(400).json({ message: 'Email is already registered' })
+        return
+      }
+
       await this.sendVerifyEmail(email, name)
       res.json({
         message:
@@ -89,7 +95,13 @@ class AuthController {
       })
       res.json({ message: 'Login successful', user })
     } catch (error) {
-      res.status(400).json({ message: error?.message || 'Login failed' })
+      if (error.name === 'LoginError') {
+        res.status(400).json({ message: error.message })
+        return
+      }
+
+      console.error(error)
+      res.status(400).json({ message: 'Login failed, please try again' })
     }
   }
 
