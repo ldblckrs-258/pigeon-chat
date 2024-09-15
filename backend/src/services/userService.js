@@ -16,20 +16,19 @@ class UserService {
    * @returns {Object} Thông tin người dùng
    */
   createAccount = async (email, password, name) => {
-    try {
-      const salt = generateSalt()
-      const hash = hashPassword(password, salt)
-      const newUser = new User({ email, hashPassword: hash, salt, name })
-      await newUser.save()
-      return {
-        _id: newUser._id,
-        email: newUser.email,
-        name: newUser.name,
-        avatar: newUser.avatar,
-        isVerified: newUser.isVerified
-      }
-    } catch (error) {
-      console.error(error)
+    const existUser = await User.findOne({ email })
+    if (existUser) return null
+
+    const salt = generateSalt()
+    const hash = hashPassword(password, salt)
+    const newUser = new User({ email, hashPassword: hash, salt, name })
+    await newUser.save()
+    return {
+      _id: newUser._id,
+      email: newUser.email,
+      name: newUser.name,
+      avatar: newUser.avatar,
+      isVerified: newUser.isVerified
     }
   }
 
@@ -41,14 +40,16 @@ class UserService {
    * @throws {Error} Lỗi khi email không tồn tại hoặc mật khẩu không đúng
    */
   login = async (email, password) => {
-    try {
-      const user = await User.findOne({ email })
-      if (!user) {
-        throw new Error('This email is not registered')
-      }
-      if (!verifyPassword(password, user.hashPassword, user.salt)) {
-        throw new Error('Password is incorrect')
-      }
+    const user = await User.findOne({ email })
+    if (!user) {
+      const error = new Error('Email does not exist')
+      error.name = 'LoginError'
+      throw error
+    } else if (!verifyPassword(password, user.hashPassword, user.salt)) {
+      const error = new Error('Password is incorrect')
+      error.name = 'LoginError'
+      throw error
+    } else
       return {
         _id: user._id,
         email: user.email,
@@ -56,9 +57,6 @@ class UserService {
         avatar: user.avatar,
         isVerified: user.isVerified
       }
-    } catch (error) {
-      console.error(error)
-    }
   }
 
   /**
@@ -69,15 +67,11 @@ class UserService {
    * @returns {Object} Thông tin người dùng
    */
   changeInfo = async (userId, name, avatar) => {
-    try {
-      const user = await User.findById(userId)
-      user.name = name
-      user.avatar = avatar
-      await user.save()
-      return user
-    } catch (error) {
-      console.error(error)
-    }
+    const user = await User.findById(userId)
+    user.name = name
+    user.avatar = avatar
+    await user.save()
+    return user
   }
 
   /**
@@ -89,19 +83,15 @@ class UserService {
    * @throws {Error} Lỗi khi mật khẩu cũ không đúng
    */
   changePassword = async (userId, oldPassword, newPassword) => {
-    try {
-      const user = await User.findById(userId)
-      if (!verifyPassword(oldPassword, user.hashPassword, user.salt)) {
-        throw new Error('Old password is incorrect')
-      }
-      const salt = generateSalt()
-      user.hashPassword = hashPassword(newPassword, salt)
-      user.salt = salt
-      await user.save()
-      return user
-    } catch (error) {
-      console.error(error)
+    const user = await User.findById(userId)
+    if (!verifyPassword(oldPassword, user.hashPassword, user.salt)) {
+      throw new Error('Old password is incorrect')
     }
+    const salt = generateSalt()
+    user.hashPassword = hashPassword(newPassword, salt)
+    user.salt = salt
+    await user.save()
+    return user
   }
 
   /**
@@ -110,11 +100,7 @@ class UserService {
    * @returns {Object} Thông tin người dùng
    */
   getUserById = async (userId) => {
-    try {
-      return await User.findById(userId).select('-hashPassword -salt')
-    } catch (error) {
-      console.error(error)
-    }
+    return await User.findById(userId).select('-hashPassword -salt')
   }
 
   /**
@@ -123,11 +109,20 @@ class UserService {
    * @returns {Object} Thông tin người dùng
    */
   getUserByEmail = async (email) => {
-    try {
-      return await User.findOne({ email }).select('-hashPassword -salt')
-    } catch (error) {
-      console.error(error)
-    }
+    return await User.findOne({ email }).select('-hashPassword -salt')
+  }
+
+  /**
+   * Lấy danh sách Id người dùng có tồn tại
+   * @param {Array} userIds - Danh sách ID người dùng
+   * @returns {Array} Danh sách ID người dùng có tồn tại
+   */
+  validateUserIds = async (userIds) => {
+    const result = await User.find({ _id: { $in: userIds } }).select('_id')
+
+    if (!result) return []
+
+    return result.map((user) => user._id.toString())
   }
 }
 

@@ -23,12 +23,8 @@ class MailService {
    * @param {String} html - Nội dung email dạng html
    */
   sendMail = async (to, subject, text, html) => {
-    try {
-      const transporter = this.transporter
-      await transporter.sendMail({ from: ADMIN_EMAIL, to, subject, text, html })
-    } catch (error) {
-      console.error(error)
-    }
+    const transporter = this.transporter
+    await transporter.sendMail({ from: ADMIN_EMAIL, to, subject, text, html })
   }
 
   /**
@@ -38,12 +34,8 @@ class MailService {
    * @param {String} url - Đường dẫn xác thực
    */
   sendVerificationEmail = async (name, email, url) => {
-    try {
-      const html = VerificationMail(name, url)
-      await this.sendMail(email, 'Verify your email', '', html)
-    } catch (error) {
-      console.error(error)
-    }
+    const html = VerificationMail(name, url)
+    await this.sendMail(email, 'Verify your email', '', html)
   }
 }
 
