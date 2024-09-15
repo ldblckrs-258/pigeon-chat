@@ -10,6 +10,7 @@ config()
 import handleSocketConnection from './src/socket/socket.js'
 import homeRoute from './src/routes/homeRoute.js'
 import authRoute from './src/routes/authRoute.js'
+import chatRoute from './src/routes/chatRoute.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -25,8 +26,9 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'Server is running' })
 })
 
-app.use('/api/home', homeRoute)
-app.use('/api/auth', authRoute)
+app.use('/home', homeRoute)
+app.use('/auth', authRoute)
+app.use('/chat', chatRoute)
 
 const server = createServer(app)
 
