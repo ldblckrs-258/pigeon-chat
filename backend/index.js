@@ -7,6 +7,7 @@ import cors from 'cors'
 import { connectDb, disconnectDb } from './src/utils/mongodb.js'
 import { config } from 'dotenv'
 config()
+import handleFileTransfer from './src/socket/file-transfer/index.js'
 import handleSocketConnection from './src/socket/socket.js'
 import homeRoute from './src/routes/homeRoute.js'
 import authRoute from './src/routes/authRoute.js'
@@ -38,6 +39,8 @@ const io = new Server(server, {
 })
 
 handleSocketConnection(io)
+
+handleFileTransfer(io)
 
 server.listen(PORT, async () => {
   try {
