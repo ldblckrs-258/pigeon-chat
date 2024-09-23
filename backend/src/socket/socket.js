@@ -1,3 +1,4 @@
+import handleFileTransfer from './file-transfer/index.js'
 const onlineUsers = new Set()
 
 const handleSocketConnection = (io) => {
@@ -13,6 +14,8 @@ const handleSocketConnection = (io) => {
       const lastUser = Array.from(onlineUsers).pop()
       io.to(lastUser).emit('message', data)
     })
+
+    handleFileTransfer(socket)
 
     // Handle disconnection
     socket.on('disconnect', () => {
