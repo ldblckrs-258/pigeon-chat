@@ -109,18 +109,13 @@ class ChatRoomController {
     try {
       const userId = req.user._id
       const { id } = req.params
-      const { name, avatar } = req.body
+      const { name } = req.body
 
       if (!id) {
         return res.status(400).json({ message: 'id is required' })
       }
 
-      const chatRoom = await chatRoomService.updateChatRoom(
-        userId,
-        id,
-        name,
-        avatar
-      )
+      const chatRoom = await chatRoomService.updateChatRoom(userId, id, name)
 
       if (!chatRoom) {
         return res.status(404).json({ message: 'Chat room not found' })

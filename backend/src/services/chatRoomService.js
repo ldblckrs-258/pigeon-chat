@@ -1,8 +1,22 @@
 import ChatRoom, { CHAT_ROOM_TYPES } from '../models/chatRoomModel.js'
 import userService from './userService.js'
-import { ObjectId } from 'mongoose'
 
 class ChatRoomService {
+  /**
+   * Kiểm tra người dùng có trong phòng chat không
+   * @param {String} userId - ID người dùng
+   * @param {String} chatRoomId - ID phòng chat
+   * @returns {Object} Thông tin phòng chat
+   * @returns {Boolean} Kết quả kiểm tra
+   */
+  checkIsMember = async (userId, chatRoomId) => {
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      members: userId
+    })
+    return chatRoom
+  }
+
   /**
    * Tạo phòng chat
    * @param {String} userId - ID người dùng
@@ -30,9 +44,7 @@ class ChatRoomService {
       type: CHAT_ROOM_TYPES.GROUP,
       members: [userId, ...memberIds],
       owners: [userId],
-      name: 'New Group Chat',
-      avatar:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFei77t1O-6TTTENh63BsESAoRUaY8ttuxNw&s'
+      name: 'New Group Chat'
     })
     await newChatRoom.save()
     return newChatRoom
@@ -71,10 +83,9 @@ class ChatRoomService {
    * Cập nhật thông tin phòng chat
    * @param {String} chatRoomId - ID phòng chat
    * @param {Object} name - Tên phòng chat
-   * @param {Object} avatar - Avatar phòng chat
    * @returns {Object} Thông tin phòng chat
    */
-  updateChatRoom = async (userId, chatRoomId, name, avatar) => {
+  updateChatRoom = async (userId, chatRoomId, name) => {
     const chatRoom = await ChatRoom.findOne({
       _id: chatRoomId,
       type: CHAT_ROOM_TYPES.GROUP,
@@ -83,7 +94,6 @@ class ChatRoomService {
     if (!chatRoom) return null
 
     if (name) chatRoom.name = name
-    if (avatar) chatRoom.avatar = avatar
 
     await chatRoom.save()
     return chatRoom

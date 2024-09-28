@@ -14,9 +14,6 @@ const chatRoomSchema = new mongoose.Schema({
   name: {
     type: String
   },
-  avatar: {
-    type: String
-  },
   members: [
     {
       type: mongoose.Schema.Types.ObjectId,
