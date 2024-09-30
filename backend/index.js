@@ -1,59 +1,67 @@
-import { createServer } from 'http'
-import { Server } from 'socket.io'
-import express from 'express'
-import bodyParser from 'body-parser'
-import cookieParser from 'cookie-parser'
-import cors from 'cors'
-import { connectDb, disconnectDb } from './src/utils/mongodb.js'
-import { config } from 'dotenv'
-config()
-import handleFileTransfer from './src/socket/file-transfer/index.js'
-import handleSocketConnection from './src/socket/socket.js'
-import homeRoute from './src/routes/homeRoute.js'
-import authRoute from './src/routes/authRoute.js'
-import chatRoute from './src/routes/chatRoute.js'
+var express = require("express")
+const morgan = require("morgan")
+const http = require("http")
+const mongoose = require("mongoose")
+const cors = require("cors")
+const cookieParser = require("cookie-parser")
+const socketService = require("./Socket/index")
+require("dotenv").config()
 
-const app = express()
-const PORT = process.env.PORT || 3000
+const { getTime } = require("./utils/Time")
+const { serverInfo } = require("./Utils/Network")
 
-// Middleware
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+var app = express()
 app.use(cookieParser())
-app.use(cors({ origin: '*', credentials: true }))
 
-// Routes
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Server is running' })
+const port = process.env.PORT || 3001
+const origin = process.env.ORIGIN || "http://localhost:3000"
+
+morgan.token("preciseTime", getTime)
+
+app.use(
+  morgan(
+    ":preciseTime :method :url :status :response-time ms from :remote-addr"
+  )
+)
+
+app.use(express.json())
+app.use(
+  cors({
+    origin: origin,
+  })
+)
+
+// > Routes
+
+app.get("/", serverInfo)
+
+app.use("/users", require("./Routes/userRoute"))
+app.use("/auth", require("./Routes/authRoute"))
+app.use("/chats", require("./Routes/chatRoute"))
+app.use("/messages", require("./Routes/messageRoute"))
+app.use("/tools", require("./Routes/toolRoute"))
+
+// > End of Routes
+
+const server = http.createServer(app)
+
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`)
 })
 
-app.use('/home', homeRoute)
-app.use('/auth', authRoute)
-app.use('/chat', chatRoute)
-
-const server = createServer(app)
-
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+server.on("error", (err) => {
+  console.error(err)
 })
 
-handleSocketConnection(io)
+mongoose
+  .connect(process.env.ATLAS_URI)
+  .then(() => {
+    console.log("Connected to MongoDB\n")
+  })
+  .catch((err) => {
+    console.error(err)
+  })
 
-handleFileTransfer(io)
+// > Socket.io
 
-server.listen(PORT, async () => {
-  try {
-    await connectDb()
-    console.log(`Server is running on http://localhost:${PORT}`)
-  } catch (error) {
-    console.error('Server is running failure')
-  } finally {
-    process.on('SIGINT', async () => {
-      await disconnectDb()
-      process.exit(0)
-    })
-  }
-})
+socketService.init(server)
