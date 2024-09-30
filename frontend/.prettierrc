@@ -1,13 +1,9 @@
 {
-  "plugins": ["prettier-plugin-tailwindcss", "prettier"],
-  "semi": false,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "useTabs": true,
-  "prettier/prettier": [
-    "error",
-    {
-      "endOfLine": "auto"
-    }
-  ]
+	"plugins": ["prettier-plugin-tailwindcss", "prettier"],
+	"endOfLine": "auto",
+	"printWidth": 80,
+	"semi": false,
+	"useTabs": true,
+	"tabWidth": 4,
+	"singleQuote": true
 }
