@@ -3,6 +3,7 @@ import {
 	PiImageFill,
 	PiPaperPlaneTiltFill,
 	PiSmileyFill,
+	PiUploadBold,
 	PiXBold,
 } from 'react-icons/pi'
 import { FaThumbsUp } from 'react-icons/fa'
@@ -10,6 +11,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import EmojiPicker from 'emoji-picker-react'
 import { useMessage } from '../hook/useMessage'
 import DefaultImg from '../assets/default.png'
+import FileTransfer from './FileTransfer'
+import { useAuth } from '../hook/useAuth'
 
 const ChatBoxFooter = ({ chatInfo }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)
@@ -18,7 +21,14 @@ const ChatBoxFooter = ({ chatInfo }) => {
 	const inputImgRef = useRef(null)
 	const { sendAMessage, sendThumbUp, uploadImage } = useMessage()
 	const [image, setImage] = useState(null)
-
+	const { user } = useAuth()
+	const targetId = () => {
+		if (chatInfo.members[0]._id === user.id) {
+			return chatInfo.members[1]._id
+		} else {
+			return chatInfo.members[0]._id
+		}
+	}
 	const handleEmojiClick = (event) => {
 		setMessage((prev) => prev + event.emoji)
 		inputRef.current.focus()
@@ -92,6 +102,21 @@ const ChatBoxFooter = ({ chatInfo }) => {
 						</motion.div>
 					)}
 				</AnimatePresence>
+			</div>
+			<div>
+				<button
+					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+					popovertarget="transfer-modal"
+				>
+					<PiUploadBold />
+				</button>
+				<div
+					popover="auto"
+					id="transfer-modal"
+					className="rounded border border-gray-200 bg-gray-50 p-6 shadow-xl"
+				>
+					<FileTransfer id={targetId()} />
+				</div>
 			</div>
 			<div className="relative mx-2 flex-1">
 				<input

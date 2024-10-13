@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState } from 'react'
 import { useAuth } from '../hook/useAuth'
-import { useNotification } from '../hook/useNotification'
 import io from 'socket.io-client'
+import { useNotification } from '../hook/useNotification'
 
 export const SocketContext = createContext()
 
@@ -13,8 +13,18 @@ export const SocketContextProvider = ({ children }) => {
 	const { titleNotify } = useNotification()
 
 	useEffect(() => {
+		const serverUrl = import.meta.env.VITE_SERVER_URL
+		const serverPort = import.meta.env.VITE_SERVER_PORT
+
+		if (!serverUrl && !serverPort) {
+			console.error(
+				'VITE_SERVER_URL and VITE_SERVER_PORT must be defined',
+				serverUrl,
+				serverPort,
+			)
+		}
 		if (user) {
-			const newSocket = io('http://localhost:3000')
+			const newSocket = io(`${serverUrl}:${serverPort}`)
 			setSocket(newSocket)
 			return () => newSocket.disconnect()
 		}
@@ -30,6 +40,11 @@ export const SocketContextProvider = ({ children }) => {
 			setLastUpdate({ type, time, chatId })
 			if (type === 'message') titleNotify('You have new message!')
 		})
+
+		return () => {
+			socket.off('getOnlineUsers')
+			socket.off('updated')
+		}
 	}, [socket])
 
 	return (
