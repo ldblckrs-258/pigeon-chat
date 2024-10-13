@@ -103,6 +103,7 @@ const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
 						className="w-full"
 						label="Search chat"
 						value={searchValue}
+						type="text"
 						onChange={(e) => setSearchValue(e.target.value)}
 					/>
 				</div>
