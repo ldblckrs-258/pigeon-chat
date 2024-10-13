@@ -184,6 +184,7 @@ const AccountModal = ({ onClose }) => {
 						</div>
 						<TextField
 							className="mt-4 w-full"
+							key="editName"
 							label="Name"
 							value={editData?.name}
 							onChange={(e) =>
@@ -196,6 +197,7 @@ const AccountModal = ({ onClose }) => {
 						/>
 						<TextField
 							className="mt-4 w-full"
+							key="editEmail"
 							label="Email"
 							type="email"
 							value={user.email}
@@ -209,6 +211,7 @@ const AccountModal = ({ onClose }) => {
 						</h3>
 						<TextField
 							className="w-full"
+							key="currentPwd"
 							label="Current password"
 							type="password"
 							value={pwdData.currentPwd}
@@ -222,6 +225,7 @@ const AccountModal = ({ onClose }) => {
 						/>
 						<TextField
 							className="w-full"
+							key="newPwd"
 							label="New password"
 							type="password"
 							value={pwdData.newPwd}
@@ -235,6 +239,7 @@ const AccountModal = ({ onClose }) => {
 						/>
 						<TextField
 							className="w-full"
+							key="confirmPwd"
 							label="Confirm password"
 							type="password"
 							value={pwdData.confirmPwd}
@@ -249,7 +254,7 @@ const AccountModal = ({ onClose }) => {
 					</div>
 				)}
 				<button
-					className="mt-6 rounded-lg bg-primary-400 px-8 py-1 font-semibold text-white transition-colors hover:bg-primary-500"
+					className={`mt-6 rounded-lg px-8 py-1 font-semibold text-white transition-colors ${isLoading ? 'bg-primary-300' : 'bg-primary-400 hover:bg-primary-500'}`}
 					onClick={() => {
 						if (tabIndex === 0) {
 							handleSaveInfo()

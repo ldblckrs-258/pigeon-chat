@@ -5,9 +5,12 @@ import Register from './pages/Register'
 import Chat from './pages/Chat'
 import { useAuth } from './hook/useAuth'
 import { useEffect } from 'react'
+import FileTransfer from './pages/FileTransfer'
+import { useSocket } from './hook/useSocket'
 
 function App() {
 	const { auth, user } = useAuth()
+	const { onlineUsers, socket } = useSocket()
 	useEffect(() => {
 		auth()
 	}, [])
@@ -16,6 +19,7 @@ function App() {
 		<>
 			{user ? (
 				<Routes>
+					<Route path="/file/:id" element={<FileTransfer />} />
 					<Route path="/:id" element={<Chat />} />
 					<Route path="/" element={<Chat />} />
 				</Routes>
