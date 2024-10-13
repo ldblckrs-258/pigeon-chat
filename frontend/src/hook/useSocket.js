@@ -12,5 +12,11 @@ export const useSocket = () => {
 		socket.emit('updateChat', chatId, memberIds)
 	}
 
-	return { socket, onlineUsers, lastUpdate, updateChat, sendMsg }
+	return {
+		socket,
+		onlineUsers,
+		lastUpdate,
+		updateChat,
+		sendMsg,
+	}
 }

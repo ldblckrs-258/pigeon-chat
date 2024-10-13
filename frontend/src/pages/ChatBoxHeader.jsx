@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '../hook/useAuth'
 import { useSocket } from '../hook/useSocket'
 import { twMerge } from 'tailwind-merge'
@@ -7,6 +8,12 @@ import { isOnline } from '../utils/validate'
 const ChatBoxHeader = ({ chatInfo, onClickInfoButton, isInfoExpand }) => {
 	const { user } = useAuth()
 	const { onlineUsers } = useSocket()
+	const [userOnline, setUserOnline] = useState(false)
+
+	useEffect(() => {
+		setUserOnline(isOnline(chatInfo.members, user.id, onlineUsers))
+	}, [onlineUsers, chatInfo._id])
+
 	return (
 		<div className="absolute left-0 top-0 flex w-full items-center justify-between bg-white px-6 py-4 shadow-md">
 			<div className="flex flex-1 items-center justify-start">
@@ -16,7 +23,7 @@ const ChatBoxHeader = ({ chatInfo, onClickInfoButton, isInfoExpand }) => {
 						src={chatInfo.avatar}
 						alt="targetUser-avatar"
 					/>
-					{isOnline(chatInfo.members, user.id, onlineUsers) && (
+					{userOnline && (
 						<div className="absolute bottom-0 right-0 h-[14px] w-[14px] rounded-full border-2 border-white bg-green-400"></div>
 					)}
 				</div>
@@ -25,7 +32,9 @@ const ChatBoxHeader = ({ chatInfo, onClickInfoButton, isInfoExpand }) => {
 					<p className="text-sm font-semibold text-primary-900">
 						{chatInfo.name}
 					</p>
-					<p className="text-xs text-primary-700">{'Online'}</p>
+					<p className="text-xs text-primary-700">
+						{userOnline ? 'Online' : 'Offline'}
+					</p>
 				</div>
 			</div>
 			<button
