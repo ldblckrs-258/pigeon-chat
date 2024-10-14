@@ -16,7 +16,13 @@ import { twMerge } from 'tailwind-merge'
 import { useSocket } from '../hook/useSocket'
 import axios from 'axios'
 import MemberModal from './MemberModal'
-const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
+const ChatSidebar = ({
+	className = '',
+	chatId,
+	onChatClick,
+	isExpanded,
+	setIsExpanded,
+}) => {
 	const { user, logout } = useAuth()
 	const [showEmail, setShowEmail] = useState(false)
 	const [isHoverAvatar, setIsHoverAvatar] = useState(false)
@@ -59,7 +65,15 @@ const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
 	}, [lastUpdate, searchValue])
 
 	return (
-		<div className={twMerge('flex w-[380px] flex-col gap-1', className)}>
+		<div
+			className={twMerge(
+				'flex flex-col gap-1',
+				isExpanded
+					? 'w-full max-w-[calc(100vw-16px)] sm:w-[380px]'
+					: 'w-20',
+				className,
+			)}
+		>
 			{showAddModal && (
 				<MemberModal
 					type="create"
@@ -72,51 +86,65 @@ const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
 					}}
 				/>
 			)}
-			<div className="flex w-full items-center justify-center bg-white px-6 py-4">
+			<div
+				className={`flex w-full items-center justify-center bg-white ${isExpanded ? 'px-6 py-4' : 'px-3 py-3.5'}`}
+			>
 				<div className="flex flex-1 items-center justify-center">
-					<button className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-400">
+					<button
+						className={`flex items-center justify-center rounded-lg bg-primary-400 ${isExpanded ? 'size-10' : 'size-11'}`}
+						onClick={() => setIsExpanded(!isExpanded)}
+					>
 						<IoIosChatbubbles className="text-2xl text-gray-100" />
 					</button>
-					<div className="tiem-center flex flex-1">
-						<h1 className="ml-4 mr-1 text-lg font-semibold text-gray-800">
-							Messages
-						</h1>
-						{unread > 0 && (
-							<span className="h-5 -translate-y-2 rounded-full bg-red-300 px-2 py-0.5 text-xs font-semibold text-gray-700">
-								{unread}
-							</span>
-						)}
-					</div>
+					{isExpanded && (
+						<div className="tiem-center flex flex-1">
+							<h1 className="ml-4 mr-1 text-lg font-semibold text-gray-800">
+								Messages
+							</h1>
+							{unread > 0 && (
+								<span className="h-5 -translate-y-2 rounded-full bg-red-300 px-2 py-0.5 text-xs font-semibold text-gray-700">
+									{unread}
+								</span>
+							)}
+						</div>
+					)}
 				</div>
-				<button
-					onClick={() => {
-						setShowAddModal(true)
-					}}
-					className="flex h-8 w-8 items-center justify-center gap-1 rounded-full bg-primary-300 text-sm font-semibold text-white transition-colors hover:bg-primary-400 active:bg-primary-500"
-				>
-					<PiPlusBold className="text-xl" />
-				</button>
+				{isExpanded && (
+					<button
+						onClick={() => {
+							setShowAddModal(true)
+						}}
+						className="flex h-8 w-8 items-center justify-center gap-1 rounded-full bg-primary-300 text-sm font-semibold text-white transition-colors hover:bg-primary-400 active:bg-primary-500"
+					>
+						<PiPlusBold className="text-xl" />
+					</button>
+				)}
 			</div>
 			<div className="h-min-0 flex w-full flex-1 flex-col items-center overflow-y-auto bg-white p-2">
-				<div className="w-full px-4 py-2">
-					<TextField
-						className="w-full"
-						label="Search chat"
-						value={searchValue}
-						type="text"
-						onChange={(e) => setSearchValue(e.target.value)}
-					/>
-				</div>
+				{isExpanded && (
+					<div className="w-full px-4 py-2">
+						<TextField
+							className="w-full"
+							label="Search chat"
+							value={searchValue}
+							type="text"
+							onChange={(e) => setSearchValue(e.target.value)}
+						/>
+					</div>
+				)}
 				{chats.map((chat) => (
 					<div
 						key={chat._id}
 						className={twMerge(
-							'relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-gray-100',
+							'relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg transition-colors hover:bg-gray-100',
+							isExpanded ? 'px-4 py-3' : 'p-2',
 							chatId === chat._id ? 'bg-gray-100' : '',
 						)}
 						onClick={() => handleClickChat(chat._id)}
 					>
-						<div className="relative h-10 w-10">
+						<div
+							className={`relative ${isExpanded ? 'size-10' : 'size-11'}`}
+						>
 							<img
 								className="h-full w-full rounded-full border border-gray-300 object-cover"
 								src={chat.avatar}
@@ -128,22 +156,24 @@ const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
 								<span className="absolute bottom-0 right-0 h-[14px] w-[14px] rounded-full border-2 border-white bg-green-400"></span>
 							)}
 						</div>
-						<div className="max-w-[280px] flex-1">
-							<p className="line-clamp-1 w-full text-sm font-semibold text-primary-900">
-								{chat.name}
-							</p>
-							<div className="flex w-full items-center gap-2">
-								<p
-									className={`line-clamp-1 w-full flex-1 text-xs text-primary-900 ${!chat.read && 'font-bold'}`}
-								>
-									{chat.isMyMessage && 'You: '}{' '}
-									{chat.lastMessage}
+						{isExpanded && (
+							<div className="max-w-[280px] flex-1">
+								<p className="line-clamp-1 w-full text-sm font-semibold text-primary-900">
+									{chat.name}
 								</p>
-								<p className="text-xs text-primary-600">
-									{timeAgo(chat.lastTime)}
-								</p>
+								<div className="flex w-full items-center gap-2">
+									<p
+										className={`line-clamp-1 w-full flex-1 text-xs text-primary-900 ${!chat.read && 'font-bold'}`}
+									>
+										{chat.isMyMessage && 'You: '}{' '}
+										{chat.lastMessage}
+									</p>
+									<p className="text-xs text-primary-600">
+										{timeAgo(chat.lastTime)}
+									</p>
+								</div>
 							</div>
-						</div>
+						)}
 						{!chat.read && (
 							<span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-red-400"></span>
 						)}
@@ -151,9 +181,9 @@ const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
 				))}
 			</div>
 			<div className="relative flex items-center justify-center bg-white px-6 py-4">
-				<div className="flex flex-1 items-center justify-start">
+				<div className="flex flex-1 items-center justify-center">
 					<div
-						className="relative h-9 w-9 overflow-hidden rounded-full border border-gray-300"
+						className={`relative overflow-hidden rounded-full border border-gray-300 ${isExpanded ? 'size-9' : 'size-11'}`}
 						onMouseEnter={() => setIsHoverAvatar(true)}
 						onMouseLeave={() => setIsHoverAvatar(false)}
 					>
@@ -172,35 +202,39 @@ const ChatSidebar = ({ className = '', chatId, onChatClick }) => {
 						)}
 					</div>
 
-					<div className="ml-3">
-						<p className="text-sm font-semibold text-primary-900">
-							{user.name}
-						</p>
-						<div className="flex items-center gap-2">
-							<p className="text-xs text-secondary-800">
-								{showEmail ? user.email : hiddenEmail}
+					{isExpanded && (
+						<div className="ml-3 flex-1">
+							<p className="text-sm font-semibold text-primary-900">
+								{user.name}
 							</p>
-							<button
-								className="flex items-center text-sm text-gray-600"
-								onClick={() => setShowEmail(!showEmail)}
-								title="Show/Hide Email"
-							>
-								{showEmail ? (
-									<PiEyeBold />
-								) : (
-									<PiEyeClosedBold />
-								)}
-							</button>
+							<div className="flex items-center gap-2">
+								<p className="text-xs text-secondary-800">
+									{showEmail ? user.email : hiddenEmail}
+								</p>
+								<button
+									className="flex items-center text-sm text-gray-600"
+									onClick={() => setShowEmail(!showEmail)}
+									title="Show/Hide Email"
+								>
+									{showEmail ? (
+										<PiEyeBold />
+									) : (
+										<PiEyeClosedBold />
+									)}
+								</button>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
-				<button
-					className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-gray-800 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					onClick={logout}
-					title="Logout"
-				>
-					<PiSignOutBold />
-				</button>
+				{isExpanded && (
+					<button
+						className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-gray-800 transition-colors hover:bg-gray-100 active:bg-gray-200"
+						onClick={logout}
+						title="Logout"
+					>
+						<PiSignOutBold />
+					</button>
+				)}
 			</div>
 			{showAccountModal && (
 				<AccountModal onClose={() => setShowAccountModal(false)} />
