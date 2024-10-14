@@ -11,7 +11,7 @@ const Chat = () => {
 	const [chatId, setChatId] = useState('')
 	const [chatInfo, setChatInfo] = useState(undefined)
 	const { lastUpdate } = useSocket()
-
+	const [chatListExpanded, setChatListExpanded] = useState(false)
 	useEffect(() => {
 		if (id) {
 			setChatId(id)
@@ -56,14 +56,19 @@ const Chat = () => {
 	}, [lastUpdate])
 
 	return (
-		<div className="flex h-screen w-full items-center gap-3 overflow-hidden bg-gray-100 p-4">
+		<div
+			className={`flex h-dvh w-full items-center gap-1 overflow-hidden bg-gray-100 p-2 transition-all sm:gap-3 sm:p-4`}
+		>
 			<ChatSidebar
-				className="h-full overflow-hidden rounded-lg"
+				className="h-full overflow-hidden rounded-lg transition-all"
 				chatId={chatId}
 				onChatClick={(id) => setChatId(id)}
+				isExpanded={chatListExpanded}
+				setIsExpanded={setChatListExpanded}
 			/>
 			{chatInfo && (
 				<ChatBox
+					className={`${chatListExpanded ? 'hidden sm:flex' : ''}`}
 					isInfoExpand={isInfoExpand}
 					onClickInfoButton={() => setIsInfoExpand(!isInfoExpand)}
 					chatInfo={chatInfo}

@@ -1,6 +1,6 @@
 const socketio = require("socket.io")
 require("dotenv").config()
-const { handleSendMsg, handleUpdateChat } = require("./messageHandlers")
+const { getTime } = require("../utils/Time")
 
 let io
 let onlineUsers = []
@@ -35,8 +35,26 @@ module.exports = {
         )
         console.log(`Socket disconnected: ${socket.id}`)
       })
-      socket.on("sendMsg", handleSendMsg(socket, io, onlineUsers))
-      socket.on("updateChat", handleUpdateChat(socket, io, onlineUsers))
+      socket.on("sendMsg", (chatId, memberIds) => {
+        const time = getTime()
+        memberIds.forEach((id) => {
+          const user = onlineUsers.find((u) => u.userId === id)
+          const type = "message"
+          if (user) {
+            io.to(user.socketId).emit("updated", type, time, chatId)
+          }
+        })
+      })
+      socket.on("updateChat", (chatId, memberIds) => {
+        const time = getTime()
+        memberIds.forEach((id) => {
+          const user = onlineUsers.find((u) => u.userId === id)
+          const type = "chat"
+          if (user) {
+            io.to(user.socketId).emit("updated", type, time, chatId)
+          }
+        })
+      })
 
       socket.on("sendFileRequest", (metadata, receiverId) => {
         const receiver = onlineUsers.find((u) => u.userId === receiverId)

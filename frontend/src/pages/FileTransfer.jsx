@@ -159,7 +159,7 @@ export default function FileTransfer({ id }) {
 			current: prev.current + receivedData.byteLength,
 		}))
 		if (receivedData === 'END') {
-			setProgress({ current: metadata.size, total: metadata.size })
+			setProgress((prev) => ({ ...prev, current: prev.total }))
 			const receivedBlob = new Blob(receiveBuffer)
 			setReceivedFile(receivedBlob)
 			alert('File received')
@@ -264,13 +264,20 @@ export default function FileTransfer({ id }) {
 			>
 				Send file
 			</button>
-			<progress
-				className="h-2 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
-				value={progress.current}
-				max={progress.total}
-			/>
+			<div className="relative flex w-full items-center justify-center">
+				<progress
+					className="h-4 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
+					value={progress.current || 0}
+					max={progress.total || 1}
+				/>
+				<p className="absolute text-center text-xs">
+					{progress.current > 0
+						? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
+						: ''}
+				</p>
+			</div>
 
-			{receivedFile ? (
+			{receivedFile && (
 				<a
 					className="text-sm hover:underline"
 					href={URL.createObjectURL(receivedFile)}
@@ -278,12 +285,6 @@ export default function FileTransfer({ id }) {
 				>
 					{receivedMetadata?.name}
 				</a>
-			) : (
-				<p className="text-center text-sm">
-					{progress.current > 0
-						? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
-						: ''}
-				</p>
 			)}
 		</div>
 	)

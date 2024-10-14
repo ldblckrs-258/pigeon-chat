@@ -13,7 +13,7 @@ const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 	const [messages, setMessages] = useState([])
 	const skip = useRef(0)
 	const haveMore = useRef(true)
-	const limit = 20
+	const limit = 100
 	const [loading, setLoading] = useState(false)
 	const toast = useToast()
 	const { lastUpdate } = useSocket()
