@@ -7,7 +7,7 @@ import { useAuth } from './hook/useAuth'
 import { useEffect } from 'react'
 import FileTransfer from './pages/FileTransfer'
 import { useSocket } from './hook/useSocket'
-
+import FileReceiver from './components/FileReceiver' // Đã import FileReceiver
 function App() {
 	const { auth, user } = useAuth()
 	const { onlineUsers, socket } = useSocket()
@@ -17,7 +17,7 @@ function App() {
 
 	return (
 		<>
-			{user ? (
+			{/* {user ? (
 				<Routes>
 					<Route path="/file/:id" element={<FileTransfer />} />
 					<Route path="/:id" element={<Chat />} />
@@ -28,7 +28,8 @@ function App() {
 					<Route path="/" element={<Login />} />
 					<Route path="/register" element={<Register />} />
 				</Routes>
-			)}
+			)} */}
+			<FileReceiver /> {/* Modal nhận file */}
 		</>
 	)
 }
