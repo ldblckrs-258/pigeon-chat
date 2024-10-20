@@ -24,7 +24,7 @@ const ChatBoxFooter = ({ chatInfo }) => {
 	const { user } = useAuth()
 	const targetId = () => {
 		if (chatInfo.members[0]._id === user.id) {
-			return chatInfo.members[1]._id
+			return chatInfo.members[1]?._id || ''
 		} else {
 			return chatInfo.members[0]._id
 		}
@@ -106,16 +106,12 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				</div>
 			</div>
 			<div>
-				<button
-					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					popovertarget="transfer-modal"
-				>
+				<button className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200">
 					<PiUploadBold />
 				</button>
 				<div
-					popover="auto"
 					id="transfer-modal"
-					className="rounded border border-gray-200 bg-gray-50 p-6 shadow-xl"
+					className="fixed right-5 top-20 rounded border border-gray-200 bg-gray-50 p-6 shadow-xl"
 				>
 					<FileTransfer id={targetId()} />
 				</div>
