@@ -24,7 +24,7 @@ const ChatBoxFooter = ({ chatInfo }) => {
 	const { user } = useAuth()
 	const targetId = () => {
 		if (chatInfo.members[0]._id === user.id) {
-			return chatInfo.members[1]._id
+			return chatInfo.members[1]?._id || ''
 		} else {
 			return chatInfo.members[0]._id
 		}
@@ -60,65 +60,63 @@ const ChatBoxFooter = ({ chatInfo }) => {
 	}
 
 	return (
-		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white px-6 py-4">
-			<button
-				className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-				onClick={() => inputImgRef.current.click()}
-			>
-				<PiImageFill />
-				<input
-					type="file"
-					accept="image/*"
-					className="hidden"
-					ref={inputImgRef}
-					onChange={handleUploadImage}
-				/>
-			</button>
-			<div className="relative">
+		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white px-3 py-2 sm:px-6 sm:py-4">
+			<div className="hidden items-center sm:flex">
 				<button
-					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					onClick={() => setOpenEmoji(!openEmoji)}
+					className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+					onClick={() => inputImgRef.current.click()}
 				>
-					<PiSmileyFill />
+					<PiImageFill />
+					<input
+						type="file"
+						accept="image/*"
+						className="hidden"
+						ref={inputImgRef}
+						onChange={handleUploadImage}
+					/>
 				</button>
-				<AnimatePresence>
-					{openEmoji && (
-						<motion.div
-							className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
-							initial={{ opacity: 0, y: '-100%' }}
-							animate={{ opacity: 1, y: '-100%' }}
-							exit={{ opacity: 0, y: '-100%' }}
-							transition={{ duration: 0.2 }}
-						>
-							<EmojiPicker
-								width={280}
-								height={280}
-								skinTonesDisabled
-								emojiStyle="native"
-								previewConfig={{ showPreview: false }}
-								searchDisabled
-								onEmojiClick={handleEmojiClick}
-							/>
-						</motion.div>
-					)}
-				</AnimatePresence>
+				<div className="relative">
+					<button
+						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+						onClick={() => setOpenEmoji(!openEmoji)}
+					>
+						<PiSmileyFill />
+					</button>
+					<AnimatePresence>
+						{openEmoji && (
+							<motion.div
+								className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
+								initial={{ opacity: 0, y: '-100%' }}
+								animate={{ opacity: 1, y: '-100%' }}
+								exit={{ opacity: 0, y: '-100%' }}
+								transition={{ duration: 0.2 }}
+							>
+								<EmojiPicker
+									width={280}
+									height={280}
+									skinTonesDisabled
+									emojiStyle="native"
+									previewConfig={{ showPreview: false }}
+									searchDisabled
+									onEmojiClick={handleEmojiClick}
+								/>
+							</motion.div>
+						)}
+					</AnimatePresence>
+				</div>
 			</div>
 			<div>
-				<button
-					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					popovertarget="transfer-modal"
-				>
+				<button className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200">
 					<PiUploadBold />
 				</button>
 				<div
-					popover="auto"
 					id="transfer-modal"
-					className="rounded border border-gray-200 bg-gray-50 p-6 shadow-xl"
+					className="fixed right-5 top-20 rounded border border-gray-200 bg-gray-50 p-6 shadow-xl"
 				>
 					<FileTransfer id={targetId()} />
 				</div>
 			</div>
-			<div className="relative mx-2 flex-1">
+			<div className="relative flex-1 sm:mx-2">
 				<input
 					ref={inputRef}
 					type="text"
@@ -156,7 +154,7 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				)}
 			</div>
 			<button
-				className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+				className="relative hidden h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200 sm:flex"
 				onClick={handleThumbUp}
 			>
 				<FaThumbsUp />
