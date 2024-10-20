@@ -1,13 +1,13 @@
 import { useSocket } from '../hook/useSocket'
 import { useEffect, useState, useRef } from 'react'
+import { PiX } from 'react-icons/pi'
 
-export default function FileTransfer({ id }) {
+export default function FileTransfer({ id, onClose }) {
 	const [file, setFile] = useState(null)
 	const [dataChannel, setDataChannel] = useState(null)
 	const localPeer = useRef(null)
-	const [receivedFile, setReceivedFile] = useState(null)
 	const [progress, setProgress] = useState({ current: 0, total: 0 })
-	const [receivedMetadata, setReceivedMetadata] = useState(null)
+	const receivedMetadata = useRef(null)
 	const { socket } = useSocket()
 	const [isReady, setIsReady] = useState(false)
 
@@ -135,7 +135,7 @@ export default function FileTransfer({ id }) {
 			) {
 				dataChannel.onbufferedamountlow = () => {
 					sendChunk(e.target.result)
-					dataChannel.onbufferedamountlow = null // Clear the event handler
+					dataChannel.onbufferedamountlow = null
 				}
 			} else {
 				sendChunk(e.target.result)
@@ -154,16 +154,20 @@ export default function FileTransfer({ id }) {
 
 	const handleReceiveFile = (event) => {
 		const receivedData = event.data
-		console.log(receivedData)
 		setProgress((prev) => ({
 			...prev,
 			current: prev.current + receivedData.byteLength,
 		}))
 		if (receivedData === 'END') {
+			console.log('END', receivedMetadata)
 			setProgress((prev) => ({ ...prev, current: prev.total }))
 			const receivedBlob = new Blob(receiveBuffer)
-			setReceivedFile(receivedBlob)
-			alert('File received')
+
+			const url = URL.createObjectURL(receivedBlob)
+			const a = document.createElement('a')
+			a.href = url
+			a.download = receivedMetadata.current.name
+			a.click()
 			receiveBuffer = []
 			return
 		}
@@ -217,10 +221,10 @@ export default function FileTransfer({ id }) {
 		})
 
 		socket.on('fileTransferRequest', (metadata) => {
-			setReceivedMetadata(metadata)
+			receivedMetadata.current = metadata
 
 			let confirm = window.confirm(
-				`Accept file ${metadata.name} - ${metadata.size}?`,
+				`Accept and download file ${metadata.name} - ${metadata.size}?`,
 			)
 
 			if (confirm) {
@@ -268,8 +272,19 @@ export default function FileTransfer({ id }) {
 		}
 	}, [isReady])
 
+	useEffect(() => {
+		console.log('receivedMetadata', receivedMetadata)
+	}, [receivedMetadata])
+
 	return (
-		<div className="flex w-full flex-col items-center justify-center gap-2">
+		<div className="relative flex w-auto flex-col items-center justify-center gap-2 rounded-lg bg-white px-8 py-4">
+			<h1 className="pb-2 text-xl font-semibold">Transfer your file</h1>
+			<button
+				className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full text-lg hover:bg-gray-100"
+				onClick={onClose}
+			>
+				<PiX />
+			</button>
 			<input
 				className="rounded border border-gray-300 px-4 py-2"
 				type="file"
@@ -293,16 +308,6 @@ export default function FileTransfer({ id }) {
 						: ''}
 				</p>
 			</div>
-
-			{receivedFile && (
-				<a
-					className="text-sm hover:underline"
-					href={URL.createObjectURL(receivedFile)}
-					download={receivedMetadata?.name}
-				>
-					{receivedMetadata?.name}
-				</a>
-			)}
 		</div>
 	)
 }

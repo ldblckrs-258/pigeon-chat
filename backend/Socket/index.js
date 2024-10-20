@@ -57,9 +57,16 @@ module.exports = {
       })
 
       socket.on("sendFileRequest", (metadata, receiverId) => {
+        const senderId = onlineUsers.find(
+          (u) => u.socketId === socket.id
+        ).userId
         const receiver = onlineUsers.find((u) => u.userId === receiverId)
         if (receiver) {
-          io.to(receiver.socketId).emit("fileTransferRequest", metadata)
+          io.to(receiver.socketId).emit(
+            "fileTransferRequest",
+            metadata,
+            senderId
+          )
           console.log(`fileTransferRequest to ${receiver.socketId}`)
         } else {
           socket.emit("fileTransferError", "The receiver is not online")
