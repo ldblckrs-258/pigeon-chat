@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 export default function FileTransfer({ id }) {
 	const [file, setFile] = useState(null)
 	const [dataChannel, setDataChannel] = useState(null)
-	const localPeer = useRef(null) // Use useRef to persist localPeer across re-renders
+	const localPeer = useRef(null)
 	const [receivedFile, setReceivedFile] = useState(null)
 	const [progress, setProgress] = useState({ current: 0, total: 0 })
 	const [receivedMetadata, setReceivedMetadata] = useState(null)
@@ -46,11 +46,11 @@ export default function FileTransfer({ id }) {
 		dataChannel.binaryType = 'arraybuffer'
 		dataChannel.onmessage = handleReceiveFile
 		dataChannel.onopen = () => {
+			console.log('Sender data channel connected')
 			setIsReady(true)
 		}
 		setDataChannel(dataChannel)
 
-		// Sự kiện onicecandidate để thu thập ICE candidate
 		localPeer.current.onicecandidate = (event) => {
 			if (event.candidate) {
 				socket.emit(
@@ -154,6 +154,7 @@ export default function FileTransfer({ id }) {
 
 	const handleReceiveFile = (event) => {
 		const receivedData = event.data
+		console.log(receivedData)
 		setProgress((prev) => ({
 			...prev,
 			current: prev.current + receivedData.byteLength,
@@ -181,6 +182,22 @@ export default function FileTransfer({ id }) {
 				},
 			],
 		})
+
+		localPeer.current.oniceconnectionstatechange = (event) => {
+			if (localPeer.current.iceConnectionState === 'disconnected') {
+				console.log('ICE connection state disconnected')
+			} else if (localPeer.current.iceConnectionState === 'connected') {
+				console.log('ICE connection state connected')
+			}
+		}
+
+		localPeer.current.onicegatheringstatechange = (event) => {
+			if (localPeer.current.iceGatheringState === 'complete') {
+				console.log('ICE gathering state complete')
+			} else if (localPeer.current.iceGatheringState === 'gathering') {
+				console.log('ICE gathering state gathering')
+			}
+		}
 
 		console.log('Local peer created')
 	}

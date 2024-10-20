@@ -16,13 +16,13 @@ app.use(cookieParser())
 const port = process.env.PORT || 3001
 const origin = process.env.ORIGIN || "http://localhost:3000"
 
-morgan.token("preciseTime", getTime)
+// morgan.token("preciseTime", getTime)
 
-app.use(
-  morgan(
-    ":preciseTime :method :url :status :response-time ms from :remote-addr"
-  )
-)
+// app.use(
+//   morgan(
+//     ":preciseTime :method :url :status :response-time ms from :remote-addr"
+//   )
+// )
 
 app.use(express.json())
 app.use(

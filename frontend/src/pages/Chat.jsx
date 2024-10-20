@@ -11,7 +11,7 @@ const Chat = () => {
 	const [chatId, setChatId] = useState('')
 	const [chatInfo, setChatInfo] = useState(undefined)
 	const { lastUpdate } = useSocket()
-	const [chatListExpanded, setChatListExpanded] = useState(false)
+	const [chatListExpanded, setChatListExpanded] = useState(true)
 	useEffect(() => {
 		if (id) {
 			setChatId(id)
