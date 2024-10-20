@@ -7,7 +7,6 @@ import { useAuth } from './hook/useAuth'
 import { useEffect } from 'react'
 import FileTransfer from './pages/FileTransfer'
 import { useSocket } from './hook/useSocket'
-import FileReceiver from './components/FileReceiver' // Đã import FileReceiver
 function App() {
 	const { auth, user } = useAuth()
 	const { onlineUsers, socket } = useSocket()

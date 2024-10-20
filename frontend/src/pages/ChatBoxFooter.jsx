@@ -3,16 +3,15 @@ import {
 	PiImageFill,
 	PiPaperPlaneTiltFill,
 	PiSmileyFill,
-	PiUploadBold,
+	PiArrowsLeftRightBold,
 	PiXBold,
 } from 'react-icons/pi'
 import { FaThumbsUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import EmojiPicker from 'emoji-picker-react'
 import { useMessage } from '../hook/useMessage'
-import DefaultImg from '../assets/default.png'
-import FileSender from '../components/FileSender' // Đã import FileSender
 import { useAuth } from '../hook/useAuth'
+import FileSender from '../components/FileSender'
 
 const ChatBoxFooter = ({ chatInfo }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)
@@ -22,9 +21,8 @@ const ChatBoxFooter = ({ chatInfo }) => {
 	const { sendAMessage, sendThumbUp, uploadImage } = useMessage()
 	const [image, setImage] = useState(null)
 	const { user } = useAuth()
-	const [isSendingFile, setIsSendingFile] = useState(false) // Trạng thái để mở modal FileSender
+	const [openFileTransfer, setOpenFileTransfer] = useState(false)
 
-	// Xác định ID của người nhận dựa trên chatInfo
 	const targetId = () => {
 		if (chatInfo.members[0]._id === user.id) {
 			return chatInfo.members[1]?._id || ''
@@ -63,16 +61,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 		}
 	}
 
-	// Mở modal gửi file
-	const handleOpenFileSender = () => {
-		setIsSendingFile(true)
-	}
-
-	// Đóng modal gửi file
-	const handleCloseFileSender = () => {
-		setIsSendingFile(false)
-	}
-
 	return (
 		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white px-6 py-4">
 			{/* Nút để upload hình ảnh */}
@@ -93,76 +81,59 @@ const ChatBoxFooter = ({ chatInfo }) => {
 			{/* Nút mở Emoji Picker */}
 			<div className="relative">
 				<button
-					className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					onClick={() => inputImgRef.current.click()}
+					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+					onClick={() => setOpenEmoji(!openEmoji)}
 				>
-					<PiImageFill />
-					<input
-						type="file"
-						accept="image/*"
-						className="hidden"
-						ref={inputImgRef}
-						onChange={handleUploadImage}
-					/>
+					<PiSmileyFill />
 				</button>
-				<div className="relative">
-					<button
-						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-						onClick={() => setOpenEmoji(!openEmoji)}
-					>
-						<PiSmileyFill />
-					</button>
-					<AnimatePresence>
-						{openEmoji && (
-							<motion.div
-								className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
-								initial={{ opacity: 0, y: '-100%' }}
-								animate={{ opacity: 1, y: '-100%' }}
-								exit={{ opacity: 0, y: '-100%' }}
-								transition={{ duration: 0.2 }}
-							>
-								<EmojiPicker
-									width={280}
-									height={280}
-									skinTonesDisabled
-									emojiStyle="native"
-									previewConfig={{ showPreview: false }}
-									searchDisabled
-									onEmojiClick={handleEmojiClick}
-								/>
-							</motion.div>
-						)}
-					</AnimatePresence>
-				</div>
+				<AnimatePresence>
+					{openEmoji && (
+						<motion.div
+							className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
+							initial={{ opacity: 0, y: '-100%' }}
+							animate={{ opacity: 1, y: '-100%' }}
+							exit={{ opacity: 0, y: '-100%' }}
+							transition={{ duration: 0.2 }}
+						>
+							<EmojiPicker
+								width={280}
+								height={280}
+								skinTonesDisabled
+								emojiStyle="native"
+								previewConfig={{ showPreview: false }}
+								searchDisabled
+								onEmojiClick={handleEmojiClick}
+							/>
+						</motion.div>
+					)}
+				</AnimatePresence>
 			</div>
 
-			{/* Nút để gửi file */}
 			<div>
 				<button
 					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					onClick={handleOpenFileSender} // Khi nhấn mở modal gửi file
+					onClick={() => setOpenFileTransfer(true)}
 				>
-					<PiUploadBold />
+					<PiArrowsLeftRightBold />
 				</button>
 
-				{/* Modal để gửi file, căn giữa màn hình */}
-				{isSendingFile && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-						<div className="relative rounded-lg bg-white p-6 shadow-lg">
-							<FileSender id={targetId()} />{' '}
-							{/* Gửi file thông qua FileSender */}
-							<button
-								className="absolute right-0 top-0 mr-2 mt-2 text-xl"
-								onClick={handleCloseFileSender} // Đóng modal
-							>
-								<PiXBold />
-							</button>
-						</div>
+				{openFileTransfer && (
+					<div
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+						onClick={(e) => {
+							if (e.target === e.currentTarget) {
+								setOpenFileTransfer(false)
+							}
+						}}
+					>
+						<FileSender
+							id={targetId()}
+							onClose={() => setOpenFileTransfer(false)}
+						/>
 					</div>
 				)}
 			</div>
 
-			{/* Input để nhập tin nhắn */}
 			<div className="relative mx-2 flex-1">
 				<input
 					ref={inputRef}
@@ -184,7 +155,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				>
 					<PiPaperPlaneTiltFill />
 				</button>
-				{/* Hiển thị hình ảnh khi được upload */}
 				{image && (
 					<div className="absolute -top-2 left-2 h-20 w-20 translate-y-[-100%] rounded-lg shadow-custom">
 						<img
@@ -202,7 +172,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				)}
 			</div>
 
-			{/* Nút Thumbs Up */}
 			<button
 				className="relative hidden h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200 sm:flex"
 				onClick={handleThumbUp}

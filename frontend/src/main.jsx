@@ -8,6 +8,7 @@ import { ToastContextProvider } from './contexts/ToastContext.jsx'
 import { LoaderContextProvider } from './contexts/LoaderContext.jsx'
 import { SocketContextProvider } from './contexts/SocketContext.jsx'
 import { LightboxContextProvider } from './contexts/LightboxContext.jsx'
+import { FileReceiveContextProvider } from './contexts/FileReceiveContext.jsx'
 import Compose from './contexts/Compose.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -19,6 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 				LoaderContextProvider,
 				SocketContextProvider,
 				LightboxContextProvider,
+				FileReceiveContextProvider,
 			]}
 		>
 			<App />
