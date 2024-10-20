@@ -27,7 +27,7 @@ const ChatBoxFooter = ({ chatInfo }) => {
 	// Xác định ID của người nhận dựa trên chatInfo
 	const targetId = () => {
 		if (chatInfo.members[0]._id === user.id) {
-			return chatInfo.members[1]._id
+			return chatInfo.members[1]?._id || ''
 		} else {
 			return chatInfo.members[0]._id
 		}
@@ -93,32 +93,47 @@ const ChatBoxFooter = ({ chatInfo }) => {
 			{/* Nút mở Emoji Picker */}
 			<div className="relative">
 				<button
-					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					onClick={() => setOpenEmoji(!openEmoji)}
+					className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+					onClick={() => inputImgRef.current.click()}
 				>
-					<PiSmileyFill />
+					<PiImageFill />
+					<input
+						type="file"
+						accept="image/*"
+						className="hidden"
+						ref={inputImgRef}
+						onChange={handleUploadImage}
+					/>
 				</button>
-				<AnimatePresence>
-					{openEmoji && (
-						<motion.div
-							className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
-							initial={{ opacity: 0, y: '-100%' }}
-							animate={{ opacity: 1, y: '-100%' }}
-							exit={{ opacity: 0, y: '-100%' }}
-							transition={{ duration: 0.2 }}
-						>
-							<EmojiPicker
-								width={280}
-								height={280}
-								skinTonesDisabled
-								emojiStyle="native"
-								previewConfig={{ showPreview: false }}
-								searchDisabled
-								onEmojiClick={handleEmojiClick}
-							/>
-						</motion.div>
-					)}
-				</AnimatePresence>
+				<div className="relative">
+					<button
+						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+						onClick={() => setOpenEmoji(!openEmoji)}
+					>
+						<PiSmileyFill />
+					</button>
+					<AnimatePresence>
+						{openEmoji && (
+							<motion.div
+								className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
+								initial={{ opacity: 0, y: '-100%' }}
+								animate={{ opacity: 1, y: '-100%' }}
+								exit={{ opacity: 0, y: '-100%' }}
+								transition={{ duration: 0.2 }}
+							>
+								<EmojiPicker
+									width={280}
+									height={280}
+									skinTonesDisabled
+									emojiStyle="native"
+									previewConfig={{ showPreview: false }}
+									searchDisabled
+									onEmojiClick={handleEmojiClick}
+								/>
+							</motion.div>
+						)}
+					</AnimatePresence>
+				</div>
 			</div>
 
 			{/* Nút để gửi file */}
@@ -189,7 +204,7 @@ const ChatBoxFooter = ({ chatInfo }) => {
 
 			{/* Nút Thumbs Up */}
 			<button
-				className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+				className="relative hidden h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200 sm:flex"
 				onClick={handleThumbUp}
 			>
 				<FaThumbsUp />

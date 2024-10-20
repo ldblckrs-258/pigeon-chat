@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 export default function FileTransfer({ id }) {
 	const [file, setFile] = useState(null)
 	const [dataChannel, setDataChannel] = useState(null)
-	const localPeer = useRef(null) // Use useRef to persist localPeer across re-renders
+	const localPeer = useRef(null)
 	const [receivedFile, setReceivedFile] = useState(null)
 	const [progress, setProgress] = useState({ current: 0, total: 0 })
 	const [receivedMetadata, setReceivedMetadata] = useState(null)
@@ -46,11 +46,11 @@ export default function FileTransfer({ id }) {
 		dataChannel.binaryType = 'arraybuffer'
 		dataChannel.onmessage = handleReceiveFile
 		dataChannel.onopen = () => {
+			console.log('Sender data channel connected')
 			setIsReady(true)
 		}
 		setDataChannel(dataChannel)
 
-		// Sự kiện onicecandidate để thu thập ICE candidate
 		localPeer.current.onicecandidate = (event) => {
 			if (event.candidate) {
 				socket.emit(
@@ -154,12 +154,13 @@ export default function FileTransfer({ id }) {
 
 	const handleReceiveFile = (event) => {
 		const receivedData = event.data
+		console.log(receivedData)
 		setProgress((prev) => ({
 			...prev,
 			current: prev.current + receivedData.byteLength,
 		}))
 		if (receivedData === 'END') {
-			setProgress({ current: metadata.size, total: metadata.size })
+			setProgress((prev) => ({ ...prev, current: prev.total }))
 			const receivedBlob = new Blob(receiveBuffer)
 			setReceivedFile(receivedBlob)
 			alert('File received')
@@ -181,6 +182,22 @@ export default function FileTransfer({ id }) {
 				},
 			],
 		})
+
+		localPeer.current.oniceconnectionstatechange = (event) => {
+			if (localPeer.current.iceConnectionState === 'disconnected') {
+				console.log('ICE connection state disconnected')
+			} else if (localPeer.current.iceConnectionState === 'connected') {
+				console.log('ICE connection state connected')
+			}
+		}
+
+		localPeer.current.onicegatheringstatechange = (event) => {
+			if (localPeer.current.iceGatheringState === 'complete') {
+				console.log('ICE gathering state complete')
+			} else if (localPeer.current.iceGatheringState === 'gathering') {
+				console.log('ICE gathering state gathering')
+			}
+		}
 
 		console.log('Local peer created')
 	}
@@ -264,13 +281,20 @@ export default function FileTransfer({ id }) {
 			>
 				Send file
 			</button>
-			<progress
-				className="h-2 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
-				value={progress.current}
-				max={progress.total}
-			/>
+			<div className="relative flex w-full items-center justify-center">
+				<progress
+					className="h-4 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
+					value={progress.current || 0}
+					max={progress.total || 1}
+				/>
+				<p className="absolute text-center text-xs">
+					{progress.current > 0
+						? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
+						: ''}
+				</p>
+			</div>
 
-			{receivedFile ? (
+			{receivedFile && (
 				<a
 					className="text-sm hover:underline"
 					href={URL.createObjectURL(receivedFile)}
@@ -278,12 +302,6 @@ export default function FileTransfer({ id }) {
 				>
 					{receivedMetadata?.name}
 				</a>
-			) : (
-				<p className="text-center text-sm">
-					{progress.current > 0
-						? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
-						: ''}
-				</p>
 			)}
 		</div>
 	)
