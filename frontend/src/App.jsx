@@ -17,7 +17,7 @@ function App() {
 
 	return (
 		<>
-			{/* {user ? (
+			{user ? (
 				<Routes>
 					<Route path="/file/:id" element={<FileTransfer />} />
 					<Route path="/:id" element={<Chat />} />
@@ -28,8 +28,7 @@ function App() {
 					<Route path="/" element={<Login />} />
 					<Route path="/register" element={<Register />} />
 				</Routes>
-			)} */}
-			<FileReceiver /> {/* Modal nhận file */}
+			)}
 		</>
 	)
 }
