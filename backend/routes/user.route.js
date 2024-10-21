@@ -1,5 +1,5 @@
 const express = require("express")
-const userController = require("../Controllers/userController")
+const userController = require("../controllers/user.controller")
 const router = express.Router()
 
 router.get("/get", userController.getUser)

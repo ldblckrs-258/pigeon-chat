@@ -1,4 +1,4 @@
-const mediaService = require("../Services/mediaService")
+const mediaService = require("../services/media.service")
 const fs = require("fs")
 
 const uploadImage = async (req, res) => {

@@ -1,8 +1,8 @@
-const chatModel = require("../Models/chatModel")
-const messageModel = require("../Models/messageModel")
-const userModel = require("../Models/userModel")
+const chatModel = require("../models/chat.model")
+const messageModel = require("../models/message.model")
+const userModel = require("../models/user.model")
 const ObjectId = require("mongoose").Types.ObjectId
-const messageController = require("./messageController")
+const messageController = require("./message.controller")
 
 const createChat = async (req, res) => {
   const userId = req.user._id

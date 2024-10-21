@@ -12,6 +12,7 @@ import EmojiPicker from 'emoji-picker-react'
 import { useMessage } from '../hook/useMessage'
 import { useAuth } from '../hook/useAuth'
 import FileSender from '../components/FileSender'
+import DefaultImg from '../assets/default.png'
 
 const ChatBoxFooter = ({ chatInfo }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)

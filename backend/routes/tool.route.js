@@ -1,7 +1,7 @@
 const express = require("express")
 const multer = require("multer")
-const toolController = require("../Controllers/toolController")
-const authenticate = require("../Middlewares/authMiddleware")
+const toolController = require("../controllers/tool.controller")
+const authenticate = require("../middlewares/auth.middleware")
 
 const router = express.Router()
 const upload = multer({ dest: "uploads/" })
