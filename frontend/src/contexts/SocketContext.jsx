@@ -13,18 +13,13 @@ export const SocketContextProvider = ({ children }) => {
 	const { titleNotify } = useNotification()
 
 	useEffect(() => {
-		const serverUrl = import.meta.env.VITE_SERVER_URL
-		const serverPort = import.meta.env.VITE_SERVER_PORT
+		const serverURI = import.meta.env.VITE_SERVER_URI
 
-		if (!serverUrl && !serverPort) {
-			console.error(
-				'VITE_SERVER_URL and VITE_SERVER_PORT must be defined',
-				serverUrl,
-				serverPort,
-			)
+		if (!serverURI) {
+			console.error('VITE_SERVER_URI must be defined')
 		}
 		if (user) {
-			const newSocket = io(`${serverUrl}:${serverPort}`)
+			const newSocket = io(`${serverURI}`)
 			setSocket(newSocket)
 			return () => newSocket.disconnect()
 		}

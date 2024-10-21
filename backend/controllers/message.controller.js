@@ -1,5 +1,5 @@
-const messageModel = require("../Models/messageModel")
-const mediaService = require("../Services/mediaService")
+const messageModel = require("../models/message.model")
+const mediaService = require("../services/media.service")
 
 const createMessage = async (req, res) => {
   const userId = req.user._id

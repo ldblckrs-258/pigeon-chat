@@ -1,6 +1,6 @@
 const express = require("express")
-const authController = require("../Controllers/authController")
-const authenticate = require("../Middlewares/authMiddleware")
+const authController = require("../controllers/auth.controller")
+const authenticate = require("../middlewares/auth.middleware")
 const router = express.Router()
 
 router.get("/", authenticate, authController.myAccount)
