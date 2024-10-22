@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 
+// Transfer status
 const STATUS = {
 	NONE: 'Send file',
 	PENDING: 'Pending request',
