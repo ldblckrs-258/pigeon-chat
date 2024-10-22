@@ -47,5 +47,5 @@ function reloadWebsite() {
 }
 
 if (process.env.SERVER_URI) {
-  setInterval(reloadWebsite, 1000 * 60 * 3)
+  setInterval(reloadWebsite, 1000 * 60 * 10)
 }
