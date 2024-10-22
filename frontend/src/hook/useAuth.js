@@ -13,14 +13,11 @@ export const useAuth = () => {
 
 	const login = async (email, password, isRemember) => {
 		try {
-			const res = await axios.post(
-				`${import.meta.env.VITE_SERVER_URI}/auth/login`,
-				{
-					email,
-					password,
-					isRemember,
-				},
-			)
+			const res = await axios.post('/api/auth/login', {
+				email,
+				password,
+				isRemember,
+			})
 			setUser(res.data.user)
 			toast.success(
 				'Login successful',
@@ -28,20 +25,17 @@ export const useAuth = () => {
 				2000,
 			)
 		} catch (err) {
-			toast.error('Login failed', err.response?.data?.message || '', 5000)
+			toast.error('Login failed', err.response?.data?.message, 5000)
 		}
 	}
 
 	const register = async (name, email, password) => {
 		try {
-			const res = await axios.post(
-				`${import.meta.env.VITE_SERVER_URI}/auth/register`,
-				{
-					name,
-					email,
-					password,
-				},
-			)
+			const res = await axios.post('/api/auth/register', {
+				name,
+				email,
+				password,
+			})
 			setUser(res.data.user)
 			toast.success('Success', 'Register successful', 2000)
 			navigate('/')
@@ -54,7 +48,7 @@ export const useAuth = () => {
 
 	const logout = async () => {
 		try {
-			await axios.get(`${import.meta.env.VITE_SERVER_URI}/auth/logout`)
+			await axios.get('/api/auth/logout')
 			setUser(null)
 			toast.success('Logout successful', 'Goodbye, see you later', 2000)
 			navigate('/')
@@ -66,9 +60,7 @@ export const useAuth = () => {
 	const auth = async () => {
 		setLoading(true)
 		try {
-			const res = await axios.get(
-				`${import.meta.env.VITE_SERVER_URI}/auth`,
-			)
+			const res = await axios.get('/api/auth')
 			setUser(res.data.user)
 		} catch (err) {
 			toast.info('Welcome', 'Please login to continue', 3000)

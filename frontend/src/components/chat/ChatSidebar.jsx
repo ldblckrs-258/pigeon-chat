@@ -36,12 +36,9 @@ const ChatSidebar = ({
 	const { onlineUsers, lastUpdate } = useSocket()
 	const handleGetChats = async () => {
 		try {
-			const res = await axios.get(
-				`${import.meta.env.VITE_SERVER_URI}/chats/all`,
-				{
-					params: { ...(searchValue && { search: searchValue }) },
-				},
-			)
+			const res = await axios.get('/api/chats/all', {
+				params: { ...(searchValue && { search: searchValue }) },
+			})
 			const data = res.data
 			setChats(data)
 			setUnread(data.filter((chat) => !chat.read).length)
