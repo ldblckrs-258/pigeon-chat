@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import ChatSidebar from '../components/Chat/ChatSidebar'
-import ChatBox from '../components/Chat/ChatBox'
-import ChatInfo from '../components/Chat/ChatInfo'
+import ChatSidebar from '../components/chat/ChatSidebar'
+import ChatBox from '../components/chat/ChatBox'
+import ChatInfo from '../components/chat/ChatInfo'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSocket } from '../hook/useSocket'
 const Chat = () => {
