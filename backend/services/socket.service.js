@@ -47,7 +47,13 @@ class SocketServices {
     })
 
     socket.on("sendFileRequest", (metadata, receiverId) => {
-      const senderId = _onlineUsers.find((u) => u.socketId === socket.id).userId
+      const senderId = _onlineUsers.find(
+        (u) => u.socketId === socket.id
+      )?.userId
+      if (!senderId) {
+        socket.emit("fileTransferError", "You are using more than one device")
+        return
+      }
       const receiver = _onlineUsers.find((u) => u.userId === receiverId)
       if (receiver) {
         _io

@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
-import SpinLoader from '../components/SpinLoader'
-import { useToast } from '../hook/useToast'
+import SpinLoader from '../SpinLoader'
+import { useToast } from '../../hook/useToast'
 import axios from 'axios'
-import { useSocket } from '../hook/useSocket'
-import { useLightbox } from '../hook/useLightbox'
+import { useSocket } from '../../hook/useSocket'
+import { useLightbox } from '../../hook/useLightbox'
 import { PiTrashBold } from 'react-icons/pi'
 import { AnimatePresence, motion } from 'framer-motion'
-import DefaultImg from '../assets/default.png'
+import DefaultImg from '../../assets/default.png'
 
 const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 	const [messages, setMessages] = useState([])

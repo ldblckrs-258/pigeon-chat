@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import ChatSidebar from './ChatSidebar'
-import ChatBox from './ChatBox'
-import ChatInfo from './ChatInfo'
+import ChatSidebar from '../components/Chat/ChatSidebar'
+import ChatBox from '../components/Chat/ChatBox'
+import ChatInfo from '../components/Chat/ChatInfo'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSocket } from '../hook/useSocket'
 const Chat = () => {
@@ -39,7 +39,7 @@ const Chat = () => {
 			setChatInfo(data.data)
 		} catch (error) {
 			setChatId('')
-			console.error(error)
+			navigate('/')
 		}
 	}
 

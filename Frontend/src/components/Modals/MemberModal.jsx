@@ -1,10 +1,10 @@
 import { PiXCircleBold, PiXBold } from 'react-icons/pi'
-import TextField from '../components/TextField'
+import TextField from '../TextField'
 import { useState } from 'react'
 import axios from 'axios'
-import { useToast } from '../hook/useToast'
-import { useAuth } from '../hook/useAuth'
-import { useSocket } from '../hook/useSocket'
+import { useToast } from '../../hook/useToast'
+import { useAuth } from '../../hook/useAuth'
+import { useSocket } from '../../hook/useSocket'
 
 // type: create | add
 const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {

@@ -2,8 +2,6 @@ import { twMerge } from 'tailwind-merge'
 import ChatContent from './ChatContent'
 import ChatBoxHeader from './ChatBoxHeader'
 import ChatBoxFooter from './ChatBoxFooter'
-const defaultImg =
-	'https://coffective.com/wp-content/uploads/2018/06/default-featured-image.png.jpg'
 
 const ChatBox = ({
 	className = '',

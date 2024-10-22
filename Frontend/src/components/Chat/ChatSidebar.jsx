@@ -1,10 +1,10 @@
 import { useEffect, useState, useContext } from 'react'
-import { useAuth } from '../hook/useAuth'
-import { timeAgo } from '../utils/time'
+import { useAuth } from '../../hook/useAuth'
+import { timeAgo } from '../../utils/time'
 import PropsTypes from 'prop-types'
 import { IoIosChatbubbles } from 'react-icons/io'
-import TextField from '../components/TextField'
-import AccountModal from './AccountModal'
+import TextField from '../TextField'
+import AccountModal from '../Modals/AccountModal'
 import {
 	PiPlusBold,
 	PiEyeBold,
@@ -13,9 +13,9 @@ import {
 	PiGearFill,
 } from 'react-icons/pi'
 import { twMerge } from 'tailwind-merge'
-import { useSocket } from '../hook/useSocket'
+import { useSocket } from '../../hook/useSocket'
 import axios from 'axios'
-import MemberModal from './MemberModal'
+import MemberModal from '../Modals/MemberModal'
 const ChatSidebar = ({
 	className = '',
 	chatId,

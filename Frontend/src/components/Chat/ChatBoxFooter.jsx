@@ -9,10 +9,10 @@ import {
 import { FaThumbsUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import EmojiPicker from 'emoji-picker-react'
-import { useMessage } from '../hook/useMessage'
-import { useAuth } from '../hook/useAuth'
-import FileSender from '../components/FileSender'
-import DefaultImg from '../assets/default.png'
+import { useMessage } from '../../hook/useMessage'
+import { useAuth } from '../../hook/useAuth'
+import FileSender from '../Modals/FileSender'
+import DefaultImg from '../../assets/default.png'
 
 const ChatBoxFooter = ({ chatInfo }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)

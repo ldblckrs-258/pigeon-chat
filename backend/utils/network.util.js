@@ -19,4 +19,18 @@ async function serverInfo(req, res) {
   }
 }
 
-module.exports = { serverInfo }
+function networkAddresses() {
+  const os = require("os")
+  const networkInterfaces = os.networkInterfaces()
+  const addresses = []
+  for (const key in networkInterfaces) {
+    for (const network of networkInterfaces[key]) {
+      if (network.family === "IPv4" && !network.internal) {
+        addresses.push(network.address)
+      }
+    }
+  }
+  return addresses
+}
+
+module.exports = { serverInfo, networkAddresses }

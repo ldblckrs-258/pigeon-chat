@@ -1,7 +1,7 @@
-import { useSocket } from '../hook/useSocket'
+import { useSocket } from '../../hook/useSocket'
 import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
-import { useToast } from '../hook/useToast'
+import { useToast } from '../../hook/useToast'
 
 const STATUS = {
 	NONE: 'Send file',

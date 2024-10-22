@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from 'react'
-import FileReceiver from '../components/FileReceiver'
+import FileReceiver from '../components/Modals/FileReceiver'
 import { useSocket } from '../hook/useSocket'
 import { useNotification } from '../hook/useNotification'
 import axios from 'axios'
