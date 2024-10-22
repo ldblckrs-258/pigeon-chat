@@ -24,7 +24,9 @@ const ChatInfo = ({ className, chatInfo }) => {
 
 	const handleLeaveChat = async () => {
 		try {
-			await axios.post(`/api/chats/leave/${chatInfo._id}`)
+			await axios.post(
+				`${import.meta.env.VITE_SERVER_URI}/chats/leave/${chatInfo._id}`,
+			)
 			updateChat(
 				chatInfo._id,
 				chatInfo.members.map((member) => member._id),
@@ -39,7 +41,9 @@ const ChatInfo = ({ className, chatInfo }) => {
 
 	const handleDeleteChat = async () => {
 		try {
-			await axios.delete(`/api/chats/delete/${chatInfo._id}`)
+			await axios.delete(
+				`${import.meta.env.VITE_SERVER_URI}/chats/delete/${chatInfo._id}`,
+			)
 
 			updateChat(
 				chatInfo._id,
@@ -55,10 +59,13 @@ const ChatInfo = ({ className, chatInfo }) => {
 
 	const handleRemoveMember = async (memberId) => {
 		try {
-			await axios.post(`/api/chats/members/remove`, {
-				chatId: chatInfo._id,
-				memberId: memberId,
-			})
+			await axios.post(
+				`${import.meta.env.VITE_SERVER_URI}/chats/members/remove`,
+				{
+					chatId: chatInfo._id,
+					memberId: memberId,
+				},
+			)
 			updateChat(
 				chatInfo._id,
 				chatInfo.members.map((member) => member._id),
@@ -90,7 +97,10 @@ const ChatInfo = ({ className, chatInfo }) => {
 		setEditData({ ...editData, avatar: URL.createObjectURL(file) })
 		setIsLoading(true)
 		try {
-			const res = await axios.post('/api/tools/upload/image', formData)
+			const res = await axios.post(
+				'${import.meta.env.VITE_SERVER_URI}/tools/upload/image',
+				formData,
+			)
 			setEditData({ ...editData, avatar: res.data.url })
 		} catch (error) {
 			console.error(error)
@@ -106,7 +116,7 @@ const ChatInfo = ({ className, chatInfo }) => {
 			await new Promise((resolve) => setTimeout(resolve, 1000))
 		}
 		try {
-			await axios.post('/api/chats/edit', {
+			await axios.post(`${import.meta.env.VITE_SERVER_URI}/chats/edit`, {
 				chatId: chatInfo._id,
 				name: editData.name,
 				avatar: editData.avatar,

@@ -8,13 +8,6 @@ export default ({ mode }) => {
 		plugins: [react()],
 		server: {
 			port: process.env.VITE_CLIENT_PORT,
-			proxy: {
-				'/api': {
-					target: `${process.env.VITE_SERVER_URI}`,
-					changeOrigin: true,
-					rewrite: (path) => path.replace(/^\/api/, ''),
-				},
-			},
 		},
 	})
 }

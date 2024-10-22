@@ -36,9 +36,12 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 		let addUser = null
 
 		try {
-			const res = await axios.get('/api/users/find', {
-				params: { email },
-			})
+			const res = await axios.get(
+				`${import.meta.env.VITE_SERVER_URI}/users/find`,
+				{
+					params: { email },
+				},
+			)
 			addUser = res.data.user
 		} catch (error) {
 			return toast.error(
@@ -69,9 +72,12 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 
 	const createChat = async () => {
 		try {
-			await axios.post('/api/chats/create', {
-				members: members.map((member) => member._id),
-			})
+			await axios.post(
+				`${import.meta.env.VITE_SERVER_URI}/chats/create`,
+				{
+					members: members.map((member) => member._id),
+				},
+			)
 			toast.success('Chat created', 'New chat has been created', 3000)
 			updateChat(
 				'',
@@ -96,10 +102,13 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 
 	const addMembers = async () => {
 		try {
-			await axios.post('/api/chats/members/add', {
-				chatId: chatInfo._id,
-				members: members.map((member) => member._id),
-			})
+			await axios.post(
+				`${import.meta.env.VITE_SERVER_URI}/chats/members/add`,
+				{
+					chatId: chatInfo._id,
+					members: members.map((member) => member._id),
+				},
+			)
 			toast.success('Members added', 'Members have been added', 3000)
 			updateChat(
 				chatInfo._id,

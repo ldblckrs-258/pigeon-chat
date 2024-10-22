@@ -29,9 +29,12 @@ const Chat = () => {
 
 	const handleGetChat = async (id) => {
 		try {
-			const res = await fetch(`/api/chats/get/${id}`, {
-				method: 'GET',
-			})
+			const res = await fetch(
+				`${import.meta.env.VITE_SERVER_URI}/chats/get/${id}`,
+				{
+					method: 'GET',
+				},
+			)
 			const data = await res.json()
 			if (!data.data) {
 				setChatId('')
