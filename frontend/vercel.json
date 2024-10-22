@@ -1,9 +1,12 @@
 {
-	"routes": [{ "src": "/[^.]+", "dest": "/", "status": 200 }],
 	"rewrites": [
 		{
 			"source": "/api/:path*",
 			"destination": "https://pigeon-chat-6gau.onrender.com/:path*"
+		},
+		{
+			"source": "/:path*",
+			"destination": "/"
 		}
 	]
 }
