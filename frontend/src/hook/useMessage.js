@@ -16,14 +16,11 @@ export const useMessage = () => {
 	const sendAnyMessage = async (content, type, chatId) => {
 		if (!content || content === '') return
 		try {
-			await axios.post(
-				`${import.meta.env.VITE_SERVER_URI}/messages/send`,
-				{
-					chatId,
-					content,
-					type,
-				},
-			)
+			await axios.post('/api/messages/send', {
+				chatId,
+				content,
+				type,
+			})
 			return true
 		} catch (error) {
 			console.error(error)
@@ -72,15 +69,11 @@ export const useMessage = () => {
 		try {
 			const formData = new FormData()
 			formData.append('image', file)
-			const res = await axios.post(
-				`${import.meta.env.VITE_SERVER_URI}/tools/upload/image`,
-				formData,
-				{
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
+			const res = await axios.post('/api/tools/upload/image', formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
 				},
-			)
+			})
 			return res.data.url
 		} catch (error) {
 			console.error(error)

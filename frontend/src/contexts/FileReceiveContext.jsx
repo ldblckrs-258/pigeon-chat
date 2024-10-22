@@ -19,14 +19,11 @@ export const FileReceiveContextProvider = ({ children }) => {
 	}
 
 	const getSenderInfo = async (senderId) => {
-		const res = await axios.get(
-			`${import.meta.env.VITE_SERVER_URI}/users/get`,
-			{
-				params: {
-					id: senderId,
-				},
+		const res = await axios.get('/api/users/get', {
+			params: {
+				id: senderId,
 			},
-		)
+		})
 
 		setSender(res.data)
 	}

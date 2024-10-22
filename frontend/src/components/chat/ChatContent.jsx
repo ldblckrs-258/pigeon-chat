@@ -20,9 +20,7 @@ const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 
 	const handleDeleteMessage = async (messageId) => {
 		try {
-			await axios.delete(
-				`${import.meta.env.VITE_SERVER_URI}/messages/delete/${messageId}`,
-			)
+			await axios.delete(`/api/messages/delete/${messageId}`)
 			toast.success(
 				'Message deleted',
 				'Your message has been deleted',
@@ -41,7 +39,7 @@ const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 		setLoading(true)
 		try {
 			const res = await axios.get(
-				`${import.meta.env.VITE_SERVER_URI}/messages/get/${chatId}?limit=${limit}`,
+				`/api/messages/get/${chatId}?limit=${limit}`,
 			)
 			const data = res.data?.data
 			if (data.length === 0) return
@@ -59,7 +57,7 @@ const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 		setLoading(true)
 		try {
 			const res = await axios.get(
-				`${import.meta.env.VITE_SERVER_URI}/messages/get/${chatId}?limit=${limit}&skip=${skip.current}`,
+				`/api/messages/get/${chatId}?limit=${limit}&skip=${skip.current}`,
 			)
 			const data = res.data?.data
 			console.log(data)
@@ -78,7 +76,7 @@ const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 	const getNewMessages = async () => {
 		try {
 			const res = await axios.get(
-				`${import.meta.env.VITE_SERVER_URI}/messages/getNew/${chatId}?lastMessageId=${messages[0]._id}`,
+				`/api/messages/getNew/${chatId}?lastMessageId=${messages[0]._id}`,
 			)
 			const data = res.data?.data
 			if (data.length === 0) return

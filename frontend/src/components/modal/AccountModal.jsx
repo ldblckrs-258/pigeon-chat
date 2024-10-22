@@ -34,10 +34,7 @@ const AccountModal = ({ onClose }) => {
 		setEditData({ ...editData, avatar: URL.createObjectURL(file) })
 		setIsLoading(true)
 		try {
-			const res = await axios.post(
-				`${import.meta.env.VITE_SERVER_URI}/tools/upload/image`,
-				formData,
-			)
+			const res = await axios.post('/api/tools/upload/image', formData)
 			setEditData({ ...editData, avatar: res.data.url })
 		} catch (error) {
 			console.error(error)
@@ -67,10 +64,7 @@ const AccountModal = ({ onClose }) => {
 			)
 		}
 		try {
-			await axios.put(
-				`${import.meta.env.VITE_SERVER_URI}/auth/update/info`,
-				editData,
-			)
+			await axios.put('/api/auth/update/info', editData)
 			toast.success('Success', 'Update information successfully', 3000)
 			auth()
 			onClose()
@@ -112,13 +106,10 @@ const AccountModal = ({ onClose }) => {
 	const handleSavePwd = async () => {
 		if (!validatePwd()) return
 		try {
-			await axios.put(
-				`${import.meta.env.VITE_SERVER_URI}/auth/update/password`,
-				{
-					oldPassword: pwdData.currentPwd,
-					newPassword: pwdData.newPwd,
-				},
-			)
+			await axios.put('/api/auth/update/password', {
+				oldPassword: pwdData.currentPwd,
+				newPassword: pwdData.newPwd,
+			})
 			toast.success('Success', 'Update password successfully', 3000)
 			onClose()
 		} catch (error) {
