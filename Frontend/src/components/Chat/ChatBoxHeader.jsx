@@ -3,10 +3,10 @@ import { useAuth } from '../../hook/useAuth'
 import { useSocket } from '../../hook/useSocket'
 import { twMerge } from 'tailwind-merge'
 import { PiDotsThreeOutlineVerticalFill } from 'react-icons/pi'
-import { FiPhone, FiVideo } from 'react-icons/fi' // Import icons
+import { FiPhone, FiVideo } from 'react-icons/fi'
 import { isOnline } from '../../utils/validate'
-import VoiceCallModal from '../Modals/VoiceCallModal' // Import voice call modal
-import VideoCallModal from '../Modals/VideoCallModal' // Import video call modal
+import VoiceCallModal from '../modal/VoiceCallModal'
+import VideoCallModal from '../modal/VideoCallModal'
 
 const ChatBoxHeader = ({ chatInfo, onClickInfoButton, isInfoExpand }) => {
 	const { user } = useAuth()

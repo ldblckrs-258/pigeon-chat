@@ -12,7 +12,7 @@ import {
 import { useState, useRef, useEffect } from 'react'
 import { useToast } from '../../hook/useToast'
 import axios from 'axios'
-import MemberModal from '../Modals/MemberModal'
+import MemberModal from '../modal/MemberModal'
 import TextField from '../TextField'
 
 const ChatInfo = ({ className, chatInfo }) => {
