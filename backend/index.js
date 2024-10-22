@@ -13,9 +13,12 @@ global._onlineUsers = []
 global._io.on("connection", socketService.connection)
 
 server.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
+  console.log(`Local: http://localhost:${port}`)
+  const addresses = require("./utils/network.util").networkAddresses()
+  addresses.forEach((address) => {
+    console.log(`Network: http://${address}:${port}`)
+  })
 })
-
 mongoose
   .connect(process.env.ATLAS_URI)
   .then(() => {
@@ -24,5 +27,3 @@ mongoose
   .catch((err) => {
     console.error(err)
   })
-
-// webSocket.init(server)

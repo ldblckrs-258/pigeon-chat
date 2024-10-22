@@ -1,8 +1,8 @@
 import { twMerge } from 'tailwind-merge'
 import { motion, AnimatePresence } from 'framer-motion'
-import { isOnline } from '../utils/validate'
-import { useAuth } from '../hook/useAuth'
-import { useSocket } from '../hook/useSocket'
+import { isOnline } from '../../utils/validate'
+import { useAuth } from '../../hook/useAuth'
+import { useSocket } from '../../hook/useSocket'
 import {
 	PiCaretRightBold,
 	PiFloppyDiskBackFill,
@@ -10,10 +10,10 @@ import {
 	PiXBold,
 } from 'react-icons/pi'
 import { useState, useRef, useEffect } from 'react'
-import { useToast } from '../hook/useToast'
+import { useToast } from '../../hook/useToast'
 import axios from 'axios'
-import MemberModal from './MemberModal'
-import TextField from '../components/TextField'
+import MemberModal from '../Modals/MemberModal'
+import TextField from '../TextField'
 
 const ChatInfo = ({ className, chatInfo }) => {
 	const [expandUser, setExpandUser] = useState(false)
