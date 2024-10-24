@@ -5,28 +5,35 @@ import { twMerge } from 'tailwind-merge'
 import { PiDotsThreeOutlineVerticalFill } from 'react-icons/pi'
 import { FiPhone, FiVideo } from 'react-icons/fi'
 import { isOnline } from '../../utils/validate'
-import VoiceCallModal from '../modal/VoiceCallModal'
-import VideoCallModal from '../modal/VideoCallModal'
 
 const ChatBoxHeader = ({ chatInfo, onClickInfoButton, isInfoExpand }) => {
 	const { user } = useAuth()
 	const { onlineUsers } = useSocket()
 	const [userOnline, setUserOnline] = useState(false)
 
-	// State quản lý việc mở modal
-	const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false)
-	const [isVideoCallOpen, setIsVideoCallOpen] = useState(false)
-
 	useEffect(() => {
 		setUserOnline(isOnline(chatInfo.members, user.id, onlineUsers))
 	}, [onlineUsers, chatInfo._id])
 
-	// Hàm mở/đóng các modal
-	const handleOpenVoiceCall = () => setIsVoiceCallOpen(true)
-	const handleCloseVoiceCall = () => setIsVoiceCallOpen(false)
+	const handleOpenVoiceCall = () => {
+		const url = `/voice-call/${chatInfo._id}` // URL trang voice call
+		// Mở cửa sổ mới với các tham số tùy chỉnh
+		window.open(
+			url,
+			'_blank',
+			'noopener,noreferrer,width=800,height=600,top=100,left=100,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes',
+		)
+	}
 
-	const handleOpenVideoCall = () => setIsVideoCallOpen(true)
-	const handleCloseVideoCall = () => setIsVideoCallOpen(false)
+	const handleOpenVideoCall = () => {
+		const url = `/video-call/${chatInfo._id}` // URL trang voice call
+		// Mở cửa sổ mới với các tham số tùy chỉnh
+		window.open(
+			url,
+			'_blank',
+			'noopener,noreferrer,width=800,height=600,top=100,left=100,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes',
+		)
+	}
 
 	return (
 		<>
@@ -84,20 +91,6 @@ const ChatBoxHeader = ({ chatInfo, onClickInfoButton, isInfoExpand }) => {
 					</button>
 				</div>
 			</div>
-
-			{/* Render Voice Call Modal */}
-			<VoiceCallModal
-				isOpen={isVoiceCallOpen}
-				onClose={handleCloseVoiceCall}
-				chatInfo={chatInfo}
-			/>
-
-			{/* Render Video Call Modal */}
-			<VideoCallModal
-				isOpen={isVideoCallOpen}
-				onClose={handleCloseVideoCall}
-				chatInfo={chatInfo}
-			/>
 		</>
 	)
 }
