@@ -6,6 +6,8 @@ import Chat from './pages/Chat'
 import { useAuth } from './hook/useAuth'
 import { useEffect } from 'react'
 import { useSocket } from './hook/useSocket'
+import VoiceCallPage from './pages/VoiceCall'
+import VideoCallPage from './pages/VideoCall'
 function App() {
 	const { auth, user } = useAuth()
 	const { onlineUsers, socket } = useSocket()
@@ -19,6 +21,14 @@ function App() {
 				<Routes>
 					<Route path="/:id" element={<Chat />} />
 					<Route path="/*" element={<Chat />} />
+					<Route
+						path="/voice-call/:chatId"
+						element={<VoiceCallPage />}
+					/>
+					<Route
+						path="/video-call/:chatId"
+						element={<VideoCallPage />}
+					/>
 				</Routes>
 			) : (
 				<Routes>
