@@ -4,19 +4,24 @@ import SpinLoader from '../SpinLoader'
 import { useToast } from '../../hook/useToast'
 import axios from 'axios'
 import { useSocket } from '../../hook/useSocket'
+import { useChat } from '../../hook/useChat'
 import { useLightbox } from '../../hook/useLightbox'
 import { PiTrashBold } from 'react-icons/pi'
 import { AnimatePresence, motion } from 'framer-motion'
 import DefaultImg from '../../assets/default.png'
 
-const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
-	const [messages, setMessages] = useState([])
-	const skip = useRef(0)
-	const haveMore = useRef(true)
-	const limit = 100
-	const [loading, setLoading] = useState(false)
+const ChatContent = ({ className }) => {
 	const toast = useToast()
-	const { lastUpdate } = useSocket()
+	const { socket } = useSocket()
+	const {
+		messages,
+		setMessages,
+		loading,
+		setLoading,
+		chatId,
+		isGroup,
+		onDeleted,
+	} = useChat()
 
 	const handleDeleteMessage = async (messageId) => {
 		try {
@@ -35,80 +40,27 @@ const ChatContent = ({ className, chatId, onDeleted, isGroup }) => {
 
 	const container = useRef(null)
 
-	const getMessages = async () => {
-		setLoading(true)
-		try {
-			const res = await axios.get(
-				`/api/messages/get/${chatId}?limit=${limit}`,
-			)
-			const data = res.data?.data
-			if (data.length === 0) return
-			setMessages(data)
-		} catch (error) {
-			console.log(error)
-		} finally {
-			setLoading(false)
-		}
-	}
-
-	const loadMoreMessages = async () => {
-		if (!haveMore.current) return
-		skip.current += limit
-		setLoading(true)
-		try {
-			const res = await axios.get(
-				`/api/messages/get/${chatId}?limit=${limit}&skip=${skip.current}`,
-			)
-			const data = res.data?.data
-			console.log(data)
-			if (data.length === 0) {
-				haveMore.current = false
-				return
-			}
-			setMessages((prev) => [...prev, ...data])
-		} catch (error) {
-			console.log(error)
-		} finally {
-			setLoading(false)
-		}
-	}
-
-	const getNewMessages = async () => {
-		try {
-			const res = await axios.get(
-				`/api/messages/getNew/${chatId}?lastMessageId=${messages[0]._id}`,
-			)
-			const data = res.data?.data
-			if (data.length === 0) return
-			setMessages((prev) => [...data, ...prev])
-		} catch (error) {
-			console.log(error)
-		}
-	}
-
-	const handleScroll = (e) => {
-		if (e.target.scrollTop === 0) loadMoreMessages()
-	}
-
-	useEffect(() => {
-		skip.current = 0
-		haveMore.current = true
-		getMessages()
-	}, [chatId])
-
-	useEffect(() => {
-		if (lastUpdate) {
-			if (messages.length === 0) getMessages()
-			getNewMessages()
-		}
-	}, [lastUpdate])
-
-	useEffect(() => {
-		container.current?.addEventListener('scroll', handleScroll)
-		return () => {
-			container.current?.removeEventListener('scroll', handleScroll)
-		}
-	}, [container.current])
+	// const loadMoreMessages = async () => {
+	// 	if (!haveMore.current) return
+	// 	skip.current += limit
+	// 	setLoading(true)
+	// 	try {
+	// 		const res = await axios.get(
+	// 			`/api/messages/get/${chatId}?limit=${limit}&skip=${skip.current}`,
+	// 		)
+	// 		const data = res.data?.data
+	// 		console.log(data)
+	// 		if (data.length === 0) {
+	// 			haveMore.current = false
+	// 			return
+	// 		}
+	// 		setMessages((prev) => [...prev, ...data])
+	// 	} catch (error) {
+	// 		console.log(error)
+	// 	} finally {
+	// 		setLoading(false)
+	// 	}
+	// }
 
 	return (
 		<div className={twMerge('relative gap-1', className)} ref={container}>

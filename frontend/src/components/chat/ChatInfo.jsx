@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { isOnline } from '../../utils/validate'
 import { useAuth } from '../../hook/useAuth'
 import { useSocket } from '../../hook/useSocket'
+import { useChat } from '../../hook/useChat'
 import {
 	PiCaretRightBold,
 	PiFloppyDiskBackFill,
@@ -15,21 +16,18 @@ import axios from 'axios'
 import MemberModal from '../modal/MemberModal'
 import TextField from '../TextField'
 
-const ChatInfo = ({ className, chatInfo }) => {
+const ChatInfo = ({ className }) => {
+	const { currentChat: chatInfo, clearCurrent } = useChat()
 	const [expandUser, setExpandUser] = useState(false)
 	const [showAddModal, setShowAddModal] = useState(false)
 	const toast = useToast()
 	const { user } = useAuth()
-	const { onlineUsers, updateChat } = useSocket()
+	const { onlineUsers } = useSocket()
 
 	const handleLeaveChat = async () => {
 		try {
 			await axios.post(`/api/chats/leave/${chatInfo._id}`)
-			updateChat(
-				chatInfo._id,
-				chatInfo.members.map((member) => member._id),
-			)
-
+			clearCurrent()
 			toast.success('Success', 'Leave chat successfully', 3000)
 		} catch (error) {
 			console.error(error)
@@ -40,12 +38,7 @@ const ChatInfo = ({ className, chatInfo }) => {
 	const handleDeleteChat = async () => {
 		try {
 			await axios.delete(`/api/chats/delete/${chatInfo._id}`)
-
-			updateChat(
-				chatInfo._id,
-				chatInfo.members.map((member) => member._id),
-			)
-
+			clearCurrent()
 			toast.success('Success', 'Delete chat successfully', 3000)
 		} catch (error) {
 			console.error(error)
@@ -59,10 +52,7 @@ const ChatInfo = ({ className, chatInfo }) => {
 				chatId: chatInfo._id,
 				memberId: memberId,
 			})
-			updateChat(
-				chatInfo._id,
-				chatInfo.members.map((member) => member._id),
-			)
+
 			toast.success('Success', 'Remove member successfully', 3000)
 		} catch (error) {
 			console.error(error)
@@ -101,7 +91,6 @@ const ChatInfo = ({ className, chatInfo }) => {
 	}
 
 	const handleEditChat = async () => {
-		// wait until the image is uploaded
 		while (isLoading) {
 			await new Promise((resolve) => setTimeout(resolve, 1000))
 		}
@@ -112,10 +101,7 @@ const ChatInfo = ({ className, chatInfo }) => {
 				avatar: editData.avatar,
 			})
 			toast.success('Success', 'Edit chat successfully', 3000)
-			updateChat(
-				chatInfo._id,
-				chatInfo.members.map((member) => member._id),
-			)
+
 			setEditChat(false)
 		} catch (error) {
 			console.error(error)

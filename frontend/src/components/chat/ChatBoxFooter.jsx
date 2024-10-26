@@ -9,17 +9,18 @@ import {
 import { FaThumbsUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import EmojiPicker from 'emoji-picker-react'
-import { useMessage } from '../../hook/useMessage'
+// import { useMessage } from '../../hook/useMessage'
 import { useAuth } from '../../hook/useAuth'
 import FileSender from '../modal/FileSender'
 import DefaultImg from '../../assets/default.png'
+import { useChat } from '../../hook/useChat'
 
 const ChatBoxFooter = ({ chatInfo }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)
 	const [message, setMessage] = useState('')
 	const inputRef = useRef(null)
 	const inputImgRef = useRef(null)
-	const { sendAMessage, sendThumbUp, uploadImage } = useMessage()
+	const { sendAMessage, sendThumbUp, uploadImage } = useChat()
 	const [image, setImage] = useState(null)
 	const { user } = useAuth()
 	const [openFileTransfer, setOpenFileTransfer] = useState(false)
@@ -39,17 +40,17 @@ const ChatBoxFooter = ({ chatInfo }) => {
 
 	const handleSendMessage = () => {
 		if (image) {
-			sendAMessage(image, chatInfo._id, chatInfo.members)
+			sendAMessage(image)
 			setImage(null)
 		} else {
-			sendAMessage(message, chatInfo._id, chatInfo.members)
+			sendAMessage(message)
 			setMessage('')
 			inputRef.current.focus()
 		}
 	}
 
 	const handleThumbUp = () => {
-		sendThumbUp(chatInfo._id, chatInfo.members)
+		sendThumbUp()
 	}
 
 	const handleUploadImage = (e) => {
@@ -64,7 +65,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 
 	return (
 		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white px-6 py-4">
-			{/* Nút để upload hình ảnh */}
 			<button
 				className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
 				onClick={() => inputImgRef.current.click()}
@@ -79,7 +79,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				/>
 			</button>
 
-			{/* Nút mở Emoji Picker */}
 			<div className="relative">
 				<button
 					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"

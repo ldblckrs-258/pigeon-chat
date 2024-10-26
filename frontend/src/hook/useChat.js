@@ -1,9 +1,28 @@
+import { useContext } from 'react'
 import axios from 'axios'
-import { useSocket } from './useSocket'
 import { useToast } from './useToast'
-
-export const useMessage = () => {
-	const { sendMsg } = useSocket()
+import { ChatContext } from '../contexts/ChatContext'
+export const useChat = () => {
+	const {
+		loading,
+		setLoading,
+		currentChatId,
+		setCurrentChatId,
+		currentChat,
+		setCurrentChat,
+		chats,
+		setChats,
+		searchValue,
+		setSearchValue,
+		unread,
+		setUnread,
+		messages,
+		setMessages,
+		getMessages,
+		getChats,
+		openChat,
+		clearCurrent,
+	} = useContext(ChatContext)
 	const toast = useToast()
 
 	const isEmoji = (str) => {
@@ -13,15 +32,16 @@ export const useMessage = () => {
 		return regex.test(str) && str.length === 2 && !isNumber
 	}
 
-	const sendAnyMessage = async (content, type, chatId) => {
+	const sendAnyMessage = async (content, type) => {
 		if (!content || content === '') return
 		try {
-			await axios.post('/api/messages/send', {
-				chatId,
+			const res = await axios.post('/api/messages/send', {
+				chatId: currentChatId,
 				content,
 				type,
 			})
-			return true
+			setMessages((prev) => [res.data.message, ...prev])
+			getChats()
 		} catch (error) {
 			console.error(error)
 			toast.error(
@@ -32,40 +52,28 @@ export const useMessage = () => {
 		}
 	}
 
-	const sendAMessage = async (message, chatId, chatMembers) => {
-		const memberIds = chatMembers.map((member) => member._id)
+	const sendAMessage = async (message) => {
 		if (!message || message === '') return
-		let isSend = false
 		if (isEmoji(message)) {
-			isSend = await sendAnyMessage(message, 'emoji', chatId, memberIds)
+			await sendAnyMessage(message, 'emoji')
 		} else if (
 			message.startsWith('http') &&
 			(message.endsWith('.png') ||
 				message.endsWith('.jpg') ||
 				message.endsWith('.jpeg'))
 		) {
-			isSend = await sendAnyMessage(message, 'image', chatId, memberIds)
+			await sendAnyMessage(message, 'image')
 		} else {
-			isSend = await sendAnyMessage(message, 'text', chatId, memberIds)
-		}
-		if (isSend) {
-			sendMsg(chatId, memberIds)
+			await sendAnyMessage(message, 'text')
 		}
 	}
 
-	const sendThumbUp = async (chatId, chatMembers) => {
-		const isSend = await sendAnyMessage('👍', 'emoji', chatId)
-		if (isSend) {
-			sendMsg(
-				chatId,
-				chatMembers.map((member) => member._id),
-			)
-		}
+	const sendThumbUp = async () => {
+		await sendAnyMessage('👍', 'emoji')
 	}
 
 	const uploadImage = async (file) => {
 		toast.info('Uploading image', 'Please wait a moment', 5000)
-		console.log(file)
 		try {
 			const formData = new FormData()
 			formData.append('image', file)
@@ -86,8 +94,26 @@ export const useMessage = () => {
 	}
 
 	return {
+		loading,
+		setLoading,
+		currentChatId,
+		setCurrentChatId,
+		currentChat,
+		setCurrentChat,
+		chats,
+		setChats,
+		searchValue,
+		setSearchValue,
+		unread,
+		setUnread,
+		messages,
+		setMessages,
+		getMessages,
+		getChats,
+		openChat,
 		sendAMessage,
 		sendThumbUp,
 		uploadImage,
+		clearCurrent,
 	}
 }
