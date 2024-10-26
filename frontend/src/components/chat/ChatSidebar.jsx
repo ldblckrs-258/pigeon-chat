@@ -14,55 +14,26 @@ import {
 } from 'react-icons/pi'
 import { twMerge } from 'tailwind-merge'
 import { useSocket } from '../../hook/useSocket'
-import axios from 'axios'
+import { useChat } from '../../hook/useChat'
 import MemberModal from '../modal/MemberModal'
-const ChatSidebar = ({
-	className = '',
-	chatId,
-	onChatClick,
-	isExpanded,
-	setIsExpanded,
-}) => {
+const ChatSidebar = ({ className = '', isExpanded, setIsExpanded }) => {
 	const { user, logout } = useAuth()
+	const { onlineUsers } = useSocket()
+	const {
+		chats,
+		currentChatId,
+		setCurrentChatId,
+		unread,
+		getChats,
+		searchValue,
+		setSearchValue,
+		openChat,
+	} = useChat()
 	const [showEmail, setShowEmail] = useState(false)
 	const [isHoverAvatar, setIsHoverAvatar] = useState(false)
 	const hiddenEmail = user.email.replace(/(?<=.{3}).(?=[^@]*?.@)/g, '*')
-	const [unread, setUnread] = useState(0)
-	const [searchValue, setSearchValue] = useState('')
 	const [showAddModal, setShowAddModal] = useState(false)
 	const [showAccountModal, setShowAccountModal] = useState(false)
-
-	const [chats, setChats] = useState([])
-	const { onlineUsers, lastUpdate } = useSocket()
-	const handleGetChats = async () => {
-		try {
-			const res = await axios.get('/api/chats/all', {
-				params: { ...(searchValue && { search: searchValue }) },
-			})
-			const data = res.data
-			setChats(data)
-			setUnread(data.filter((chat) => !chat.read).length)
-		} catch (error) {
-			console.error(error)
-		}
-	}
-
-	const handleClickChat = (id) => {
-		setChats((prev) =>
-			prev.map((chat) => {
-				if (chat._id === id) {
-					chat.read = true
-				}
-				return chat
-			}),
-		)
-		setUnread((prev) => prev - 1)
-		onChatClick(id)
-	}
-
-	useEffect(() => {
-		handleGetChats()
-	}, [lastUpdate, searchValue])
 
 	return (
 		<div
@@ -81,7 +52,7 @@ const ChatSidebar = ({
 						setShowAddModal(false)
 					}}
 					onSubmit={() => {
-						handleGetChats()
+						getChats()
 						setShowAddModal(false)
 					}}
 				/>
@@ -138,9 +109,9 @@ const ChatSidebar = ({
 						className={twMerge(
 							'relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg transition-colors hover:bg-gray-100',
 							isExpanded ? 'px-4 py-3' : 'p-2',
-							chatId === chat._id ? 'bg-gray-100' : '',
+							currentChatId === chat._id ? 'bg-gray-100' : '',
 						)}
-						onClick={() => handleClickChat(chat._id)}
+						onClick={() => openChat(chat._id)}
 					>
 						<div
 							className={`relative ${isExpanded ? 'size-10' : 'size-11'}`}

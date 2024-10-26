@@ -1,59 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import ChatSidebar from '../components/chat/ChatSidebar'
 import ChatBox from '../components/chat/ChatBox'
 import ChatInfo from '../components/chat/ChatInfo'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useSocket } from '../hook/useSocket'
+import { useChat } from '../hook/useChat'
 const Chat = () => {
-	const { id } = useParams()
+	const { currentChat } = useChat()
 	const [isInfoExpand, setIsInfoExpand] = useState(false)
-	const [chatId, setChatId] = useState('')
-	const [chatInfo, setChatInfo] = useState(undefined)
-	const { lastUpdate } = useSocket()
 	const [chatListExpanded, setChatListExpanded] = useState(true)
-	useEffect(() => {
-		if (id) {
-			setChatId(id)
-		} else {
-			setChatId('')
-		}
-	}, [id])
-
-	const navigate = useNavigate()
-	useEffect(() => {
-		if (chatId !== '') {
-			navigate(`/${chatId}`)
-		}
-	}, [chatId])
-
-	const handleGetChat = async (id) => {
-		try {
-			const res = await fetch(`/api/chats/get/${id}`, {
-				method: 'GET',
-			})
-			const data = await res.json()
-			if (!data.data) {
-				setChatId('')
-			}
-			setChatInfo(data.data)
-		} catch (error) {
-			setChatId('')
-			navigate('/')
-		}
-	}
-
-	useEffect(() => {
-		if (chatId && chatId !== '') {
-			handleGetChat(chatId)
-		}
-	}, [chatId])
-
-	useEffect(() => {
-		if (lastUpdate && lastUpdate.chatId === chatId) {
-			handleGetChat(chatId)
-		}
-	}, [lastUpdate])
 
 	return (
 		<div
@@ -61,26 +15,20 @@ const Chat = () => {
 		>
 			<ChatSidebar
 				className="h-full overflow-hidden rounded-lg transition-all"
-				chatId={chatId}
-				onChatClick={(id) => setChatId(id)}
 				isExpanded={chatListExpanded}
 				setIsExpanded={setChatListExpanded}
 			/>
-			{chatInfo && (
+			{currentChat && (
 				<ChatBox
 					className={`${chatListExpanded ? 'hidden sm:flex' : ''}`}
 					isInfoExpand={isInfoExpand}
 					onClickInfoButton={() => setIsInfoExpand(!isInfoExpand)}
-					chatInfo={chatInfo}
 				/>
 			)}
-			{chatInfo && (
+			{currentChat && (
 				<AnimatePresence>
 					{isInfoExpand && (
-						<ChatInfo
-							className="h-full overflow-hidden rounded-lg bg-white"
-							chatInfo={chatInfo}
-						/>
+						<ChatInfo className="h-full overflow-hidden rounded-lg bg-white" />
 					)}
 				</AnimatePresence>
 			)}

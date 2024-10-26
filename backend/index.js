@@ -1,6 +1,6 @@
 const http = require("http")
 const mongoose = require("mongoose")
-const socketService = require("./services/socket.service")
+const socketService = require("./services/socket.services")
 const socketio = require("socket.io")
 
 require("dotenv").config()

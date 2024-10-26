@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
 	PiImageFill,
 	PiPaperPlaneTiltFill,
@@ -9,28 +9,20 @@ import {
 import { FaThumbsUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import EmojiPicker from 'emoji-picker-react'
-import { useMessage } from '../../hook/useMessage'
-import { useAuth } from '../../hook/useAuth'
 import FileSender from '../modal/FileSender'
 import DefaultImg from '../../assets/default.png'
+import { useChat } from '../../hook/useChat'
+import { useAuth } from '../../hook/useAuth'
 
-const ChatBoxFooter = ({ chatInfo }) => {
+const ChatBoxFooter = () => {
 	const [openEmoji, setOpenEmoji] = useState(false)
 	const [message, setMessage] = useState('')
 	const inputRef = useRef(null)
 	const inputImgRef = useRef(null)
-	const { sendAMessage, sendThumbUp, uploadImage } = useMessage()
-	const [image, setImage] = useState(null)
 	const { user } = useAuth()
+	const { currentChat, sendAMessage, sendThumbUp, uploadImage } = useChat()
+	const [image, setImage] = useState(null)
 	const [openFileTransfer, setOpenFileTransfer] = useState(false)
-
-	const targetId = () => {
-		if (chatInfo.members[0]._id === user.id) {
-			return chatInfo.members[1]?._id || ''
-		} else {
-			return chatInfo.members[0]._id
-		}
-	}
 
 	const handleEmojiClick = (event) => {
 		setMessage((prev) => prev + event.emoji)
@@ -39,17 +31,17 @@ const ChatBoxFooter = ({ chatInfo }) => {
 
 	const handleSendMessage = () => {
 		if (image) {
-			sendAMessage(image, chatInfo._id, chatInfo.members)
+			sendAMessage(image)
 			setImage(null)
 		} else {
-			sendAMessage(message, chatInfo._id, chatInfo.members)
+			sendAMessage(message)
 			setMessage('')
 			inputRef.current.focus()
 		}
 	}
 
 	const handleThumbUp = () => {
-		sendThumbUp(chatInfo._id, chatInfo.members)
+		sendThumbUp()
 	}
 
 	const handleUploadImage = (e) => {
@@ -64,7 +56,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 
 	return (
 		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white px-6 py-4">
-			{/* Nút để upload hình ảnh */}
 			<button
 				className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
 				onClick={() => inputImgRef.current.click()}
@@ -79,7 +70,6 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				/>
 			</button>
 
-			{/* Nút mở Emoji Picker */}
 			<div className="relative">
 				<button
 					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
@@ -110,30 +100,36 @@ const ChatBoxFooter = ({ chatInfo }) => {
 				</AnimatePresence>
 			</div>
 
-			<div>
-				<button
-					className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-					onClick={() => setOpenFileTransfer(true)}
-				>
-					<PiArrowsLeftRightBold />
-				</button>
-
-				{openFileTransfer && (
-					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-						onClick={(e) => {
-							if (e.target === e.currentTarget) {
-								setOpenFileTransfer(false)
-							}
-						}}
+			{currentChat?.isGroup ? null : (
+				<div>
+					<button
+						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+						onClick={() => setOpenFileTransfer(true)}
 					>
-						<FileSender
-							id={targetId()}
-							onClose={() => setOpenFileTransfer(false)}
-						/>
-					</div>
-				)}
-			</div>
+						<PiArrowsLeftRightBold />
+					</button>
+
+					{openFileTransfer && (
+						<div
+							className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+							onClick={(e) => {
+								if (e.target === e.currentTarget) {
+									setOpenFileTransfer(false)
+								}
+							}}
+						>
+							<FileSender
+								targetId={
+									currentChat?.members.find(
+										(m) => m._id !== user.id,
+									)?._id
+								}
+								onClose={() => setOpenFileTransfer(false)}
+							/>
+						</div>
+					)}
+				</div>
+			)}
 
 			<div className="relative mx-2 flex-1">
 				<input

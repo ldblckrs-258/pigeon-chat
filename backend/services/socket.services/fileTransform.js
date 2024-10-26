@@ -1,51 +1,5 @@
-const { getTime } = require("../utils/time.util")
-class SocketServices {
-  config = {
-    cors: {
-      origin: "*",
-    },
-  }
-  connection(socket) {
-    socket.on("online", (userId) => {
-      if (userId && !_onlineUsers.some((u) => u.userId === userId)) {
-        _onlineUsers.push({
-          userId,
-          socketId: socket.id,
-        })
-      }
-      _io.emit(
-        "getOnlineUsers",
-        _onlineUsers.map((u) => u.userId)
-      )
-    })
-    socket.on("disconnect", () => {
-      _onlineUsers = _onlineUsers.filter((u) => u.socketId !== socket.id)
-      _io.emit(
-        "getOnlineUsers",
-        _onlineUsers.map((u) => u.userId)
-      )
-    })
-    socket.on("sendMsg", (chatId, memberIds) => {
-      const time = getTime()
-      memberIds.forEach((id) => {
-        const user = _onlineUsers.find((u) => u.userId === id)
-        const type = "message"
-        if (user) {
-          _io.to(user.socketId).emit("updated", type, time, chatId)
-        }
-      })
-    })
-    socket.on("updateChat", (chatId, memberIds) => {
-      const time = getTime()
-      memberIds.forEach((id) => {
-        const user = _onlineUsers.find((u) => u.userId === id)
-        const type = "chat"
-        if (user) {
-          _io.to(user.socketId).emit("updated", type, time, chatId)
-        }
-      })
-    })
-
+class FileTransform {
+  handler(socket) {
     socket.on("sendFileRequest", (metadata, receiverId) => {
       const senderId = _onlineUsers.find(
         (u) => u.socketId === socket.id
@@ -97,11 +51,7 @@ class SocketServices {
         socket.emit("fileTransferError", "The target is not online")
       }
     })
-
-    socket.on("error", (err) => {
-      console.error(err)
-    })
   }
 }
 
-module.exports = new SocketServices()
+module.exports = new FileTransform()
