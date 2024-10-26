@@ -19,7 +19,6 @@ function App() {
 		<>
 			{user ? (
 				<Routes>
-					<Route path="/:id" element={<Chat />} />
 					<Route path="/*" element={<Chat />} />
 					<Route
 						path="/voice-call/:chatId"

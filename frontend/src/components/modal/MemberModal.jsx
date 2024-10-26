@@ -4,7 +4,6 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../../hook/useToast'
 import { useAuth } from '../../hook/useAuth'
-import { useSocket } from '../../hook/useSocket'
 
 // type: create | add
 const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
@@ -12,7 +11,6 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 	const [members, setMembers] = useState([])
 	const toast = useToast()
 	const { user } = useAuth()
-	const { updateChat } = useSocket()
 	const createMode = type === 'create'
 
 	const handleAddMember = async () => {
@@ -73,10 +71,6 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 				members: members.map((member) => member._id),
 			})
 			toast.success('Chat created', 'New chat has been created', 3000)
-			updateChat(
-				'',
-				members.map((member) => member._id),
-			)
 		} catch (error) {
 			if (error.response) {
 				toast.error(
@@ -101,10 +95,6 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 				members: members.map((member) => member._id),
 			})
 			toast.success('Members added', 'Members have been added', 3000)
-			updateChat(
-				chatInfo._id,
-				members.concat(chatInfo.members).map((member) => member._id),
-			)
 		} catch (error) {
 			if (error.response) {
 				toast.error(
