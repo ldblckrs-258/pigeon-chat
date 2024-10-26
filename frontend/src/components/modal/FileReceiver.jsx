@@ -2,6 +2,7 @@ import { useSocket } from '../../hook/useSocket'
 import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
+import { iceServers } from '../../configs/iceServers'
 
 export default function FileReceiver({ sender, metadata, onClose }) {
 	const [dataChannel, setDataChannel] = useState(null)
@@ -11,7 +12,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 		total: metadata.size,
 	})
 	const { socket } = useSocket()
-	const { toast } = useToast()
+	const toast = useToast()
 	const [isAccepted, setIsAccepted] = useState(false)
 
 	const acceptFileTransfer = () => {
@@ -42,24 +43,9 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 				let answer = await localPeer.current.createAnswer()
 				await localPeer.current.setLocalDescription(answer)
 			}
-
-			localPeer.current.ondatachannel = (event) => {
-				const receiveChannel = event.channel
-				receiveChannel.binaryType = 'arraybuffer'
-				receiveChannel.onmessage = handleReceiveFile
-				receiveChannel.onopen = () => {
-					console.log('Receiver data channel connected')
-				}
-				setDataChannel(receiveChannel)
-			}
-
-			localPeer.current.onicecandidate = (event) => {
-				if (event.candidate) {
-					socket.emit('ice-candidate', event.candidate, sender._id)
-				}
-			}
 		} catch (error) {
 			console.error('Error setting remote description', error)
+			toast.error('File transfer error', "Can't set remote description")
 		}
 	}
 
@@ -71,7 +57,6 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			...prev,
 			current: prev.current + receivedData.byteLength,
 		}))
-		console.log('progress', progress.current + receivedData.byteLength)
 		if (typeof receivedData === 'string' && receivedData === 'END') {
 			setProgress((prev) => ({ ...prev, current: prev.total }))
 			const receivedBlob = new Blob(receiveBuffer)
@@ -91,15 +76,59 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 
 	const initPeer = async () => {
 		localPeer.current = new RTCPeerConnection({
-			iceServers: [
-				{ urls: 'stun:freestun.net:3479' },
-				{
-					urls: 'turn:freestun.net:3479',
-					username: 'free',
-					credential: 'free',
-				},
-			],
+			iceServers: iceServers,
 		})
+
+		localPeer.current.onicecandidate = (event) => {
+			if (event.candidate) {
+				socket.emit('ice-candidate', event.candidate, sender._id)
+			}
+		}
+
+		localPeer.current.oniceconnectionstatechange = () => {
+			console.log(
+				'ICE connection state: ',
+				localPeer.current.iceConnectionState,
+			)
+			if (localPeer.current.iceConnectionState === 'failed') {
+				toast.error('File transfer error', 'ICE connection failed')
+			}
+		}
+
+		localPeer.current.onsignalingstatechange = () => {
+			console.log('Signaling state: ', localPeer.current.signalingState)
+			if (localPeer.current.signalingState === 'closed') {
+				toast.info('File transfer info', 'Signaling state closed')
+			}
+		}
+
+		localPeer.current.ondatachannel = (event) => {
+			const receiveChannel = event.channel
+			receiveChannel.binaryType = 'arraybuffer'
+			receiveChannel.onmessage = handleReceiveFile
+			receiveChannel.onopen = () => {
+				console.log('Receiver data channel connected')
+			}
+			receiveChannel.onclose = () => {
+				console.log('Receiver data channel closed')
+			}
+			receiveChannel.onerror = (error) => {
+				console.error('Receiver data channel error: ', error)
+				toast.error(
+					'File transfer error',
+					'An error occurred while receiving file',
+				)
+			}
+			setDataChannel(receiveChannel)
+		}
+
+		localPeer.current.onerror = (error) => {
+			console.error('Peer connection error: ', error)
+			toast.error(
+				'File transfer error',
+				'An error occurred while receiving file',
+			)
+		}
 	}
 
 	const clearAll = () => {
@@ -120,7 +149,12 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 		}
 
 		socket.on('fileTransferError', (error) => {
-			toast.error(error)
+			toast.error(
+				"Can't receive file",
+				typeof error === 'string'
+					? error
+					: 'An error occurred while setting up connection',
+			)
 		})
 
 		socket.on('senderDesc', async (desc) => {
@@ -133,6 +167,10 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 				await localPeer.current.addIceCandidate(iceCandidate)
 			} catch (error) {
 				console.error('Error adding received ICE candidate', error)
+				toast.error(
+					'File transfer error',
+					'An error occurred while exchanging ICE candidate',
+				)
 			}
 		})
 
