@@ -1,25 +1,76 @@
-const VoiceCallModal = ({ isOpen, onClose, chatInfo }) => {
-	if (!isOpen) return null
+import { useState } from 'react'
+import { FiPhone, FiMic, FiUserPlus, FiX } from 'react-icons/fi'
+
+const VoiceCallModal = ({ chatInfo }) => {
+	// Trạng thái quản lý microphone
+	const [isMuted, setIsMuted] = useState(false)
+
+	// Trạng thái hiển thị thông báo microphone
+	const [showMicNotification, setShowMicNotification] = useState(true)
+
+	// Hàm bật/tắt âm thanh
+	const toggleMute = () => {
+		setIsMuted(!isMuted)
+	}
+
+	// Hàm tắt thông báo microphone
+	const closeMicNotification = () => {
+		setShowMicNotification(false)
+	}
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-			<div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-				<h2 className="mb-4 text-lg font-semibold">
-					Voice Call with {chatInfo.name}
-				</h2>
-				<div className="flex items-center justify-center">
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
+			<div className="relative h-full w-full bg-gray-900">
+				{/* Thông báo kết nối microphone */}
+				{showMicNotification && (
+					<div className="absolute right-4 top-4 flex items-center rounded-md bg-gray-800 px-4 py-2 text-white">
+						<FiMic className="mr-2" />
+						<span>
+							Connected microphone and speaker: Microphone Array
+						</span>
+						<button
+							onClick={closeMicNotification}
+							className="ml-4 text-white hover:text-gray-400"
+							aria-label="Close notification"
+						>
+							<FiX className="h-4 w-4" />
+						</button>
+					</div>
+				)}
+
+				{/* Avatar và tên người dùng */}
+				<div className="flex h-full flex-col items-center justify-center">
 					<img
-						className="h-24 w-24 rounded-full border object-cover"
 						src={chatInfo.avatar}
-						alt="targetUser-avatar"
+						alt="avatar"
+						className="h-32 w-32 rounded-full object-cover"
 					/>
+					<h2 className="mt-6 text-2xl font-semibold text-white">
+						{chatInfo.name}
+					</h2>
+					<p className="text-lg text-gray-400">Calling...</p>
 				</div>
-				<div className="mt-6 flex justify-between">
+
+				{/* Các nút điều khiển */}
+				<div className="absolute bottom-10 flex w-full justify-center space-x-8">
+					{/* Nút bật/tắt micro */}
 					<button
-						onClick={onClose}
-						className="rounded-lg bg-red-500 px-4 py-2 text-white"
+						onClick={toggleMute}
+						className={`flex h-16 w-16 items-center justify-center rounded-full ${
+							isMuted ? 'bg-red-600' : 'bg-gray-700'
+						} text-white`}
 					>
-						End Call
+						<FiMic className="h-8 w-8" />
+					</button>
+
+					{/* Nút thêm người */}
+					<button className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-700 text-white">
+						<FiUserPlus className="h-8 w-8" />
+					</button>
+
+					{/* Nút kết thúc cuộc gọi */}
+					<button className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-white">
+						<FiPhone className="h-8 w-8" />
 					</button>
 				</div>
 			</div>

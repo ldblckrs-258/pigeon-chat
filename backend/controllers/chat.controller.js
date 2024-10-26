@@ -3,6 +3,7 @@ const messageModel = require("../models/message.model")
 const userModel = require("../models/user.model")
 const ObjectId = require("mongoose").Types.ObjectId
 const messageController = require("./message.controller")
+const messageSocket = require("../services/socket.services/message")
 
 const createChat = async (req, res) => {
   const userId = req.user._id
@@ -33,6 +34,8 @@ const createChat = async (req, res) => {
     })
 
     await newChat.save()
+
+    messageSocket.joinChat(members.map((member) => member.toString()))
 
     res.status(201).send({
       message: "Chat created successfully",
@@ -200,10 +203,14 @@ const addMembers = async (req, res) => {
       .select("name")
 
     messageController.createSystemMessage(
-      chatId,
+      chat,
       `${user.name} added ${addedMembers
         .map((member) => member.name)
         .join(", ")} to chat`
+    )
+    messageSocket.updateChat(
+      chatId,
+      chat.members.map((member) => member.toString())
     )
 
     res.status(200).send({ message: "Members added successfully" })
@@ -232,29 +239,30 @@ const removeMember = async (chatId, targetId, userId) => {
   }
 
   let members = chat.members
+  messageSocket.updateChat(
+    chatId,
+    members.map((member) => member.toString())
+  )
   members = members.filter(
     (member) => member.toString() !== targetId.toString()
   )
   chat.members = members
-  await chat.save()
+  messageSocket.outChat(chatId, [targetId])
 
-  return true
+  return await chat.save()
 }
 
 const leaveChat = async (req, res) => {
-  const userId = req.user._id
   const chatId = req.params.id
 
   try {
-    const result = await removeMember(chatId, userId)
+    const chat = await removeMember(chatId, req.user?._id)
 
-    if (!result) {
+    if (!chat) {
       return res.status(404).send({ message: "Chat not found" })
     }
 
-    const user = await userModel.findById(userId).select("name")
-
-    messageController.createSystemMessage(chatId, `${user.name} left chat`)
+    messageController.createSystemMessage(chat, `${req.user?.name} left chat`)
 
     res.status(200).send({ message: "Chat left successfully" })
   } catch (err) {
@@ -264,22 +272,19 @@ const leaveChat = async (req, res) => {
 }
 
 const removeChatMember = async (req, res) => {
-  const userId = req.user._id
   const chatId = req.body.chatId
   const memberId = req.body.memberId
-  console.log(userId, chatId, memberId)
   try {
-    const result = await removeMember(chatId, memberId, userId)
-    if (!result) {
+    const chat = await removeMember(chatId, memberId, req.user._id)
+    if (!chat) {
       return res.status(404).send({ message: "Chat not found" })
     }
 
-    const user = await userModel.findById(userId).select("name")
     const target = await userModel.findById(memberId).select("name")
 
     messageController.createSystemMessage(
-      chatId,
-      `${user.name} removed ${target.name} from chat`
+      chat,
+      `${req.user?.name} removed ${target.name} from chat`
     )
 
     res.status(200).send({ message: "Member removed successfully" })
@@ -298,6 +303,7 @@ const deleteChat = async (req, res) => {
       _id: chatId,
       members: { $in: [userId] },
     })
+    const members = chat.members.map((member) => member.toString())
 
     if (!chat) {
       return res.status(404).send({ message: "Chat not found" })
@@ -305,6 +311,8 @@ const deleteChat = async (req, res) => {
 
     await chatModel.findByIdAndDelete(chatId)
     await messageModel.deleteMany({ chatId: chatId })
+
+    messageSocket.outChat(chatId, members)
 
     res.status(200).send({ message: "Chat deleted successfully" })
   } catch (err) {
@@ -314,7 +322,6 @@ const deleteChat = async (req, res) => {
 }
 
 const editChat = async (req, res) => {
-  const userId = req.user._id
   const chatId = req.body.chatId
   const name = req.body.name
   const avatar = req.body.avatar
@@ -322,44 +329,26 @@ const editChat = async (req, res) => {
   try {
     const chat = await chatModel.findOne({
       _id: chatId,
-      members: { $in: [userId] },
+      members: { $in: [req.user?._id] },
     })
 
     if (!chat) {
       return res.status(404).send({ message: "Chat not found" })
     }
 
-    let changed = {
-      name: chat.name !== name,
-      avatar: chat.avatar !== avatar,
-    }
-
     chat.name = name
     chat.avatar = avatar
     await chat.save()
 
-    const user = await userModel.findById(userId).select("name")
+    messageController.createSystemMessage(
+      chat,
+      `${req.user?.name} changed chat info`
+    )
 
-    if (changed.name && changed.avatar) {
-      messageController.createSystemMessage(
-        chatId,
-        `${user.name} changed chat name and avatar`
-      )
-    }
-
-    if (changed.name && !changed.avatar) {
-      messageController.createSystemMessage(
-        chatId,
-        `${user.name} changed chat name`
-      )
-    }
-
-    if (!changed.name && changed.avatar) {
-      messageController.createSystemMessage(
-        chatId,
-        `${user.name} changed chat avatar`
-      )
-    }
+    messageSocket.updateChat(
+      chatId,
+      chat.members.map((member) => member.toString())
+    )
 
     res.status(200).send({ message: "Chat updated successfully" })
   } catch (err) {

@@ -1,26 +1,47 @@
 const messageModel = require("../models/message.model")
-const mediaService = require("../services/media.service")
-
+const chatModel = require("../models/chat.model")
+const messageSocket = require("../services/socket.services/message")
 const createMessage = async (req, res) => {
-  const userId = req.user._id
   const chatId = req.body.chatId
   const content = req.body.content
   const type = req.body.type || "text"
 
   try {
+    const chatRoom = await chatModel.findById(chatId)
+    if (!chatRoom) {
+      return res.status(404).send({ message: "Chat not found" })
+    }
     const newMessage = new messageModel({
       chatId,
-      senderId: userId,
+      senderId: req.user._id,
       content,
       type,
-      readerIds: [userId],
+      readerIds: [req.user._id],
     })
 
     const response = await newMessage.save()
 
+    const memberIds = chatRoom.members.map((member) => {
+      if (member.toString() !== req.user._id.toString())
+        return member.toString()
+    })
+
+    let data = {
+      ...response?._doc,
+      sender: {
+        isMine: false,
+        _id: req.user._id,
+        name: req.user.name,
+        avatar: req.user.avatar,
+      },
+    }
+
+    messageSocket.sendMessage(data, memberIds)
+
+    data.sender.isMine = true
+
     res.status(201).send({
-      message: "Message sent successfully",
-      message: response,
+      message: data,
     })
   } catch (err) {
     console.error(err)
@@ -43,20 +64,20 @@ const getChatMessages = async (req, res) => {
       .select("-updatedAt -__v -chatId")
       .populate("senderId", "name avatar")
 
-    if (!messages || messages.length === 0)
+    if (!messages || messages?.length === 0)
       return res.status(200).send({
         message: "No messages found",
         data: [],
       })
 
-    messages.forEach((message) => {
+    messages?.forEach((message) => {
       if (!message.readerIds.includes(userId)) {
         message.readerIds.push(userId)
         message.save()
       }
     })
 
-    let modifiedMessages = messages.map((message) => {
+    let modifiedMessages = messages?.map((message) => {
       let sender = null
       if (message.senderId) {
         sender = {
@@ -145,17 +166,20 @@ const getNewMessages = async (req, res) => {
   }
 }
 
-const createSystemMessage = async (chatId, content) => {
+const createSystemMessage = async (chat, content) => {
   try {
     const newMessage = new messageModel({
-      chatId,
+      chatId: chat._id,
       senderId: null,
       content,
       type: "system",
       readerIds: [],
     })
-
     await newMessage.save()
+    messageSocket.sendMessage(
+      newMessage,
+      chat.members.map((member) => member.toString())
+    )
   } catch (err) {
     console.error(err)
   }
