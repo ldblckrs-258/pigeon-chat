@@ -2,8 +2,8 @@ import { useSocket } from '../../hook/useSocket'
 import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
-
-// Transfer status
+import { useChat } from '../../hook/useChat'
+import { iceServers } from '../../configs/iceServers'
 const STATUS = {
 	NONE: 'Send file',
 	PENDING: 'Pending request',
@@ -12,13 +12,15 @@ const STATUS = {
 	DONE: 'Done',
 }
 
-export default function FileSender({ id, onClose }) {
+export default function FileSender({ targetId, onClose }) {
+	const { currentChat } = useChat()
+
 	const [file, setFile] = useState(null)
 	const [dataChannel, setDataChannel] = useState(null)
 	const localPeer = useRef(null)
 	const [progress, setProgress] = useState({ current: 0, total: 0 })
 	const { socket } = useSocket()
-	const { toast } = useToast()
+	const toast = useToast()
 	const [isReady, setIsReady] = useState(false)
 	const [status, setStatus] = useState(STATUS.NONE)
 
@@ -27,13 +29,17 @@ export default function FileSender({ id, onClose }) {
 			console.error('Please select a file')
 			return
 		}
-		socket.emit('sendFileRequest', { name: file.name, size: file.size }, id)
+		socket.emit(
+			'sendFileRequest',
+			{ name: file.name, size: file.size },
+			targetId,
+		)
 		setStatus(STATUS.PENDING)
 	}
 
 	const sendSenderDesc = async () => {
 		await handleLocalConnect()
-		socket.emit('senderDesc', localPeer.current.localDescription, id)
+		socket.emit('senderDesc', localPeer.current.localDescription, targetId)
 		setStatus(STATUS.CONNECTING)
 	}
 
@@ -44,13 +50,14 @@ export default function FileSender({ id, onClose }) {
 			console.log('Sender data channel connected')
 			setIsReady(true)
 		}
-		setDataChannel(dataChannel)
-
-		localPeer.current.onicecandidate = (event) => {
-			if (event.candidate) {
-				socket.emit('ice-candidate', event.candidate, id)
-			}
+		dataChannel.onclose = () => {
+			console.log('Sender data channel closed')
 		}
+		dataChannel.onerror = (error) => {
+			console.error('Sender data channel error: ', error)
+			toast.error('File transfer error', "Can't create data channel")
+		}
+		setDataChannel(dataChannel)
 
 		const localOffer = await localPeer.current.createOffer()
 		await localPeer.current.setLocalDescription(localOffer)
@@ -80,7 +87,6 @@ export default function FileSender({ id, onClose }) {
 		let offset = 0
 
 		const sendChunk = (chunk) => {
-			console.log('send-chunk', offset)
 			if (dataChannel.readyState === 'open') {
 				dataChannel.send(chunk)
 				offset += chunk.byteLength
@@ -137,15 +143,59 @@ export default function FileSender({ id, onClose }) {
 
 	const initPeer = async () => {
 		localPeer.current = new RTCPeerConnection({
-			iceServers: [
-				{ urls: 'stun:freestun.net:3479' },
-				{
-					urls: 'turn:freestun.net:3479',
-					username: 'free',
-					credential: 'free',
-				},
-			],
+			iceServers: iceServers,
 		})
+
+		localPeer.current.onicecandidate = (event) => {
+			if (event.candidate) {
+				socket.emit('ice-candidate', event.candidate, targetId)
+			}
+		}
+
+		localPeer.current.oniceconnectionstatechange = () => {
+			console.log(
+				'ICE connection state: ',
+				localPeer.current.iceConnectionState,
+			)
+			if (localPeer.current.iceConnectionState === 'failed') {
+				toast.error('File transfer error', 'ICE connection failed')
+			}
+		}
+
+		localPeer.current.onsignalingstatechange = () => {
+			console.log('Signaling state: ', localPeer.current.signalingState)
+			if (localPeer.current.signalingState === 'closed') {
+				toast.info('File transfer info', 'Signaling state closed')
+			}
+		}
+
+		localPeer.current.ondatachannel = (event) => {
+			const receiveChannel = event.channel
+			receiveChannel.binaryType = 'arraybuffer'
+			receiveChannel.onmessage = handleReceiveFile
+			receiveChannel.onopen = () => {
+				console.log('Receiver data channel connected')
+			}
+			receiveChannel.onclose = () => {
+				console.log('Receiver data channel closed')
+			}
+			receiveChannel.onerror = (error) => {
+				console.error('Receiver data channel error: ', error)
+				toast.error(
+					'File transfer error',
+					'An error occurred while receiving file',
+				)
+			}
+			setDataChannel(receiveChannel)
+		}
+
+		localPeer.current.onerror = (error) => {
+			console.error('Peer connection error: ', error)
+			toast.error(
+				'File transfer error',
+				'An error occurred while receiving file',
+			)
+		}
 	}
 
 	useEffect(() => {
@@ -159,7 +209,12 @@ export default function FileSender({ id, onClose }) {
 		}
 
 		socket.on('fileTransferError', (error) => {
-			toast.error(error)
+			toast.error(
+				'File transfer error: ',
+				typeof error === 'string'
+					? error
+					: 'An error occurred while setting up connection',
+			)
 		})
 
 		socket.on('fileTransferAccept', () => {
@@ -175,7 +230,10 @@ export default function FileSender({ id, onClose }) {
 				const iceCandidate = new RTCIceCandidate(candidate)
 				await localPeer.current.addIceCandidate(iceCandidate)
 			} catch (error) {
-				console.error('Error adding received ICE candidate', error)
+				console.error(
+					'Error adding received ICE candidate',
+					'An error occurred while exchanging ICE candidates',
+				)
 			}
 		})
 
@@ -192,6 +250,8 @@ export default function FileSender({ id, onClose }) {
 			handleSendFile()
 		}
 	}, [isReady])
+
+	if (!currentChat || !targetId) return null
 
 	return (
 		<div className="relative flex w-auto max-w-[95vw] flex-col items-center justify-center gap-2 rounded-lg bg-white px-8 py-4">
