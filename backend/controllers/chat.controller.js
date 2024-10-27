@@ -1,8 +1,9 @@
 const chatModel = require("../models/chat.model")
 const messageModel = require("../models/message.model")
 const userModel = require("../models/user.model")
+const chatHistoryService = require("../services/chatHistory.service")
 const ObjectId = require("mongoose").Types.ObjectId
-const messageController = require("./message.controller")
+const ChatHistoryService = require("../services/chatHistory.service")
 const messageSocket = require("../services/socket.services/message")
 
 const createChat = async (req, res) => {
@@ -202,7 +203,7 @@ const addMembers = async (req, res) => {
       .find({ _id: { $in: members } })
       .select("name")
 
-    messageController.createSystemMessage(
+    chatHistoryService.createSystemMessage(
       chat,
       `${user.name} added ${addedMembers
         .map((member) => member.name)
@@ -262,7 +263,7 @@ const leaveChat = async (req, res) => {
       return res.status(404).send({ message: "Chat not found" })
     }
 
-    messageController.createSystemMessage(chat, `${req.user?.name} left chat`)
+    chatHistoryService.createSystemMessage(chat, `${req.user?.name} left chat`)
 
     res.status(200).send({ message: "Chat left successfully" })
   } catch (err) {
@@ -282,7 +283,7 @@ const removeChatMember = async (req, res) => {
 
     const target = await userModel.findById(memberId).select("name")
 
-    messageController.createSystemMessage(
+    chatHistoryService.createSystemMessage(
       chat,
       `${req.user?.name} removed ${target.name} from chat`
     )
@@ -340,7 +341,7 @@ const editChat = async (req, res) => {
     chat.avatar = avatar
     await chat.save()
 
-    messageController.createSystemMessage(
+    chatHistoryService.createSystemMessage(
       chat,
       `${req.user?.name} changed chat info`
     )

@@ -13,8 +13,25 @@ const messageSchema = new mongoose.Schema(
     content: String,
     type: {
       type: String,
-      enum: ["text", "image", "system", "emoji"],
+      enum: [
+        "text",
+        "image",
+        "system",
+        "emoji",
+        "fileTransfer",
+        "voiceCall",
+        "videoCall",
+      ],
       default: "text",
+    },
+    status: {
+      type: String,
+      enum: ["pending", "cancelled", "completed"],
+      default: "pending",
+    },
+    size: {
+      type: Number,
+      default: 0,
     },
     readerIds: [
       {

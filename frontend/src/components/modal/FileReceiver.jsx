@@ -3,8 +3,12 @@ import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { iceServers } from '../../configs/iceServers'
+import { useAuth } from '../../hook/useAuth'
+import { STATUS } from './constants'
 
 export default function FileReceiver({ sender, metadata, onClose }) {
+	const { user } = useAuth()
+	const [status, setStatus] = useState(STATUS.PENDING)
 	const [dataChannel, setDataChannel] = useState(null)
 	const localPeer = useRef(null)
 	const [progress, setProgress] = useState({
@@ -13,11 +17,20 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 	})
 	const { socket } = useSocket()
 	const toast = useToast()
-	const [isAccepted, setIsAccepted] = useState(false)
 
 	const acceptFileTransfer = () => {
-		setIsAccepted(true)
+		setStatus(STATUS.CONNECTING)
 		socket.emit('fileReceiveAccept', sender._id)
+	}
+
+	const cancelFileTransfer = () => {
+		if (status === STATUS.DONE) {
+			onClose()
+			return
+		}
+		setStatus(STATUS.CANCELLED)
+		clearAll()
+		socket.emit('fileTransferCancel', sender._id)
 	}
 
 	const sendReceiverDesc = async (remoteDesc) => {
@@ -66,7 +79,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			a.href = url
 			a.download = metadata.name
 			a.click()
-
+			setStatus(STATUS.DONE)
 			clearAll()
 			return
 		}
@@ -107,6 +120,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			receiveChannel.binaryType = 'arraybuffer'
 			receiveChannel.onmessage = handleReceiveFile
 			receiveChannel.onopen = () => {
+				setStatus(STATUS.SENDING)
 				console.log('Receiver data channel connected')
 			}
 			receiveChannel.onclose = () => {
@@ -174,10 +188,16 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			}
 		})
 
+		socket.on('fileTransferCancel', () => {
+			clearAll()
+			setStatus(STATUS.CANCELLED)
+		})
+
 		return () => {
 			socket.off('fileTransferError')
 			socket.off('senderDesc')
 			socket.off('ice-candidate')
+			socket.off('fileTransferCancel')
 		}
 	}, [socket])
 
@@ -208,27 +228,48 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 					<p>{(metadata?.size / 1000 / 1024 || 0).toFixed(2)} MB</p>
 				</div>
 			</div>
-			{isAccepted ? (
-				<div className="relative my-3 flex w-full items-center justify-center">
-					<progress
-						className="h-4 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
-						value={progress.current || 0}
-						max={progress.total || 1}
-					/>
-					<p className="absolute text-center text-xs">
-						{progress.current > 0
-							? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
-							: ''}
-					</p>
-				</div>
-			) : (
+			{[STATUS.CONNECTING, STATUS.SENDING, STATUS.DONE].includes(
+				status,
+			) ? (
+				<>
+					<div className="relative my-3 flex w-full items-center justify-center">
+						<progress
+							className="h-4 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
+							value={progress.current || 0}
+							max={progress.total || 1}
+						/>
+						<p className="absolute text-center text-xs">
+							{progress.current > 0
+								? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
+								: ''}
+						</p>
+					</div>
+					<button
+						className={`min-w-[160px] rounded px-3 py-1.5 text-white ${status === STATUS.DONE ? 'bg-sky-500' : 'bg-rose-500'}`}
+						onClick={cancelFileTransfer}
+					>
+						{status === STATUS.DONE
+							? 'Completed'
+							: 'Cancel transfer'}
+					</button>
+				</>
+			) : null}
+
+			{status === STATUS.PENDING ? (
 				<button
 					className="my-3 rounded bg-blue-500 px-3 py-1 text-white"
 					onClick={acceptFileTransfer}
 				>
 					Accept and download
 				</button>
-			)}
+			) : null}
+			{status === STATUS.CANCELLED ? (
+				<div className="relative my-3 flex w-full items-center justify-center">
+					<p className="font-semibold text-red-500">
+						File transfer cancelled
+					</p>
+				</div>
+			) : null}
 		</div>
 	)
 }

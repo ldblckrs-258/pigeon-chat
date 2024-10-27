@@ -41,6 +41,7 @@ export const ChatContextProvider = ({ children }) => {
 	}
 
 	const getChats = async () => {
+		setMessages([])
 		try {
 			const res = await axios.get('/api/chats/all', {
 				params: { ...(searchValue && { search: searchValue }) },

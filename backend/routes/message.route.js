@@ -12,5 +12,10 @@ router.delete(
 )
 router.get("/get/:chatId", authenticate, messageController.getChatMessages)
 router.get("/getNew/:chatId", authenticate, messageController.getNewMessages)
+router.post(
+  "/fileTransferHistory",
+  authenticate,
+  messageController.createFileTransferHistory
+)
 
 module.exports = router

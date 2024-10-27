@@ -93,6 +93,8 @@ export const useChat = () => {
 		}
 	}
 
+	const isGroup = currentChat?.members?.length > 2
+
 	return {
 		loading,
 		setLoading,
@@ -100,6 +102,7 @@ export const useChat = () => {
 		setCurrentChatId,
 		currentChat,
 		setCurrentChat,
+		isGroup,
 		chats,
 		setChats,
 		searchValue,

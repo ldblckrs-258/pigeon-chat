@@ -1,4 +1,4 @@
-const fileTransformSocket = require("./fileTransform")
+const fileTransferSocket = require("./fileTransfer")
 const messageSocket = require("./message")
 class SocketServices {
   config = {
@@ -28,7 +28,7 @@ class SocketServices {
     })
 
     messageSocket.handler(socket)
-    fileTransformSocket.handler(socket)
+    fileTransferSocket.handler(socket)
 
     socket.on("error", (err) => {
       console.error(err)

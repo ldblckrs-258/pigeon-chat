@@ -24,12 +24,17 @@ class Message {
     })
   }
   sendMessage(data, memberIds) {
-    let receiverIds = _onlineUsers
-      .filter((u) => memberIds.includes(u.userId))
-      .map((u) => u.socketId)
-    if (receiverIds.length === 0) return
-    receiverIds.forEach((id) => {
-      _io.to(id).emit("newMessage", data)
+    let receivers = _onlineUsers.filter((u) => memberIds.includes(u.userId))
+    if (receivers.length === 0) return
+    receivers.forEach((r) => {
+      _io.to(r.socketId).emit("newMessage", {
+        ...data,
+        sender: {
+          ...data.sender,
+          _id: data.senderId,
+          isMine: data.senderId.toString() === r.userId,
+        },
+      })
     })
   }
 
@@ -37,7 +42,6 @@ class Message {
     let receiverIds = _onlineUsers
       .filter((u) => memberIds.includes(u.userId))
       .map((u) => u.socketId)
-    console.log(receiverIds)
     if (receiverIds.length === 0) return
     receiverIds.forEach((id) => {
       _io.to(id).emit("updateChat", chatId)
