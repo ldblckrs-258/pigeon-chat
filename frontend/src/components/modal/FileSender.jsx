@@ -1,20 +1,17 @@
 import { useSocket } from '../../hook/useSocket'
+import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { useChat } from '../../hook/useChat'
 import { iceServers } from '../../configs/iceServers'
-const STATUS = {
-	NONE: 'Send file',
-	PENDING: 'Pending request',
-	CONNECTING: 'Connecting',
-	SENDING: 'Sending',
-	DONE: 'Done',
-}
+import { useAuth } from '../../hook/useAuth'
+import { byteToMb } from '../../utils/format'
+import { STATUS } from './constants'
 
 export default function FileSender({ targetId, onClose }) {
 	const { currentChat } = useChat()
-
+	const { user } = useAuth()
 	const [file, setFile] = useState(null)
 	const [dataChannel, setDataChannel] = useState(null)
 	const localPeer = useRef(null)
@@ -35,6 +32,17 @@ export default function FileSender({ targetId, onClose }) {
 			targetId,
 		)
 		setStatus(STATUS.PENDING)
+	}
+
+	const cancelFileTransfer = () => {
+		if (status === STATUS.DONE) {
+			onClose()
+			return
+		}
+		setStatus(STATUS.CANCELLED)
+		createHistory('cancelled')
+		clearAll()
+		socket.emit('fileTransferCancel', targetId)
 	}
 
 	const sendSenderDesc = async () => {
@@ -78,6 +86,20 @@ export default function FileSender({ targetId, onClose }) {
 		}
 	}
 
+	const createHistory = async (status) => {
+		try {
+			await axios.post('/api/messages/fileTransferHistory', {
+				chatId: currentChat._id,
+				senderId: user.id,
+				fileName: file.name,
+				fileSize: file.size,
+				status: status,
+			})
+		} catch (error) {
+			console.error('Error creating file transfer history', error)
+		}
+	}
+
 	const handleSendFile = async () => {
 		if (!file || !dataChannel) return
 		setStatus(STATUS.SENDING)
@@ -106,6 +128,7 @@ export default function FileSender({ targetId, onClose }) {
 				} else {
 					dataChannel.send('END')
 					setStatus(STATUS.DONE)
+					createHistory('completed')
 					clearAll()
 				}
 			} else {
@@ -120,7 +143,7 @@ export default function FileSender({ targetId, onClose }) {
 			) {
 				dataChannel.onbufferedamountlow = () => {
 					sendChunk(e.target.result)
-					dataChannel.onbufferedamountlow = null // Clear the event handler
+					dataChannel.onbufferedamountlow = null
 				}
 			} else {
 				sendChunk(e.target.result)
@@ -237,11 +260,18 @@ export default function FileSender({ targetId, onClose }) {
 			}
 		})
 
+		socket.on('fileTransferCancel', () => {
+			clearAll()
+			setStatus(STATUS.CANCELLED)
+			createHistory('cancelled')
+		})
+
 		return () => {
 			socket.off('fileTransferError')
 			socket.off('fileTransferAccept')
 			socket.off('receiverDesc')
 			socket.off('ice-candidate')
+			socket.off('fileTransferCancel')
 		}
 	}, [socket])
 
@@ -268,19 +298,32 @@ export default function FileSender({ targetId, onClose }) {
 				onChange={(e) => setFile(e.target.files[0])}
 			/>
 			{status === STATUS.SENDING || status === STATUS.DONE ? (
-				<div className="relative my-3 flex w-full items-center justify-center">
-					<progress
-						className="h-4 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
-						value={progress.current || 0}
-						max={progress.total || 1}
-					/>
-					<p className="absolute text-center text-xs">
-						{progress.current > 0
-							? `${(progress.current / 1000 / 1024).toFixed(2)} / ${(progress.total / 1000 / 1024).toFixed(2)} MB`
-							: ''}
-					</p>
-				</div>
-			) : (
+				<>
+					<div className="relative my-3 flex w-full items-center justify-center">
+						<progress
+							className="h-4 w-[280px] [&::-moz-progress-bar]:bg-violet-400 [&::-webkit-progress-bar]:rounded-lg [&::-webkit-progress-bar]:bg-slate-300 [&::-webkit-progress-value]:rounded-lg [&::-webkit-progress-value]:bg-violet-400"
+							value={progress.current || 0}
+							max={progress.total || 1}
+						/>
+						<p className="absolute text-center text-xs">
+							{progress.current > 0
+								? `${byteToMb(progress.current)} / ${byteToMb(progress.total)} MB`
+								: ''}
+						</p>
+					</div>
+					<button
+						className={`min-w-[160px] rounded px-3 py-1.5 text-white ${status === STATUS.DONE ? 'bg-sky-500' : 'bg-rose-500'}`}
+						onClick={cancelFileTransfer}
+					>
+						{status === STATUS.DONE
+							? 'Completed'
+							: 'Cancel transfer'}
+					</button>
+				</>
+			) : null}
+			{[STATUS.NONE, STATUS.PENDING, STATUS.CONNECTING].includes(
+				status,
+			) ? (
 				<button
 					className="my-3 min-w-[160px] rounded bg-blue-500 px-3 py-1.5 text-white disabled:bg-blue-500/70"
 					onClick={requestFileTransfer}
@@ -288,7 +331,14 @@ export default function FileSender({ targetId, onClose }) {
 				>
 					{status}
 				</button>
-			)}
+			) : null}
+			{status === STATUS.CANCELLED ? (
+				<div className="relative my-3 flex w-full items-center justify-center">
+					<p className="font-semibold text-red-500">
+						File transfer cancelled
+					</p>
+				</div>
+			) : null}
 		</div>
 	)
 }

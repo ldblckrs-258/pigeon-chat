@@ -1,6 +1,7 @@
 const messageModel = require("../models/message.model")
 const chatModel = require("../models/chat.model")
 const messageSocket = require("../services/socket.services/message")
+const ChatHistoryService = require("../services/chatHistory.service")
 const createMessage = async (req, res) => {
   const chatId = req.body.chatId
   const content = req.body.content
@@ -16,6 +17,7 @@ const createMessage = async (req, res) => {
       senderId: req.user._id,
       content,
       type,
+      status: "completed",
       readerIds: [req.user._id],
     })
 
@@ -93,6 +95,8 @@ const getChatMessages = async (req, res) => {
         sender,
         content: message.content,
         type: message.type,
+        size: message?.size || 0,
+        status: message.status || "completed",
         createdAt: message.createdAt,
       }
     })
@@ -166,25 +170,6 @@ const getNewMessages = async (req, res) => {
   }
 }
 
-const createSystemMessage = async (chat, content) => {
-  try {
-    const newMessage = new messageModel({
-      chatId: chat._id,
-      senderId: null,
-      content,
-      type: "system",
-      readerIds: [],
-    })
-    await newMessage.save()
-    messageSocket.sendMessage(
-      newMessage,
-      chat.members.map((member) => member.toString())
-    )
-  } catch (err) {
-    console.error(err)
-  }
-}
-
 const deleteMessage = async (req, res) => {
   const userId = req.user._id
   const messageId = req.params.messageId
@@ -206,10 +191,35 @@ const deleteMessage = async (req, res) => {
   }
 }
 
+const createFileTransferHistory = async (req, res) => {
+  const chatId = req.body.chatId
+  const senderId = req.body.senderId
+  const fileName = req.body.fileName
+  const fileSize = req.body.fileSize
+  const status = req.body.status || "completed"
+
+  try {
+    await ChatHistoryService.createFileTransferHistory(
+      chatId,
+      senderId,
+      fileName,
+      fileSize,
+      status
+    )
+
+    res
+      .status(201)
+      .send({ message: "File transfer history created successfully" })
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({ message: "Request failed, please try again later." })
+  }
+}
+
 module.exports = {
   createMessage,
   getChatMessages,
   getNewMessages,
-  createSystemMessage,
   deleteMessage,
+  createFileTransferHistory,
 }
