@@ -1,11 +1,13 @@
 import { createContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import { useSocket } from '../hook/useSocket'
+import { useAuth } from '../hook/useAuth'
 export const ChatContext = createContext()
 
 const LIMIT = 50
 export const ChatContextProvider = ({ children }) => {
 	const { socket } = useSocket()
+	const { user } = useAuth()
 	const [loading, setLoading] = useState(false)
 	const [currentChatId, setCurrentChatId] = useState(null)
 	const [currentChat, setCurrentChat] = useState(null)
@@ -41,7 +43,6 @@ export const ChatContextProvider = ({ children }) => {
 	}
 
 	const getChats = async () => {
-		setMessages([])
 		try {
 			const res = await axios.get('/api/chats/all', {
 				params: { ...(searchValue && { search: searchValue }) },
@@ -76,10 +77,11 @@ export const ChatContextProvider = ({ children }) => {
 
 	useEffect(() => {
 		getChats()
-	}, [searchValue])
+	}, [searchValue, user])
 
 	useEffect(() => {
 		if (!currentChatId) return
+		setMessages([])
 		getCurrentChat()
 		getMessages()
 	}, [currentChatId])
