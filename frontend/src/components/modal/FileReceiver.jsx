@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { STATUS } from './constants'
-import { allIceServers } from '../../utils/getIceServers'
 
 export default function FileReceiver({ sender, metadata, onClose }) {
 	const [status, setStatus] = useState(STATUS.PENDING)
@@ -15,6 +14,16 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 	})
 	const { socket } = useSocket()
 	const toast = useToast()
+
+	const getIceServers = async () => {
+		try {
+			const response = await axios.get('/api/tools/ice-servers')
+			return response.data
+		} catch (error) {
+			console.error('Error getting ICE servers', error)
+			return []
+		}
+	}
 
 	const acceptFileTransfer = async () => {
 		setStatus(STATUS.CONNECTING)
@@ -56,12 +65,8 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 				await localPeer.current.setLocalDescription(answer)
 			}
 		} catch (error) {
-			toast.error(
-				'File transfer error',
-				"Can't set remote description",
-				2000,
-			)
 			console.error('Error setting remote description', error)
+			setStatus(STATUS.CANCELLED)
 		}
 	}
 
@@ -93,7 +98,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 	const initPeer = async () => {
 		try {
 			localPeer.current = new RTCPeerConnection({
-				iceServers: await allIceServers(),
+				iceServers: await getIceServers(),
 			})
 		} catch (error) {
 			console.error('Error creating peer connection', error)
@@ -111,19 +116,12 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 				localPeer.current.iceConnectionState,
 			)
 			if (localPeer.current.iceConnectionState === 'failed') {
-				toast.error(
-					'File transfer error',
-					'ICE connection failed',
-					2000,
-				)
+				setStatus(STATUS.CANCELLED)
 			}
 		}
 
 		localPeer.current.onsignalingstatechange = () => {
 			console.log('Signaling state: ', localPeer.current.signalingState)
-			if (localPeer.current.signalingState === 'closed') {
-				toast.info('File transfer info', 'Signaling state closed', 2000)
-			}
 		}
 
 		localPeer.current.ondatachannel = (event) => {
@@ -139,22 +137,13 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			}
 			receiveChannel.onerror = (error) => {
 				console.error('Receiver data channel error: ', error)
-				toast.error(
-					'File transfer error',
-					'An error occurred while receiving file',
-					2500,
-				)
 			}
 			setDataChannel(receiveChannel)
 		}
 
 		localPeer.current.onerror = (error) => {
 			console.error('Peer connection error: ', error)
-			toast.error(
-				'File transfer error',
-				'An error occurred while receiving file',
-				2500,
-			)
+			setStatus(STATUS.CANCELLED)
 		}
 	}
 
@@ -172,6 +161,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 		}
 
 		socket.on('fileTransferError', (error) => {
+			setStatus(STATUS.CANCELLED)
 			toast.error(
 				"Can't receive file",
 				typeof error === 'string'
@@ -190,6 +180,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 				const iceCandidate = new RTCIceCandidate(candidate)
 				await localPeer.current.addIceCandidate(iceCandidate)
 			} catch (error) {
+				setStatus(STATUS.CANCELLED)
 				console.error('Error adding received ICE candidate', error)
 				toast.error(
 					'File transfer error',

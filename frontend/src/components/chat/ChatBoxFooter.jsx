@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import {
 	PiImageFill,
 	PiPaperPlaneTiltFill,
@@ -14,7 +14,7 @@ import DefaultImg from '../../assets/default.png'
 import { useChat } from '../../hook/useChat'
 import { useAuth } from '../../hook/useAuth'
 
-const ChatBoxFooter = () => {
+const ChatBoxFooter = ({ userOnline }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)
 	const [message, setMessage] = useState('')
 	const inputRef = useRef(null)
@@ -38,10 +38,6 @@ const ChatBoxFooter = () => {
 			setMessage('')
 			inputRef.current.focus()
 		}
-	}
-
-	const handleThumbUp = () => {
-		sendThumbUp()
 	}
 
 	const handleUploadImage = (e) => {
@@ -77,30 +73,22 @@ const ChatBoxFooter = () => {
 				>
 					<PiSmileyFill />
 				</button>
-				<AnimatePresence>
-					{openEmoji && (
-						<motion.div
-							className="absolute -top-4 left-0 translate-y-[-100%] text-sm"
-							initial={{ opacity: 0, y: '-100%' }}
-							animate={{ opacity: 1, y: '-100%' }}
-							exit={{ opacity: 0, y: '-100%' }}
-							transition={{ duration: 0.2 }}
-						>
-							<EmojiPicker
-								width={280}
-								height={280}
-								skinTonesDisabled
-								emojiStyle="native"
-								previewConfig={{ showPreview: false }}
-								searchDisabled
-								onEmojiClick={handleEmojiClick}
-							/>
-						</motion.div>
-					)}
-				</AnimatePresence>
+				{openEmoji && (
+					<div className="absolute -top-4 left-0 translate-y-[-100%] text-sm">
+						<EmojiPicker
+							width={280}
+							height={280}
+							skinTonesDisabled
+							emojiStyle="native"
+							previewConfig={{ showPreview: false }}
+							searchDisabled
+							onEmojiClick={handleEmojiClick}
+						/>
+					</div>
+				)}
 			</div>
 
-			{currentChat?.isGroup ? null : (
+			{!currentChat?.isGroup && userOnline ? (
 				<div>
 					<button
 						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
@@ -129,7 +117,7 @@ const ChatBoxFooter = () => {
 						</div>
 					)}
 				</div>
-			)}
+			) : null}
 
 			<div className="relative mx-2 flex-1">
 				<input
@@ -171,7 +159,7 @@ const ChatBoxFooter = () => {
 
 			<button
 				className="relative hidden h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200 sm:flex"
-				onClick={handleThumbUp}
+				onClick={() => sendThumbUp()}
 			>
 				<FaThumbsUp />
 			</button>
