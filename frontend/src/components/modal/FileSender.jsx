@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { useChat } from '../../hook/useChat'
-import { iceServers } from '../../configs/iceServers'
+import { allIceServers } from '../../utils/getIceServers'
 import { useAuth } from '../../hook/useAuth'
 import { byteToMb } from '../../utils/format'
 import { STATUS } from './constants'
@@ -34,13 +34,13 @@ export default function FileSender({ targetId, onClose }) {
 		setStatus(STATUS.PENDING)
 	}
 
-	const cancelFileTransfer = () => {
+	const cancelFileTransfer = async () => {
 		if (status === STATUS.DONE) {
 			onClose()
 			return
 		}
 		setStatus(STATUS.CANCELLED)
-		createHistory('cancelled')
+		await createHistory('cancelled')
 		clearAll()
 		socket.emit('fileTransferCancel', targetId)
 	}
@@ -59,12 +59,11 @@ export default function FileSender({ targetId, onClose }) {
 			setIsReady(true)
 		}
 		dataChannel.onclose = () => {
-			console.log('Sender data channel closed')
+			toast.info('File transfer info', 'Data channel closed', 2000)
 		}
-		dataChannel.onerror = (error) => {
-			console.error('Sender data channel error: ', error)
-			toast.error('File transfer error', "Can't create data channel")
-		}
+		// dataChannel.onerror = (error) => {
+		// 	console.error('Sender data channel error: ', error)
+		// }
 		setDataChannel(dataChannel)
 
 		const localOffer = await localPeer.current.createOffer()
@@ -132,7 +131,7 @@ export default function FileSender({ targetId, onClose }) {
 					clearAll()
 				}
 			} else {
-				console.error('Data channel is not open')
+				console.info('Data channel is not open')
 			}
 		}
 
@@ -165,9 +164,13 @@ export default function FileSender({ targetId, onClose }) {
 	}
 
 	const initPeer = async () => {
-		localPeer.current = new RTCPeerConnection({
-			iceServers: iceServers,
-		})
+		try {
+			localPeer.current = new RTCPeerConnection({
+				iceServers: await allIceServers(),
+			})
+		} catch (error) {
+			console.error('Error creating peer connection', error)
+		}
 
 		localPeer.current.onicecandidate = (event) => {
 			if (event.candidate) {
@@ -181,14 +184,18 @@ export default function FileSender({ targetId, onClose }) {
 				localPeer.current.iceConnectionState,
 			)
 			if (localPeer.current.iceConnectionState === 'failed') {
-				toast.error('File transfer error', 'ICE connection failed')
+				toast.error(
+					'File transfer error',
+					'ICE connection failed',
+					2000,
+				)
 			}
 		}
 
 		localPeer.current.onsignalingstatechange = () => {
 			console.log('Signaling state: ', localPeer.current.signalingState)
 			if (localPeer.current.signalingState === 'closed') {
-				toast.info('File transfer info', 'Signaling state closed')
+				toast.info('File transfer info', 'Signaling state closed', 2000)
 			}
 		}
 
@@ -207,6 +214,7 @@ export default function FileSender({ targetId, onClose }) {
 				toast.error(
 					'File transfer error',
 					'An error occurred while receiving file',
+					2500,
 				)
 			}
 			setDataChannel(receiveChannel)
@@ -217,6 +225,7 @@ export default function FileSender({ targetId, onClose }) {
 			toast.error(
 				'File transfer error',
 				'An error occurred while receiving file',
+				2500,
 			)
 		}
 	}
@@ -237,6 +246,7 @@ export default function FileSender({ targetId, onClose }) {
 				typeof error === 'string'
 					? error
 					: 'An error occurred while setting up connection',
+				3000,
 			)
 		})
 
@@ -260,6 +270,20 @@ export default function FileSender({ targetId, onClose }) {
 			}
 		})
 
+		return () => {
+			socket.off('fileTransferError')
+			socket.off('fileTransferAccept')
+			socket.off('receiverDesc')
+			socket.off('ice-candidate')
+		}
+	}, [socket])
+
+	useEffect(() => {
+		if (!socket) {
+			console.error('Socket is not connected')
+			return
+		}
+
 		socket.on('fileTransferCancel', () => {
 			clearAll()
 			setStatus(STATUS.CANCELLED)
@@ -267,13 +291,9 @@ export default function FileSender({ targetId, onClose }) {
 		})
 
 		return () => {
-			socket.off('fileTransferError')
-			socket.off('fileTransferAccept')
-			socket.off('receiverDesc')
-			socket.off('ice-candidate')
 			socket.off('fileTransferCancel')
 		}
-	}, [socket])
+	}, [socket, file])
 
 	useEffect(() => {
 		if (isReady) {
