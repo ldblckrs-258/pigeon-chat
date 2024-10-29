@@ -1,4 +1,5 @@
 const mediaService = require("../services/media.service")
+const iceServersUtil = require("../utils/iceServers.util")
 const fs = require("fs")
 
 const uploadImage = async (req, res) => {
@@ -24,4 +25,29 @@ const uploadImage = async (req, res) => {
   }
 }
 
-module.exports = { uploadImage }
+const getIceServers = async (req, res) => {
+  const type = req.query.type
+  try {
+    let iceServers = []
+    switch (type) {
+      case "free":
+        iceServers = iceServersUtil.freeIceServers
+        break
+      case "metered":
+        iceServers = await iceServersUtil.meteredIceServers()
+        break
+      case "cloudflare":
+        iceServers = await iceServersUtil.cloudflareIceServers()
+        break
+      default:
+        iceServers = await iceServersUtil.allIceServers()
+        break
+    }
+    res.status(200).send(iceServers)
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({ message: "Request failed, please try again later." })
+  }
+}
+
+module.exports = { uploadImage, getIceServers }
