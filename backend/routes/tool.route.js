@@ -13,4 +13,12 @@ router.post(
   toolController.uploadImage
 )
 
+/**
+ * /api/tools/ice-servers
+ * @param {string} type - The type of ICE servers to return
+ * @type {string} - "free" | "metered" | "cloudflare" | "all"
+ * @returns {Array<Object>} - An array of ICE servers
+ */
+router.get("/ice-servers", authenticate, toolController.getIceServers)
+
 module.exports = router
