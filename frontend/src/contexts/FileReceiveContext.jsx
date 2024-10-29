@@ -3,6 +3,7 @@ import FileReceiver from '../components/modal/FileReceiver'
 import { useSocket } from '../hook/useSocket'
 import { useNotification } from '../hook/useNotification'
 import axios from 'axios'
+import { byteToMb } from '../utils/format'
 export const FileReceiveContext = createContext()
 
 export const FileReceiveContextProvider = ({ children }) => {
@@ -39,7 +40,7 @@ export const FileReceiveContextProvider = ({ children }) => {
 			windowNotify(
 				'You have a file transfer request!',
 				`
-        ${sender?.name || 'Someone'} wants to send you a file: ${metadata?.name} - ${(metadata?.size / 1024 / 1024).toFixed(2)} MB`,
+        ${sender?.name || 'Someone'} wants to send you a file: ${metadata?.name} - ${byteToMb(metadata?.size)} MB`,
 			)
 		})
 
@@ -54,7 +55,7 @@ export const FileReceiveContextProvider = ({ children }) => {
 		>
 			{fileReceiveOpen && sender && metadata && (
 				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+					className="fixed inset-0 z-[51] flex items-center justify-center bg-black/50"
 					onClick={(e) => {
 						if (e.target === e.currentTarget) {
 							closeFileReceive()

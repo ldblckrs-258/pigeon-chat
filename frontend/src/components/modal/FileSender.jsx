@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react'
 import { PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { useChat } from '../../hook/useChat'
-import { allIceServers } from '../../utils/getIceServers'
 import { useAuth } from '../../hook/useAuth'
 import { byteToMb } from '../../utils/format'
 import { STATUS } from './constants'
@@ -20,6 +19,16 @@ export default function FileSender({ targetId, onClose }) {
 	const toast = useToast()
 	const [isReady, setIsReady] = useState(false)
 	const [status, setStatus] = useState(STATUS.NONE)
+
+	const getIceServers = async () => {
+		try {
+			const response = await axios.get('/api/tools/ice-servers')
+			return response.data
+		} catch (error) {
+			console.error('Error getting ICE servers', error)
+			return []
+		}
+	}
 
 	const requestFileTransfer = () => {
 		if (!file) {
@@ -59,11 +68,8 @@ export default function FileSender({ targetId, onClose }) {
 			setIsReady(true)
 		}
 		dataChannel.onclose = () => {
-			toast.info('File transfer info', 'Data channel closed', 2000)
+			console.log('Sender data channel closed')
 		}
-		// dataChannel.onerror = (error) => {
-		// 	console.error('Sender data channel error: ', error)
-		// }
 		setDataChannel(dataChannel)
 
 		const localOffer = await localPeer.current.createOffer()
@@ -166,7 +172,7 @@ export default function FileSender({ targetId, onClose }) {
 	const initPeer = async () => {
 		try {
 			localPeer.current = new RTCPeerConnection({
-				iceServers: await allIceServers(),
+				iceServers: await getIceServers(),
 			})
 		} catch (error) {
 			console.error('Error creating peer connection', error)
@@ -184,19 +190,17 @@ export default function FileSender({ targetId, onClose }) {
 				localPeer.current.iceConnectionState,
 			)
 			if (localPeer.current.iceConnectionState === 'failed') {
+				setStatus(STATUS.CANCELLED)
 				toast.error(
 					'File transfer error',
 					'ICE connection failed',
-					2000,
+					3000,
 				)
 			}
 		}
 
 		localPeer.current.onsignalingstatechange = () => {
 			console.log('Signaling state: ', localPeer.current.signalingState)
-			if (localPeer.current.signalingState === 'closed') {
-				toast.info('File transfer info', 'Signaling state closed', 2000)
-			}
 		}
 
 		localPeer.current.ondatachannel = (event) => {
@@ -211,22 +215,12 @@ export default function FileSender({ targetId, onClose }) {
 			}
 			receiveChannel.onerror = (error) => {
 				console.error('Receiver data channel error: ', error)
-				toast.error(
-					'File transfer error',
-					'An error occurred while receiving file',
-					2500,
-				)
 			}
 			setDataChannel(receiveChannel)
 		}
 
 		localPeer.current.onerror = (error) => {
 			console.error('Peer connection error: ', error)
-			toast.error(
-				'File transfer error',
-				'An error occurred while receiving file',
-				2500,
-			)
 		}
 	}
 
@@ -241,12 +235,14 @@ export default function FileSender({ targetId, onClose }) {
 		}
 
 		socket.on('fileTransferError', (error) => {
+			setStatus(STATUS.CANCELLED)
+			console.log('File transfer error: ', error)
 			toast.error(
 				'File transfer error: ',
 				typeof error === 'string'
 					? error
 					: 'An error occurred while setting up connection',
-				3000,
+				4000,
 			)
 		})
 

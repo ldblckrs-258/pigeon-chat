@@ -1,21 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../../hook/useAuth'
-import { useSocket } from '../../hook/useSocket'
 import { twMerge } from 'tailwind-merge'
 import { PiDotsThreeOutlineVerticalFill } from 'react-icons/pi'
 import { FiPhone, FiVideo } from 'react-icons/fi'
-import { isOnline } from '../../utils/validate'
 import { useChat } from '../../hook/useChat'
 
-const ChatBoxHeader = ({ onClickInfoButton, isInfoExpand }) => {
-	const { user } = useAuth()
-	const { onlineUsers } = useSocket()
-	const [userOnline, setUserOnline] = useState(false)
+const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 	const { currentChat } = useChat()
-
-	useEffect(() => {
-		setUserOnline(isOnline(currentChat.members, user.id, onlineUsers))
-	}, [onlineUsers, currentChat._id])
 
 	const handleOpenVoiceCall = () => {
 		const url = `/voice-call/${currentChat._id}` // URL trang voice call
