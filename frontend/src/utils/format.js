@@ -1,7 +1,7 @@
 export function trimFilename(fileName, length = 20) {
 	var split = fileName.split('.')
-	var name = split[0]
-	var ext = split[split.length - 1]
+	var ext = split.pop()
+	var name = split.join('.')
 	if (name.length > length - ext.length - 3) {
 		name =
 			name.substring(0, length - ext.length - 6) +

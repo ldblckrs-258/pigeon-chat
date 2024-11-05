@@ -1,8 +1,10 @@
 import { useSocket } from '../../hook/useSocket'
 import { useEffect, useState, useRef } from 'react'
-import { PiX } from 'react-icons/pi'
+import { PiArrowsDownUpBold, PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { STATUS } from './constants'
+import FileIcon from '../FileIcon'
+import { trimFilename, byteToMb } from '../../utils/format'
 
 export default function FileReceiver({ sender, metadata, onClose }) {
 	const [status, setStatus] = useState(STATUS.PENDING)
@@ -17,7 +19,9 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 
 	const getIceServers = async () => {
 		try {
-			const response = await axios.get('/api/tools/ice-servers')
+			const response = await axios.get(
+				'/api/tools/ice-servers?types=private,cloudflare',
+			)
 			return response.data
 		} catch (error) {
 			console.error('Error getting ICE servers', error)
@@ -29,6 +33,11 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 		setStatus(STATUS.CONNECTING)
 		await initPeer()
 		socket.emit('fileReceiveAccept', sender._id)
+	}
+
+	const rejectFileTransfer = () => {
+		socket.emit('fileReceiveReject', sender._id)
+		onClose()
 	}
 
 	const cancelFileTransfer = () => {
@@ -145,13 +154,21 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			console.error('Peer connection error: ', error)
 			setStatus(STATUS.CANCELLED)
 		}
+
+		localPeer.current.onicecandidateerror = (error) => {
+			console.error('ICE candidate error: ', error)
+		}
 	}
 
 	const clearAll = () => {
+		if (dataChannel) {
+			dataChannel.close()
+		}
+		if (localPeer.current) {
+			localPeer.current.close()
+		}
 		setDataChannel(null)
-		localPeer.current.close()
 		localPeer.current = null
-		receiveBuffer = []
 	}
 
 	useEffect(() => {
@@ -178,7 +195,9 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 		socket.on('ice-candidate', async (candidate) => {
 			try {
 				const iceCandidate = new RTCIceCandidate(candidate)
-				await localPeer.current.addIceCandidate(iceCandidate)
+				setTimeout(async () => {
+					await localPeer.current.addIceCandidate(iceCandidate)
+				}, 200)
 			} catch (error) {
 				setStatus(STATUS.CANCELLED)
 				console.error('Error adding received ICE candidate', error)
@@ -203,6 +222,12 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 		}
 	}, [socket])
 
+	useEffect(() => {
+		return () => {
+			clearAll()
+		}
+	}, [])
+
 	return (
 		<div className="relative flex w-auto max-w-[90vw] flex-col items-center justify-center gap-2 rounded-lg bg-white px-12 py-4">
 			<button
@@ -211,23 +236,37 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			>
 				<PiX />
 			</button>
-			<h1 className="text-center text-xl font-semibold">
+			<h1 className="pb-3 text-xl font-semibold">
 				Receive file transfer
 			</h1>
-			<div className="w-full py-1 text-sm">
-				<div className="flex items-center gap-2">
-					<p className="font-semibold">Sender:</p>
-					<p>{sender?.name || 'Unknown'}</p>
+			<div className="flex w-full items-center justify-center gap-4 rounded-lg border border-gray-300 px-4 py-2">
+				<div className="flex items-center justify-center">
+					<img
+						src={sender?.avatar}
+						alt="avatar"
+						className="size-8 rounded-full"
+					/>
 				</div>
-				<div className="flex items-center gap-2">
-					<p className="font-semibold">File name:</p>
-					<p className="line-clamp-1 flex-1">
-						{metadata?.name || 'Temp file'}
-					</p>
-				</div>
-				<div className="flex items-center gap-2">
-					<p className="font-semibold">Size:</p>
-					<p>{(metadata?.size / 1000 / 1024 || 0).toFixed(2)} MB</p>
+
+				<p className="font-semibold">{sender?.name}</p>
+			</div>
+			<div className="text-center text-xl text-primary-500">
+				<PiArrowsDownUpBold />
+			</div>
+			<div className="w-full space-y-2 py-1 text-sm">
+				<div className="flex h-14 flex-1 items-center justify-center gap-4 rounded-lg border border-gray-300 px-4 py-2">
+					<div className="flex size-6 items-center justify-center">
+						<FileIcon ext={metadata?.name.split('.').pop()} />
+					</div>
+
+					<div className="">
+						<p className="line-clamp-1 min-w-[252px] flex-1 text-sm font-semibold">
+							{trimFilename(metadata?.name, 33)}
+						</p>
+						<p className="text-xs text-gray-600">
+							{byteToMb(metadata?.size)} MB
+						</p>
+					</div>
 				</div>
 			</div>
 			{[STATUS.CONNECTING, STATUS.SENDING, STATUS.DONE].includes(
@@ -257,21 +296,31 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 				</>
 			) : null}
 
-			{status === STATUS.PENDING ? (
-				<button
-					className="my-3 rounded bg-blue-500 px-3 py-1 text-white"
-					onClick={acceptFileTransfer}
-				>
-					Accept and download
-				</button>
-			) : null}
-			{status === STATUS.CANCELLED ? (
-				<div className="relative my-3 flex w-full items-center justify-center">
-					<p className="font-semibold text-red-500">
-						File transfer cancelled
-					</p>
-				</div>
-			) : null}
+			<div className="my-2 flex items-center justify-center gap-6">
+				{status === STATUS.PENDING ? (
+					<>
+						<button
+							className="rounded bg-secondary-500 px-5 py-1 text-[15px] text-white transition-colors hover:bg-secondary-400"
+							onClick={rejectFileTransfer}
+						>
+							Reject
+						</button>
+						<button
+							className="rounded bg-primary-400 px-3 py-1 text-[15px] text-white transition-colors hover:bg-primary-300"
+							onClick={acceptFileTransfer}
+						>
+							Accept & Download
+						</button>
+					</>
+				) : null}
+				{status === STATUS.CANCELLED ? (
+					<div className="relative flex w-full items-center justify-center">
+						<p className="font-semibold text-secondary-600">
+							File transfer cancelled
+						</p>
+					</div>
+				) : null}
+			</div>
 		</div>
 	)
 }

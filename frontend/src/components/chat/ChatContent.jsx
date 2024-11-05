@@ -6,11 +6,11 @@ import axios from 'axios'
 import { useSocket } from '../../hook/useSocket'
 import { useChat } from '../../hook/useChat'
 import { useLightbox } from '../../hook/useLightbox'
-import { PiTrashBold } from 'react-icons/pi'
+import { PiArrowsLeftRightBold, PiDot, PiTrashBold } from 'react-icons/pi'
 import { AnimatePresence, motion } from 'framer-motion'
 import DefaultImg from '../../assets/default.png'
 import { trimFilename, byteToMb } from '../../utils/format'
-
+import FileIcon from '../FileIcon'
 const ChatContent = ({ className }) => {
 	const toast = useToast()
 	const { socket } = useSocket()
@@ -176,7 +176,7 @@ const TextMessage = ({ message, isGroup, onDelete }) => {
 							'rounded-[16px] px-3 py-2 text-sm',
 							message.sender.isMine
 								? 'bg-primary-400 text-white'
-								: 'bg-gray-200 text-gray-800',
+								: 'bg-gray-200/50 text-gray-800',
 							message.position === 'start' &&
 								(!message.sender.isMine
 									? 'rounded-bl'
@@ -291,29 +291,32 @@ const FileTransferHistory = ({ message }) => {
 			<div className="w-7" />
 
 			<div
-				className="flex max-w-[85%] flex-col justify-start gap-1 rounded-lg border border-gray-300 bg-slate-50 px-6 py-3"
+				className="relative flex max-w-[85%] items-center gap-4 rounded-lg bg-gray-200/50 py-3 pl-6 pr-3"
 				title={new Date(message.createdAt).toLocaleString()}
 			>
-				<div className="flex items-center gap-2 text-sm">
-					<span className="font-semibold">File name:</span>
-					<span>{trimFilename(message.content, 25)}</span>
+				<div className="flex size-7 items-center justify-center">
+					<FileIcon ext={message?.content?.split('.').pop()} />
 				</div>
-				<div className="flex items-center gap-2 text-sm">
-					<span className="font-semibold">File size:</span>
-					<span>{byteToMb(message?.size || 0)} MB</span>
-				</div>
-				<div className="flex items-center gap-2 text-sm">
-					<span className="font-semibold">Start at:</span>
-					<span>{new Date(message.createdAt).toLocaleString()}</span>
-				</div>
-				<div className="flex items-center gap-2 text-sm">
-					<span className="font-semibold">Status:</span>
-					<span
-						className={`first-letter:uppercase ${message?.status === 'completed' && 'text-green-600'} ${message?.status === 'cancelled' && 'text-rose-600'}`}
-					>
-						{message?.status}
+
+				<div className="">
+					<p className="line-clamp-1 w-[200px] flex-1 text-sm font-semibold text-gray-700">
+						{trimFilename(message?.content, 24)}
+					</p>
+					<span>
+						<p className="inline text-xs text-gray-600">
+							{byteToMb(message?.size)} MB
+						</p>
+						<PiDot className="inline text-gray-600" />
+						<p
+							className={`inline text-xs capitalize text-gray-600 ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
+						>
+							{message?.status}
+						</p>
 					</span>
 				</div>
+				<span className="absolute right-1.5 top-1.5 flex items-center justify-center rounded-full text-[10px] text-primary-500/70">
+					<PiArrowsLeftRightBold />
+				</span>
 			</div>
 		</div>
 	)
