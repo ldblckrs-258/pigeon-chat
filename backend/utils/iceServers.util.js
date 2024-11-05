@@ -33,15 +33,40 @@ const cloudflareIceServers = async () => {
   }
 }
 
+const privateCloudflareIceServers = async () => {
+  try {
+    const response = await fetch(
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${process.env.CLOUDFLARE_TURN_TOKEN}/credentials/generate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ttl: 86400,
+        }),
+      }
+    )
+    const data = await response.json()
+    return data.iceServers
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
 const allIceServers = async () => {
   const metered = await meteredIceServers()
   const cloudflare = await cloudflareIceServers()
-  return [...freeIceServers, ...cloudflare, ...metered]
+  const private = await privateCloudflareIceServers()
+  return [...private, ...cloudflare, ...metered]
 }
 
 module.exports = {
   freeIceServers,
   meteredIceServers,
   cloudflareIceServers,
+  privateCloudflareIceServers,
   allIceServers,
 }

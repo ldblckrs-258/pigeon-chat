@@ -1,12 +1,13 @@
 import { useSocket } from '../../hook/useSocket'
 import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
-import { PiX } from 'react-icons/pi'
+import { PiTrash, PiX } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import { useChat } from '../../hook/useChat'
 import { useAuth } from '../../hook/useAuth'
-import { byteToMb } from '../../utils/format'
+import { byteToMb, trimFilename } from '../../utils/format'
 import { STATUS } from './constants'
+import FileIcon from '../FileIcon'
 
 export default function FileSender({ targetId, onClose }) {
 	const { currentChat } = useChat()
@@ -22,7 +23,9 @@ export default function FileSender({ targetId, onClose }) {
 
 	const getIceServers = async () => {
 		try {
-			const response = await axios.get('/api/tools/ice-servers')
+			const response = await axios.get(
+				'/api/tools/ice-servers?types=private,cloudflare',
+			)
 			return response.data
 		} catch (error) {
 			console.error('Error getting ICE servers', error)
@@ -44,7 +47,11 @@ export default function FileSender({ targetId, onClose }) {
 	}
 
 	const cancelFileTransfer = async () => {
-		if (status === STATUS.DONE) {
+		if (
+			status === STATUS.DONE ||
+			status === STATUS.CANCELLED ||
+			status === STATUS.NONE
+		) {
 			onClose()
 			return
 		}
@@ -164,8 +171,13 @@ export default function FileSender({ targetId, onClose }) {
 	}
 
 	const clearAll = () => {
+		if (dataChannel) {
+			dataChannel.close()
+		}
+		if (localPeer.current) {
+			localPeer.current.close()
+		}
 		setDataChannel(null)
-		localPeer.current.close()
 		localPeer.current = null
 	}
 
@@ -222,10 +234,18 @@ export default function FileSender({ targetId, onClose }) {
 		localPeer.current.onerror = (error) => {
 			console.error('Peer connection error: ', error)
 		}
+
+		localPeer.current.onicecandidateerror = (error) => {
+			console.error('ICE candidate error: ', error)
+		}
 	}
 
 	useEffect(() => {
 		initPeer()
+
+		return () => {
+			clearAll()
+		}
 	}, [])
 
 	useEffect(() => {
@@ -246,6 +266,15 @@ export default function FileSender({ targetId, onClose }) {
 			)
 		})
 
+		socket.on('fileTransferReject', () => {
+			setStatus(STATUS.CANCELLED)
+			toast.error(
+				'File transfer rejected',
+				'The receiver has rejected the file transfer',
+				5000,
+			)
+		})
+
 		socket.on('fileTransferAccept', () => {
 			sendSenderDesc()
 		})
@@ -257,7 +286,9 @@ export default function FileSender({ targetId, onClose }) {
 		socket.on('ice-candidate', async (candidate) => {
 			try {
 				const iceCandidate = new RTCIceCandidate(candidate)
-				await localPeer.current.addIceCandidate(iceCandidate)
+				setTimeout(async () => {
+					await localPeer.current.addIceCandidate(iceCandidate)
+				}, 500)
 			} catch (error) {
 				console.error(
 					'Error adding received ICE candidate',
@@ -269,6 +300,7 @@ export default function FileSender({ targetId, onClose }) {
 		return () => {
 			socket.off('fileTransferError')
 			socket.off('fileTransferAccept')
+			socket.off('fileReceiveReject')
 			socket.off('receiverDesc')
 			socket.off('ice-candidate')
 		}
@@ -308,11 +340,50 @@ export default function FileSender({ targetId, onClose }) {
 			>
 				<PiX />
 			</button>
-			<input
-				className="rounded border border-gray-300 px-4 py-2"
-				type="file"
-				onChange={(e) => setFile(e.target.files[0])}
-			/>
+			{file ? (
+				<div className="my-3 flex items-center gap-2">
+					<div className="flex h-14 flex-1 items-center justify-center gap-4 rounded-lg border border-gray-300 px-4 py-2">
+						<div className="flex size-6 items-center justify-center">
+							<FileIcon ext={file?.name.split('.').pop()} />
+						</div>
+
+						<div className="">
+							<p className="line-clamp-1 min-w-[252px] flex-1 text-sm font-semibold">
+								{trimFilename(file?.name, 33)}
+							</p>
+							<p className="text-xs text-gray-600">
+								{byteToMb(file?.size)} MB
+							</p>
+						</div>
+					</div>
+					<button
+						className="flex size-6 items-center justify-center rounded-full bg-gray-100 text-sm text-red-700 transition-all hover:bg-gray-200 hover:text-red-500"
+						onClick={() => setFile(null)}
+					>
+						<PiTrash />
+					</button>
+				</div>
+			) : (
+				<div
+					className="relative my-3 flex w-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4"
+					onDragOver={(e) => e.preventDefault()}
+					onDrop={(e) => {
+						e.preventDefault()
+						if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+							setFile(e.dataTransfer.files[0])
+						}
+					}}
+				>
+					<p className="text-gray-500">
+						Drag & drop your file here, or click to select
+					</p>
+					<input
+						className="absolute inset-0 cursor-pointer opacity-0"
+						type="file"
+						onChange={(e) => setFile(e.target.files[0])}
+					/>
+				</div>
+			)}
 			{status === STATUS.SENDING || status === STATUS.DONE ? (
 				<>
 					<div className="relative my-3 flex w-full items-center justify-center">
@@ -341,7 +412,7 @@ export default function FileSender({ targetId, onClose }) {
 				status,
 			) ? (
 				<button
-					className="my-3 min-w-[160px] rounded bg-blue-500 px-3 py-1.5 text-white disabled:bg-blue-500/70"
+					className="my-2 min-w-[160px] rounded bg-primary-400 px-3 py-1 text-[15px] text-white transition-colors hover:bg-primary-300 disabled:bg-primary-300"
 					onClick={requestFileTransfer}
 					disabled={!file || status !== STATUS.NONE}
 				>
@@ -350,7 +421,7 @@ export default function FileSender({ targetId, onClose }) {
 			) : null}
 			{status === STATUS.CANCELLED ? (
 				<div className="relative my-3 flex w-full items-center justify-center">
-					<p className="font-semibold text-red-500">
+					<p className="font-semibold text-secondary-600">
 						File transfer cancelled
 					</p>
 				</div>
