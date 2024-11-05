@@ -28,6 +28,15 @@ class FileTransfer {
       }
     })
 
+    socket.on("fileReceiveReject", (senderId) => {
+      const sender = _onlineUsers.find((u) => u.userId === senderId)
+      if (sender) {
+        _io.to(sender.socketId).emit("fileTransferReject")
+      } else {
+        socket.emit("fileTransferError", "The sender has closed the connection")
+      }
+    })
+
     socket.on("senderDesc", (desc, receiverId) => {
       const receiver = _onlineUsers.find((u) => u.userId === receiverId)
       if (receiver) {

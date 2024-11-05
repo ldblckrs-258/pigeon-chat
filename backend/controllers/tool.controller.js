@@ -26,23 +26,30 @@ const uploadImage = async (req, res) => {
 }
 
 const getIceServers = async (req, res) => {
-  const type = req.query.type
+  const types = req.query.types
   try {
     let iceServers = []
-    switch (type) {
-      case "free":
-        iceServers = iceServersUtil.freeIceServers
-        break
-      case "metered":
-        iceServers = await iceServersUtil.meteredIceServers()
-        break
-      case "cloudflare":
-        iceServers = await iceServersUtil.cloudflareIceServers()
-        break
-      default:
-        iceServers = await iceServersUtil.allIceServers()
-        break
+    if (types.includes("all")) {
+      iceServers = iceServers.concat(await iceServersUtil.allIceServers())
+    } else {
+      if (types.includes("free")) {
+        iceServers = iceServers.concat(iceServersUtil.freeIceServers)
+      }
+      if (types.includes("metered")) {
+        iceServers = iceServers.concat(await iceServersUtil.meteredIceServers())
+      }
+      if (types.includes("cloudflare")) {
+        iceServers = iceServers.concat(
+          await iceServersUtil.cloudflareIceServers()
+        )
+      }
+      if (types.includes("private")) {
+        iceServers = iceServers.concat(
+          await iceServersUtil.privateCloudflareIceServers()
+        )
+      }
     }
+
     res.status(200).send(iceServers)
   } catch (err) {
     console.error(err)
