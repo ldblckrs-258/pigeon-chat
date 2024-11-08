@@ -3,22 +3,21 @@ import { twMerge } from 'tailwind-merge'
 import SpinLoader from '../SpinLoader'
 import { useToast } from '../../hook/useToast'
 import axios from 'axios'
-import { useSocket } from '../../hook/useSocket'
 import { useChat } from '../../hook/useChat'
 import { useLightbox } from '../../hook/useLightbox'
 import { PiArrowsLeftRightBold, PiDot, PiTrashBold } from 'react-icons/pi'
 import { AnimatePresence, motion } from 'framer-motion'
+import InfiniteScroll from 'react-infinite-scroll-component'
 import DefaultImg from '../../assets/default.png'
 import { trimFilename, byteToMb } from '../../utils/format'
 import FileIcon from '../FileIcon'
 const ChatContent = ({ className }) => {
 	const toast = useToast()
-	const { socket } = useSocket()
 	const {
 		messages: rawMessages,
-		setMessages: setRawMessages,
+		haveMore,
+		loadMoreMessages,
 		loading,
-		setLoading,
 		chatId,
 		isGroup,
 	} = useChat()
@@ -58,40 +57,12 @@ const ChatContent = ({ className }) => {
 
 	const container = useRef(null)
 
-	// const loadMoreMessages = async () => {
-	// 	if (!haveMore.current) return
-	// 	skip.current += limit
-	// 	setLoading(true)
-	// 	try {
-	// 		const res = await axios.get(
-	// 			`/api/messages/get/${chatId}?limit=${limit}&skip=${skip.current}`,
-	// 		)
-	// 		const data = res.data?.data
-	// 		console.log(data)
-	// 		if (data.length === 0) {
-	// 			haveMore.current = false
-	// 			return
-	// 		}
-	// 		setMessages((prev) => [...prev, ...data])
-	// 	} catch (error) {
-	// 		console.log(error)
-	// 	} finally {
-	// 		setLoading(false)
-	// 	}
-	// }
-
 	return (
-		<div className={twMerge('relative gap-1', className)} ref={container}>
-			{loading && !messages?.length && <SpinLoader className="m-auto" />}
-			{!loading && !messages?.length && (
-				<div className="m-auto text-3xl font-semibold text-gray-500">
-					No messages yet
-				</div>
-			)}
+		<>
 			<AnimatePresence>
-				{loading && messages?.length && (
+				{messages?.length && loading && (
 					<motion.div
-						className="absolute right-1/2 top-2 flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-gray-50 shadow-xl"
+						className="absolute right-1/2 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-gray-50 shadow-xl"
 						initial={{ opacity: 0, y: -20 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -20 }}
@@ -101,44 +72,70 @@ const ChatContent = ({ className }) => {
 					</motion.div>
 				)}
 			</AnimatePresence>
-			{!loading &&
-				messages?.map((message) => {
-					if (message.type === 'text')
-						return (
-							<TextMessage
-								key={message._id}
-								message={message}
-								isGroup={isGroup}
-								onDelete={handleDeleteMessage}
-							/>
-						)
-					if (message.type === 'system')
-						return (
-							<SystemMessage
-								key={message._id}
-								message={message.content}
-							/>
-						)
+			<div
+				id="message-scrollable"
+				className="flex h-full w-full flex-col-reverse overflow-auto pb-2 pt-4"
+			>
+				{loading && !messages?.length ? (
+					<SpinLoader className="m-auto" />
+				) : null}
+				{!loading && !messages?.length ? (
+					<div className="m-auto text-3xl font-semibold text-gray-500">
+						No messages yet
+					</div>
+				) : null}
+				<InfiniteScroll
+					className="relative flex h-full flex-col-reverse gap-1"
+					dataLength={messages?.length || 0}
+					inverse={true}
+					next={loadMoreMessages}
+					hasMore={haveMore && !loading}
+					scrollableTarget="message-scrollable"
+				>
+					{messages?.length
+						? messages?.map((message) => {
+								if (message.type === 'text')
+									return (
+										<TextMessage
+											key={message._id}
+											message={message}
+											isGroup={isGroup}
+											onDelete={handleDeleteMessage}
+										/>
+									)
+								if (message.type === 'system')
+									return (
+										<SystemMessage
+											key={message._id}
+											message={message.content}
+										/>
+									)
 
-					if (message.type === 'image' || message.type === 'emoji')
-						return (
-							<IEMessage
-								key={message._id}
-								message={message}
-								isGroup={isGroup}
-								onDelete={handleDeleteMessage}
-							/>
-						)
+								if (
+									message.type === 'image' ||
+									message.type === 'emoji'
+								)
+									return (
+										<IEMessage
+											key={message._id}
+											message={message}
+											isGroup={isGroup}
+											onDelete={handleDeleteMessage}
+										/>
+									)
 
-					if (message.type === 'fileTransfer')
-						return (
-							<FileTransferHistory
-								key={message._id}
-								message={message}
-							/>
-						)
-				})}
-		</div>
+								if (message.type === 'fileTransfer')
+									return (
+										<FileTransferHistory
+											key={message._id}
+											message={message}
+										/>
+									)
+							})
+						: null}
+				</InfiniteScroll>
+			</div>
+		</>
 	)
 }
 
@@ -162,7 +159,7 @@ const TextMessage = ({ message, isGroup, onDelete }) => {
 				<div className="w-7" />
 			)}
 
-			<div className="relative flex max-w-[85%] flex-col justify-start gap-1">
+			<div className="relative flex max-w-[80%] flex-col justify-start gap-1 sm:max-w-[50%]">
 				{isGroup &&
 					!message.sender.isMine &&
 					['start', 'alone'].includes(message?.position) && (
@@ -197,7 +194,7 @@ const TextMessage = ({ message, isGroup, onDelete }) => {
 				</div>
 
 				<button
-					className={`absolute -left-7 bottom-2 hidden h-5 w-5 items-center justify-center rounded-full text-gray-500 hover:text-secondary-500 ${message.sender.isMine ? 'group-hover:flex' : ''}`}
+					className={`absolute -left-7 bottom-1/2 hidden h-5 w-5 translate-y-1/2 items-center justify-center rounded-full text-gray-500 hover:text-secondary-500 ${message.sender.isMine ? 'group-hover:flex' : ''}`}
 					onClick={() => onDelete(message._id)}
 				>
 					<PiTrashBold />

@@ -8,6 +8,7 @@
 
 html {
 	scroll-behavior: smooth;
+	overscroll-behavior: none;
 }
 
 :root {
@@ -27,6 +28,7 @@ body {
 	background-color: #f6faf9;
 	color: #0c0c20;
 	font-family: 'Open Sans', sans-serif;
+	overscroll-behavior: none;
 }
 
 @layer components {
