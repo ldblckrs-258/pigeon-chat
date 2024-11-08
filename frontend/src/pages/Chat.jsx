@@ -7,20 +7,14 @@ import { useChat } from '../hook/useChat'
 const Chat = () => {
 	const { currentChat } = useChat()
 	const [isInfoExpand, setIsInfoExpand] = useState(false)
-	const [chatListExpanded, setChatListExpanded] = useState(true)
 
 	return (
 		<div
 			className={`flex h-dvh w-full items-center gap-1 overflow-hidden bg-gray-100 p-2 transition-all sm:gap-3 sm:p-4`}
 		>
-			<ChatSidebar
-				className="h-full overflow-hidden rounded-lg transition-all"
-				isExpanded={chatListExpanded}
-				setIsExpanded={setChatListExpanded}
-			/>
+			<ChatSidebar className="h-full overflow-hidden rounded-lg transition-all" />
 			{currentChat && (
 				<ChatBox
-					className={`${chatListExpanded ? 'hidden sm:flex' : ''}`}
 					isInfoExpand={isInfoExpand}
 					onClickInfoButton={() => setIsInfoExpand(!isInfoExpand)}
 				/>

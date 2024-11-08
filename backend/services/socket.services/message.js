@@ -38,6 +38,16 @@ class Message {
     })
   }
 
+  deleteMessage(chatId, messageId, memberIds) {
+    let receiverIds = _onlineUsers
+      .filter((u) => memberIds.includes(u.userId))
+      .map((u) => u.socketId)
+    if (receiverIds.length === 0) return
+    receiverIds.forEach((id) => {
+      _io.to(id).emit("deleteMessage", chatId, messageId)
+    })
+  }
+
   updateChat(chatId, memberIds) {
     let receiverIds = _onlineUsers
       .filter((u) => memberIds.includes(u.userId))

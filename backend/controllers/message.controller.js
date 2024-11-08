@@ -58,6 +58,17 @@ const getChatMessages = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10
 
   try {
+    const totalMessages = await messageModel.countDocuments({ chatId })
+
+    if (totalMessages === 0 || skip >= totalMessages) {
+      return res.status(200).send({
+        message: "No messages found",
+        data: [],
+      })
+    }
+
+    const haveMore = totalMessages > skip + limit
+
     const messages = await messageModel
       .find({ chatId })
       .sort({ createdAt: -1 })
@@ -104,6 +115,7 @@ const getChatMessages = async (req, res) => {
     res.status(200).send({
       message: "Messages retrieved successfully",
       data: modifiedMessages,
+      haveMore,
     })
   } catch (err) {
     console.error(err)
@@ -182,8 +194,20 @@ const deleteMessage = async (req, res) => {
     if (message.senderId.toString() !== userId.toString()) {
       return res.status(403).send({ message: "Unauthorized" })
     }
+    const chat = await chatModel.findById(message.chatId)
+    if (!chat) {
+      return res.status(404).send({ message: "Chat not found" })
+    }
+    if (!chat.members.includes(userId)) {
+      return res.status(403).send({ message: "Unauthorized" })
+    }
+
+    const memberIds = chat.members.map((member) => member.toString())
 
     await messageModel.findByIdAndDelete(messageId)
+
+    messageSocket.deleteMessage(message.chatId, messageId, memberIds)
+
     res.status(200).send({ message: "Message deleted successfully" })
   } catch (err) {
     console.error(err)
