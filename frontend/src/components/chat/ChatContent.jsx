@@ -131,6 +131,16 @@ const ChatContent = ({ className }) => {
 											message={message}
 										/>
 									)
+
+								if (
+									message.type === 'voiceCall' ||
+									message.type === 'videoCall'
+								)
+									return (
+										<span key={message._id}>
+											Calling Started
+										</span>
+									)
 							})
 						: null}
 				</InfiniteScroll>

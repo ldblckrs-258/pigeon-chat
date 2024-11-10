@@ -6,7 +6,7 @@ require("dotenv").config()
 const { serverInfo } = require("./utils/network.util")
 
 const app = express()
-app.use(require("./middlewares/morgan.middleware"))
+// app.use(require("./middlewares/morgan.middleware"))
 app.use(cookieParser())
 app.use(express.json())
 app.use(

@@ -7,22 +7,20 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 	const { currentChat } = useChat()
 
 	const handleOpenVoiceCall = () => {
-		const url = `/voice-call/${currentChat._id}` // URL trang voice call
-		// Mở cửa sổ mới với các tham số tùy chỉnh
+		const url = `/voice-call/${currentChat._id}`
 		window.open(
 			url,
 			'_blank',
-			'noopener,noreferrer,width=800,height=600,top=100,left=100,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes',
+			'noopener,noreferrer,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes,width=800,height=600',
 		)
 	}
 
 	const handleOpenVideoCall = () => {
-		const url = `/video-call/${currentChat._id}` // URL trang voice call
-		// Mở cửa sổ mới với các tham số tùy chỉnh
+		const url = `/video-call/${currentChat._id}`
 		window.open(
 			url,
 			'_blank',
-			'noopener,noreferrer,width=800,height=600,top=100,left=100,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes',
+			'noopener,noreferrer,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes,width=800,height=600',
 		)
 	}
 
@@ -50,24 +48,25 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 				</div>
 			</div>
 
-			{/* Thêm button gọi thoại và gọi video */}
 			<div className="flex items-center space-x-2">
-				<button
-					className="flex h-8 w-8 items-center justify-center rounded-full text-primary-800 hover:bg-gray-200"
-					onClick={handleOpenVoiceCall}
-					aria-label="Voice Call"
-				>
-					<FiPhone className="h-5 w-5" />
-				</button>
-
-				<button
-					className="flex h-8 w-8 items-center justify-center rounded-full text-primary-800 hover:bg-gray-200"
-					onClick={handleOpenVideoCall}
-					aria-label="Video Call"
-				>
-					<FiVideo className="h-5 w-5" />
-				</button>
-
+				{userOnline && (
+					<>
+						<button
+							className="flex h-8 w-8 items-center justify-center rounded-full text-primary-800 hover:bg-gray-200"
+							onClick={handleOpenVoiceCall}
+							aria-label="Voice Call"
+						>
+							<FiPhone className="h-5 w-5" />
+						</button>
+						<button
+							className="flex h-8 w-8 items-center justify-center rounded-full text-primary-800 hover:bg-gray-200"
+							onClick={handleOpenVideoCall}
+							aria-label="Video Call"
+						>
+							<FiVideo className="h-5 w-5" />
+						</button>
+					</>
+				)}
 				<button
 					className={twMerge(
 						'flex h-7 w-7 items-center justify-center rounded-full text-sm transition-colors',

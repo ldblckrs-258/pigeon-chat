@@ -7,7 +7,6 @@ import {
 	PiXBold,
 } from 'react-icons/pi'
 import { FaThumbsUp } from 'react-icons/fa'
-import { AnimatePresence, motion } from 'framer-motion'
 import EmojiPicker from 'emoji-picker-react'
 import FileSender from '../modal/FileSender'
 import DefaultImg from '../../assets/default.png'

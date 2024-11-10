@@ -1,4 +1,3 @@
-const chatHistoryService = require("../chatHistory.service")
 class FileTransfer {
   handler(socket) {
     socket.on("sendFileRequest", (metadata, receiverId) => {
