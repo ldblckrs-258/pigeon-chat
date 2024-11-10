@@ -12,10 +12,14 @@ import {
 	PiSpeakerSimpleXFill,
 } from 'react-icons/pi'
 import { useToast } from '../hook/useToast'
+import { useAuth } from '../hook/useAuth'
+import { useNavigate } from 'react-router-dom'
 
 const VoiceCallPage = () => {
 	const { socket } = useSocket()
 	const { chatId } = useParams()
+	const navigate = useNavigate()
+	const { user } = useAuth()
 	const toast = useToast()
 	const audioStreamRef = useRef(null)
 	const { currentChat, setCurrentChatId } = useChat()
@@ -23,6 +27,7 @@ const VoiceCallPage = () => {
 	const [enableSpeaker, setEnableSpeaker] = useState(true)
 	const [receivingAudio, setReceivingAudio] = useState(false)
 	const audioTimeoutRef = useRef(null)
+	const [currentMic, setCurrentMic] = useState(null)
 
 	const startVoiceCall = async () => {
 		try {
@@ -36,15 +41,19 @@ const VoiceCallPage = () => {
 		try {
 			await axios.post('/api/calls/voice/end', { chatId })
 			if (socket) socket.emit('leaveVoiceRoom', chatId)
-			window.close()
+			closeWindow()
 		} catch (error) {
 			console.error(error)
 		}
 	}
 
+	const closeWindow = () => {
+		navigate('/blank')
+	}
+
 	useEffect(() => {
-		setCurrentChatId(chatId)
 		startVoiceCall()
+		setCurrentChatId(chatId)
 
 		const handleBeforeUnload = (event) => {
 			endVoiceCall()
@@ -94,6 +103,11 @@ const VoiceCallPage = () => {
 			setTimeout(() => {
 				mediaRecorder.stop()
 			}, 1000)
+
+			// set current mic
+			const devices = await navigator.mediaDevices.enumerateDevices()
+			const mic = devices.find((device) => device.kind === 'audioinput')
+			setCurrentMic(mic.label)
 		} catch (error) {
 			console.error(error)
 			toast.error(
@@ -123,17 +137,25 @@ const VoiceCallPage = () => {
 
 	useEffect(() => {
 		if (!socket) return
-		socket.emit('joinVoiceRoom', chatId)
 		socket.on('connect', handleSendAudioStream)
-		if (enableSpeaker) socket.on('audioStream', receiveAudioStream)
-		else socket.off('audioStream', receiveAudioStream)
+		socket.once('voiceCallEnd', closeWindow)
 
 		return () => {
 			if (socket) {
 				socket.off('connect', handleSendAudioStream)
-				socket.off('audioStream', receiveAudioStream)
 			}
 		}
+	}, [socket, enableSpeaker, user])
+
+	useEffect(() => {
+		if (!socket) return
+		socket.emit('joinVoiceRoom', chatId, user.id)
+	}, [socket, chatId, user])
+
+	useEffect(() => {
+		if (!socket) return
+		if (enableSpeaker) socket.on('audioStream', receiveAudioStream)
+		else socket.off('audioStream', receiveAudioStream)
 	}, [socket, enableSpeaker])
 
 	useEffect(() => {
@@ -171,7 +193,7 @@ const VoiceCallPage = () => {
 			</div>
 
 			<h3 className="z-10 mt-3 text-2xl font-semibold">
-				{currentChat?.members?.[0]?.name}
+				{currentChat?.name}
 			</h3>
 			<aside className="fixed bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-6">
 				<button
@@ -201,6 +223,14 @@ const VoiceCallPage = () => {
 					<PiPhoneDisconnectFill />
 				</button>
 			</aside>
+			{currentMic && (
+				<div className="fixed right-3 top-3 flex max-w-[50vw] items-center justify-center gap-2 rounded-md bg-black/30 px-4 py-1.5 opacity-70 transition-all hover:opacity-90">
+					<PiMicrophoneFill className="text-sm" />
+					<span className="line-clamp-1 text-sm text-white">
+						{currentMic}
+					</span>
+				</div>
+			)}
 		</main>
 	)
 }

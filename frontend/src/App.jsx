@@ -28,6 +28,7 @@ function App() {
 						path="/video-call/:chatId"
 						element={<VideoCallPage />}
 					/>
+					<Route path="/blank" element={<div></div>} />
 				</Routes>
 			) : (
 				<Routes>

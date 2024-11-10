@@ -58,13 +58,13 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 						>
 							<FiPhone className="h-5 w-5" />
 						</button>
-						<button
+						{/* <button
 							className="flex h-8 w-8 items-center justify-center rounded-full text-primary-800 hover:bg-gray-200"
 							onClick={handleOpenVideoCall}
 							aria-label="Video Call"
 						>
 							<FiVideo className="h-5 w-5" />
-						</button>
+						</button> */}
 					</>
 				)}
 				<button

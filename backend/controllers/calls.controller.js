@@ -18,7 +18,7 @@ const startVoiceCall = async (req, res) => {
     }
 
     if (chat.calling) {
-      return res.status(400).send({ message: "Chat is already in a call" })
+      return res.status(304).send({ message: "Chat is already in a call" })
     }
     chat.calling = "voice"
     await chat.save()
@@ -27,9 +27,13 @@ const startVoiceCall = async (req, res) => {
       chat,
       `${userName} started a voice call`
     )
-    voiceCallSocket.voiceCallStart(chatId, chat.members)
 
-    res.status(200).send({ message: "Voice call started" })
+    let receivers = chat.members
+      .map((m) => m.toString())
+      .filter((m) => m !== userId.toString())
+    voiceCallSocket.voiceCallStart(chatId, receivers)
+
+    res.status(204).send({ message: "Voice call started" })
   } catch (err) {
     console.error(err)
     res.status(500).send({ message: "Request failed, please try again later." })
@@ -47,17 +51,17 @@ const endVoiceCall = async (req, res) => {
     })
 
     if (!chat) {
-      return res.status(404).send({ message: "Chat not found" })
+      return res.status(304).send({ message: "Chat not found" })
     }
 
     if (!chat.calling) {
-      return res.status(400).send({ message: "Chat is not in a call" })
+      return res.status(304).send({ message: "Chat is not in a call" })
     }
     chat.calling = null
     await chat.save()
 
     chatHistoryService.createSystemMessage(chat, "Voice call ended")
-    voiceCallSocket.voiceCallEnd(chatId, chat.members)
+    voiceCallSocket.voiceCallEnd(chatId)
 
     res.status(200).send({ message: "Voice call ended" })
   } catch (err) {
