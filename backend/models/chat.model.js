@@ -16,6 +16,11 @@ const chatSchema = new mongoose.Schema(
       type: String,
       default: "https://cdn-icons-png.flaticon.com/512/2352/2352167.png",
     },
+    calling: {
+      type: String,
+      enum: ["voice", "video"],
+      default: null,
+    },
   },
   { timestamps: true }
 )

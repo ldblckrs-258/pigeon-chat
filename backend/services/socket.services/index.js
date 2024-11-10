@@ -1,5 +1,6 @@
 const fileTransferSocket = require("./fileTransfer")
 const messageSocket = require("./message")
+const voiceCallSocket = require("./voiceCall")
 class SocketServices {
   config = {
     cors: {
@@ -8,18 +9,12 @@ class SocketServices {
   }
   connection(socket) {
     socket.on("online", (userId) => {
-      if (userId) {
-        _onlineUsers = _onlineUsers.filter((u) => u.userId !== userId)
-        _onlineUsers.push({
-          userId,
-          socketId: socket.id,
-        })
+      if (userId && !_onlineUsers.some((u) => socket.id === u.socketId)) {
+        _onlineUsers.push({ userId, socketId: socket.id })
       }
-      _io.emit(
-        "getOnlineUsers",
-        _onlineUsers.map((u) => u.userId)
-      )
-      console.log(_onlineUsers)
+      // trả về danh sách các user.userId đang online, loại bỏ trùng lặp
+      const userIds = [...new Set(_onlineUsers.map((u) => u.userId))]
+      _io.emit("getOnlineUsers", userIds)
     })
     socket.on("disconnect", () => {
       _onlineUsers = _onlineUsers.filter((u) => u.socketId !== socket.id)
@@ -27,11 +22,11 @@ class SocketServices {
         "getOnlineUsers",
         _onlineUsers.map((u) => u.userId)
       )
-      console.log(_onlineUsers)
     })
 
     messageSocket.handler(socket)
     fileTransferSocket.handler(socket)
+    voiceCallSocket.handler(socket)
 
     socket.on("error", (err) => {
       console.error(err)
