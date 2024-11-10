@@ -4,7 +4,7 @@ import { useSocket } from '../hook/useSocket'
 import { useAuth } from '../hook/useAuth'
 export const ChatContext = createContext()
 
-const LIMIT = 50
+const LIMIT = 20
 export const ChatContextProvider = ({ children }) => {
 	const { socket } = useSocket()
 	const { user } = useAuth()
@@ -15,6 +15,7 @@ export const ChatContextProvider = ({ children }) => {
 	const [searchValue, setSearchValue] = useState('')
 	const [unread, setUnread] = useState(0)
 	const [messages, setMessages] = useState([])
+	const [haveMore, setHaveMore] = useState(true)
 
 	const getCurrentChat = async () => {
 		if (!currentChatId) return
@@ -35,6 +36,24 @@ export const ChatContextProvider = ({ children }) => {
 			const data = res.data?.data
 			if (data.length === 0) return
 			setMessages(data)
+			setHaveMore(res.data.haveMore)
+		} catch (error) {
+			console.log(error)
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const loadMoreMessages = async () => {
+		setLoading(true)
+		try {
+			const res = await axios.get(
+				`/api/messages/get/${currentChatId}?limit=${LIMIT}&skip=${messages.length}`,
+			)
+			const data = res.data?.data
+			if (data.length === 0) return
+			setMessages((prev) => [...prev, ...data])
+			setHaveMore(res.data.haveMore)
 		} catch (error) {
 			console.log(error)
 		} finally {
@@ -108,11 +127,19 @@ export const ChatContextProvider = ({ children }) => {
 			}
 			getChats()
 		})
+		socket.on('deleteMessage', (chatId, messageId) => {
+			if (chatId === currentChatId) {
+				setMessages((prev) =>
+					prev.filter((msg) => msg._id !== messageId),
+				)
+			}
+		})
 		return () => {
 			socket.off('newMessage')
 			socket.off('updateChat')
 			socket.off('joinChat')
 			socket.off('outChat')
+			socket.off('deleteMessage')
 		}
 	}, [socket, currentChatId])
 
@@ -132,8 +159,10 @@ export const ChatContextProvider = ({ children }) => {
 				unread,
 				setUnread,
 				messages,
+				haveMore,
 				setMessages,
 				getMessages,
+				loadMoreMessages,
 				getChats,
 				openChat,
 				clearCurrent,

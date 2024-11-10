@@ -29,12 +29,24 @@ class Message {
     receivers.forEach((r) => {
       _io.to(r.socketId).emit("newMessage", {
         ...data,
-        sender: {
-          ...data.sender,
-          _id: data.senderId,
-          isMine: data.senderId.toString() === r.userId,
-        },
+        sender: data?.sender
+          ? {
+              ...data.sender,
+              _id: data.senderId,
+              isMine: data.senderId.toString() === r.userId,
+            }
+          : null,
       })
+    })
+  }
+
+  deleteMessage(chatId, messageId, memberIds) {
+    let receiverIds = _onlineUsers
+      .filter((u) => memberIds.includes(u.userId))
+      .map((u) => u.socketId)
+    if (receiverIds.length === 0) return
+    receiverIds.forEach((id) => {
+      _io.to(id).emit("deleteMessage", chatId, messageId)
     })
   }
 
