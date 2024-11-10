@@ -4,6 +4,7 @@ import ChatSidebar from '../components/chat/ChatSidebar'
 import ChatBox from '../components/chat/ChatBox'
 import ChatInfo from '../components/chat/ChatInfo'
 import { useChat } from '../hook/useChat'
+import CallingModal from '../components/modal/CallingModal'
 const Chat = () => {
 	const { currentChat } = useChat()
 	const [isInfoExpand, setIsInfoExpand] = useState(false)
@@ -26,6 +27,7 @@ const Chat = () => {
 					)}
 				</AnimatePresence>
 			)}
+			<CallingModal />
 		</div>
 	)
 }

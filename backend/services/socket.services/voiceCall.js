@@ -1,9 +1,19 @@
 class VoiceCall {
   handler(socket) {
     socket.on("joinVoiceRoom", (chatId, userId) => {
-      console.log("joinVoiceRoom", chatId, socket.id)
+      const room = _io.sockets.adapter.rooms.get(chatId)
+      const users = []
+      if (room)
+        for (let id of room) {
+          const user = _onlineUsers.find((u) => u.socketId === id)
+          if (user) {
+            users.push(user.userId)
+          }
+        }
+
+      if (users.includes(userId)) return
+
       socket.join(chatId)
-      console.log("voiceCallUserJoined", userId)
       socket.to(chatId).emit("voiceCallUserJoined", userId)
     })
 
@@ -45,14 +55,7 @@ class VoiceCall {
   }
 
   voiceCallEnd(chatId) {
-    // Gọi API để lưu trạng thái endvoicecall
-    // axios.post('/api/voiceCall/end', { chatId })
-    //   .then(response => {
-    //     console.log('Voice call ended:', response.data)
-    //   })
-    //   .catch(error => {
-    //     console.error('Error ending voice call:', error)
-    //   })
+    _io.to(chatId).emit("voiceCallEnd")
   }
 }
 
