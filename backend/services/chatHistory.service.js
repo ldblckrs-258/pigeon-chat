@@ -15,7 +15,7 @@ class ChatHistoryService {
       })
       await newMessage.save()
       messageSocket.sendMessage(
-        newMessage,
+        newMessage?._doc,
         chat.members.map((member) => member.toString())
       )
     } catch (err) {

@@ -3,7 +3,6 @@ const messageModel = require("../models/message.model")
 const userModel = require("../models/user.model")
 const chatHistoryService = require("../services/chatHistory.service")
 const ObjectId = require("mongoose").Types.ObjectId
-const ChatHistoryService = require("../services/chatHistory.service")
 const messageSocket = require("../services/socket.services/message")
 
 const createChat = async (req, res) => {
