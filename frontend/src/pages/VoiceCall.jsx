@@ -96,13 +96,13 @@ const VoiceCallPage = () => {
 				mediaRecorder.start()
 				setTimeout(() => {
 					mediaRecorder.stop()
-				}, 1000)
+				}, 300)
 			}
 
 			mediaRecorder.start()
 			setTimeout(() => {
 				mediaRecorder.stop()
-			}, 1000)
+			}, 300)
 
 			// set current mic
 			const devices = await navigator.mediaDevices.enumerateDevices()
@@ -132,7 +132,7 @@ const VoiceCallPage = () => {
 		}
 		audioTimeoutRef.current = setTimeout(() => {
 			setReceivingAudio(false)
-		}, 1000)
+		}, 500)
 	}
 
 	useEffect(() => {
