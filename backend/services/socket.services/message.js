@@ -29,13 +29,11 @@ class Message {
     receivers.forEach((r) => {
       _io.to(r.socketId).emit("newMessage", {
         ...data,
-        sender: data?.sender
-          ? {
-              ...data.sender,
-              _id: data.senderId,
-              isMine: data.senderId.toString() === r.userId,
-            }
-          : null,
+        sender: {
+          ...data?.sender,
+          _id: data?.senderId,
+          isMine: data?.senderId?.toString() === r.userId,
+        },
       })
     })
   }
