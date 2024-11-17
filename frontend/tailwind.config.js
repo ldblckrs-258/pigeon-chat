@@ -1,8 +1,18 @@
 /** @type {import('tailwindcss').Config} */
+import fluid, { extract, screens, fontSize } from 'fluid-tailwind'
+import containerQueries from '@tailwindcss/container-queries'
 export default {
-	content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+	content: {
+		files: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+		extract,
+	},
 	theme: {
+		screens,
+		fontSize,
 		extend: {
+			screens: {
+				xs: '28rem',
+			},
 			fontFamily: {
 				sans: ['Open Sans', 'sans-serif'],
 				lora: ['Lora', 'serif'],
@@ -54,5 +64,5 @@ export default {
 			},
 		},
 	},
-	plugins: [],
+	plugins: [fluid, containerQueries],
 }
