@@ -5,12 +5,11 @@ import Register from './pages/Register'
 import Chat from './pages/Chat'
 import { useAuth } from './hook/useAuth'
 import { useEffect } from 'react'
-import { useSocket } from './hook/useSocket'
 import VoiceCallPage from './pages/VoiceCall'
-import VideoCallPage from './pages/VideoCall'
+import VoiceCallGroup from './pages/VoiceCallGroup'
+import EndCallPage from './pages/EndCall'
 function App() {
 	const { auth, user } = useAuth()
-	const { onlineUsers, socket } = useSocket()
 	useEffect(() => {
 		auth()
 	}, [])
@@ -25,10 +24,10 @@ function App() {
 						element={<VoiceCallPage />}
 					/>
 					<Route
-						path="/video-call/:chatId"
-						element={<VideoCallPage />}
+						path="/voice-call-group/:chatId"
+						element={<VoiceCallGroup />}
 					/>
-					<Route path="/blank" element={<div></div>} />
+					<Route path="/end-call" element={<EndCallPage />} />
 				</Routes>
 			) : (
 				<Routes>

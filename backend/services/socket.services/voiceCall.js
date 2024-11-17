@@ -1,31 +1,39 @@
+const chatHistoryService = require("../chatHistory.service")
 class VoiceCall {
   handler(socket) {
     socket.on("joinVoiceRoom", (chatId, userId) => {
-      const room = _io.sockets.adapter.rooms.get(chatId)
-      const users = []
-      if (room)
-        for (let id of room) {
-          const user = _onlineUsers.find((u) => u.socketId === id)
-          if (user) {
-            users.push(user.userId)
-          }
-        }
-
-      if (users.includes(userId)) return
-
       socket.join(chatId)
-      socket.to(chatId).emit("voiceCallUserJoined", userId)
+      const user = _onlineUsers.find((u) => u.userId === userId)
+      console.log("joinVoiceRoom", chatId, userId, user)
+      const users = new Set([...this.callingUsers(chatId), user?.userId])
+      const userIds = [...users].filter(Boolean)
+      console.log("joinVoiceRoom", userIds)
+      socket.emit("callingUsers", userIds)
+      socket.to(chatId).emit("callingUsers", userIds)
+    })
+
+    socket.on("getCallingUsers", (chatId) => {
+      const users = this.callingUsers(chatId)
+      socket.emit("callingUsers", users)
     })
 
     socket.on("leaveVoiceRoom", (chatId) => {
       socket.leave(chatId)
       const user = _onlineUsers.find((u) => u.socketId === socket.id)
       if (!user) return
-      socket.to(chatId).emit("voiceCallUserLeft", user.userId)
-
       const room = _io.sockets.adapter.rooms.get(chatId)
       if (!room || room.size === 0) {
         this.voiceCallEnd(chatId)
+      } else {
+        const users = new Set()
+        for (let id of room) {
+          const u = _onlineUsers.find((u) => u.socketId === id)
+          if (u) {
+            users.add(u.userId)
+          }
+        }
+        users.delete(user.userId)
+        socket.to(chatId).emit("callingUsers", [...users])
       }
     })
 
@@ -56,6 +64,20 @@ class VoiceCall {
 
   voiceCallEnd(chatId) {
     _io.to(chatId).emit("voiceCallEnd")
+    chatHistoryService.endCalling(chatId)
+  }
+
+  callingUsers(chatId) {
+    const room = _io.sockets.adapter.rooms.get(chatId)
+    const users = []
+    if (room)
+      for (let id of room) {
+        const user = _onlineUsers.find((u) => u.socketId === id)
+        if (user) {
+          users.push(user.userId)
+        }
+      }
+    return users
   }
 }
 

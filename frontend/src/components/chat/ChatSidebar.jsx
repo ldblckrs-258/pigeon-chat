@@ -98,6 +98,7 @@ const ChatSidebar = ({ className = '' }) => {
 						className={twMerge(
 							'relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-gray-100',
 							currentChatId === chat._id ? 'bg-gray-100' : '',
+							chat?.calling ? 'bg-primary-50' : '',
 						)}
 						onClick={() => openChat(chat._id)}
 					>
@@ -130,8 +131,12 @@ const ChatSidebar = ({ className = '' }) => {
 								</p>
 							</div>
 						</div>
-						{!chat.read && (
-							<span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-red-400"></span>
+						{chat?.calling === 'voice' ? (
+							<span className="animate-ping-2 absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-400"></span>
+						) : (
+							!chat.read && (
+								<span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-red-400"></span>
+							)
 						)}
 					</div>
 				))}

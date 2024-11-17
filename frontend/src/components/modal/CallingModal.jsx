@@ -3,15 +3,18 @@ import { useState, useEffect } from 'react'
 import { useSocket } from '../../hook/useSocket'
 import { useNotification } from '../../hook/useNotification'
 import { PiPhoneCallFill, PiXBold } from 'react-icons/pi'
+import { useChat } from '../../hook/useChat'
 import axios from 'axios'
 
 export default function CallingModal() {
 	const [showModal, setShowModal] = useState(false)
 	const { socket } = useSocket()
+	const { getCurrentChat, currentChatId } = useChat()
 	const { titleNotify, windowNotify } = useNotification()
 	const [chat, setChat] = useState(null)
 
 	const getChatInfo = async (chatId) => {
+		if (currentChatId === chatId) getCurrentChat()
 		try {
 			const res = await axios.get(`/api/chats/get/${chatId}`)
 			setChat(res.data.data)
@@ -20,14 +23,26 @@ export default function CallingModal() {
 		}
 	}
 
+	const endVoiceCall = async () => {
+		try {
+			await axios.post('/api/calls/voice/end', { chatId: chat?._id })
+			if (socket) socket.emit('leaveVoiceRoom', chat?._id)
+		} catch (error) {
+			console.error(error)
+		}
+	}
+
 	const close = () => {
+		if (!chat?.isGroup) {
+			endVoiceCall()
+		}
 		setShowModal(false)
 		setChat(null)
 	}
 
 	const open = () => {
 		setShowModal(false)
-		const url = `/voice-call/${chat?._id}`
+		const url = `/voice-call${chat?.isGroup ? '-group' : ''}/${chat._id}`
 		window.open(
 			url,
 			'_blank',

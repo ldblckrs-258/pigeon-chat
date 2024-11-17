@@ -24,6 +24,7 @@ export const useChat = () => {
 		getChats,
 		openChat,
 		clearCurrent,
+		getCurrentChat,
 	} = useContext(ChatContext)
 	const toast = useToast()
 
@@ -122,5 +123,6 @@ export const useChat = () => {
 		sendThumbUp,
 		uploadImage,
 		clearCurrent,
+		getCurrentChat,
 	}
 }
