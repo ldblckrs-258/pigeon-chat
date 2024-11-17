@@ -55,7 +55,10 @@ const ChatContent = ({ className }) => {
 		setMessages(formatMessages)
 	}, [rawMessages])
 
-	const container = useRef(null)
+	useEffect(() => {
+		console.log('messages', messages?.length)
+		console.log('has more', haveMore)
+	}, [messages])
 
 	return (
 		<>
@@ -85,7 +88,7 @@ const ChatContent = ({ className }) => {
 					</div>
 				) : null}
 				<InfiniteScroll
-					className="relative flex h-full flex-col-reverse gap-1"
+					className="relative flex h-full flex-col-reverse gap-1 [&::-webkit-scrollbar]:w-0"
 					dataLength={messages?.length || 0}
 					inverse={true}
 					next={loadMoreMessages}
