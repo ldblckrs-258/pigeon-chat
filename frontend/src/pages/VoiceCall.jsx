@@ -72,6 +72,13 @@ const VoiceCallPage = () => {
 
 	const handleSendAudioStream = async () => {
 		try {
+			if (
+				!navigator.mediaDevices ||
+				!navigator.mediaDevices.getUserMedia
+			) {
+				throw new Error('getUserMedia is not supported in this browser')
+			}
+
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: true,
 			})

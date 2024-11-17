@@ -172,7 +172,9 @@ const TextMessage = ({ message, isGroup, onDelete }) => {
 				<div className="w-7" />
 			)}
 
-			<div className="relative flex max-w-[80%] flex-col justify-start gap-1 sm:max-w-[50%]">
+			<div
+				className={`relative flex max-w-[70%] flex-col justify-start gap-1 md:max-w-[55%] xl:max-w-[40%] ${['start', 'alone'].includes(message?.position) && 'mt-4'}`}
+			>
 				{isGroup &&
 					!message.sender.isMine &&
 					['start', 'alone'].includes(message?.position) && (
@@ -219,7 +221,7 @@ const TextMessage = ({ message, isGroup, onDelete }) => {
 
 const SystemMessage = ({ message }) => {
 	return (
-		<div className="flex w-full justify-center py-1 text-sm text-gray-400">
+		<div className="~text-xs/sm mt-2 flex w-full justify-center text-gray-400">
 			{message}
 		</div>
 	)
@@ -247,7 +249,9 @@ const IEMessage = ({ message, isGroup, onDelete }) => {
 				<div className="w-7" />
 			)}
 
-			<div className="relative flex max-w-[85%] flex-col justify-start gap-1">
+			<div
+				className={`relative flex max-w-[70%] flex-col justify-start gap-1 xl:max-w-[45%] ${['start', 'alone'].includes(message?.position) && 'mt-4'}`}
+			>
 				{isGroup &&
 					!message.sender.isMine &&
 					(message.position === 'start' ||
@@ -261,9 +265,9 @@ const IEMessage = ({ message, isGroup, onDelete }) => {
 					title={new Date(message.createdAt).toLocaleString()}
 				>
 					{message.type === 'image' ? (
-						<div className="h-[200px] overflow-hidden rounded-lg border border-gray-200">
+						<div className="overflow-hidden rounded-lg border border-gray-200 bg-black/90">
 							<img
-								className="h-full cursor-pointer object-cover"
+								className="max-h-[200px] w-full cursor-pointer object-cover"
 								src={message.content}
 								alt={`${message._id}-image`}
 								onClick={() => openLightbox(message.content)}
@@ -280,7 +284,7 @@ const IEMessage = ({ message, isGroup, onDelete }) => {
 					)}
 				</div>
 				<button
-					className={`absolute -left-5 hidden h-5 w-5 items-center justify-center rounded-full text-gray-500 hover:text-secondary-500 ${message.type === 'image' ? 'bottom-[100px]' : 'bottom-2'} ${message.sender.isMine ? 'group-hover:flex' : ''}`}
+					className={`absolute -left-5 top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-500 hover:text-secondary-500 ${message.sender.isMine ? 'group-hover:flex' : ''}`}
 					onClick={() => onDelete(message._id)}
 				>
 					<PiTrashBold />
@@ -301,7 +305,7 @@ const FileTransferHistory = ({ message }) => {
 			<div className="w-7" />
 
 			<div
-				className="relative flex max-w-[85%] items-center gap-4 rounded-lg bg-gray-200/50 py-3 pl-6 pr-3"
+				className="~gap-3/4 ~pl-4/6 ~pr-1.5/3 relative flex max-w-[75%] items-center rounded-lg bg-gray-200/50 py-3"
 				title={new Date(message.createdAt).toLocaleString()}
 			>
 				<div className="flex size-7 items-center justify-center">
@@ -309,16 +313,16 @@ const FileTransferHistory = ({ message }) => {
 				</div>
 
 				<div className="">
-					<p className="line-clamp-1 w-[200px] flex-1 text-sm font-semibold text-gray-700">
+					<p className="~text-xs/sm line-clamp-1 w-[200px] flex-1 font-semibold text-gray-700">
 						{trimFilename(message?.content, 24)}
 					</p>
 					<span>
-						<p className="inline text-xs text-gray-600">
+						<p className="~text-[0.7rem]/xs inline text-gray-600">
 							{byteToMb(message?.size)} MB
 						</p>
 						<PiDot className="inline text-gray-600" />
 						<p
-							className={`inline text-xs capitalize text-gray-600 ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
+							className={`~text-[0.7rem]/xs inline capitalize text-gray-600 ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
 						>
 							{message?.status}
 						</p>
