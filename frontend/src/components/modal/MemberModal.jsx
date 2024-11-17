@@ -131,7 +131,7 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 
 	return (
 		<div className="fixed left-0 top-0 z-20 flex h-screen w-screen items-center justify-center bg-[#00000033]">
-			<div className="mx-auto flex w-[440px] flex-col items-center overflow-hidden rounded-lg bg-white">
+			<div className="~w-[24rem]/[28rem] mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white">
 				<div className="relative w-full px-4 py-4 text-center text-xl font-semibold shadow-lg">
 					{createMode ? 'Create new chat' : 'Add members'}
 					<button

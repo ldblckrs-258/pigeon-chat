@@ -11,6 +11,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@tailwindcss/container-queries": "^0.1.1",
 		"axios": "^1.7.7",
 		"emoji-picker-react": "^4.12.0",
 		"framer-motion": "^11.11.11",
@@ -38,6 +39,7 @@
 		"eslint-plugin-react": "^7.37.2",
 		"eslint-plugin-react-hooks": "^5.0.0",
 		"eslint-plugin-react-refresh": "^0.4.14",
+		"fluid-tailwind": "^1.0.4",
 		"globals": "^15.12.0",
 		"postcss": "^8.4.47",
 		"postcss-import": "^16.1.0",

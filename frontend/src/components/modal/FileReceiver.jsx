@@ -5,10 +5,12 @@ import { useToast } from '../../hook/useToast'
 import { STATUS } from './constants'
 import FileIcon from '../FileIcon'
 import { trimFilename, byteToMb } from '../../utils/format'
+import useWindowSize from '../../hook/useWindowSize'
 
 export default function FileReceiver({ sender, metadata, onClose }) {
 	const [status, setStatus] = useState(STATUS.PENDING)
 	const [dataChannel, setDataChannel] = useState(null)
+	const { width } = useWindowSize()
 	const localPeer = useRef(null)
 	const [progress, setProgress] = useState({
 		current: 0,
@@ -229,7 +231,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 	}, [])
 
 	return (
-		<div className="relative flex w-auto max-w-[90vw] flex-col items-center justify-center gap-2 rounded-lg bg-white px-12 py-4">
+		<div className="~px-6/12 relative flex w-auto max-w-[90vw] flex-col items-center justify-center gap-2 rounded-lg bg-white py-4">
 			<button
 				className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full text-lg hover:bg-gray-100"
 				onClick={onClose}
@@ -259,9 +261,12 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 						<FileIcon ext={metadata?.name.split('.').pop()} />
 					</div>
 
-					<div className="">
-						<p className="line-clamp-1 min-w-[252px] flex-1 text-sm font-semibold">
-							{trimFilename(metadata?.name, 33)}
+					<div className="flex-1 overflow-hidden">
+						<p className="line-clamp-1 text-sm font-semibold">
+							{trimFilename(
+								metadata?.name,
+								width < 448 ? 20 : width < 720 ? 24 : 32,
+							)}
 						</p>
 						<p className="text-xs text-gray-600">
 							{byteToMb(metadata?.size)} MB

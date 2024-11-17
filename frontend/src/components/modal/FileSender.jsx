@@ -374,7 +374,7 @@ export default function FileSender({ targetId, onClose }) {
 						}
 					}}
 				>
-					<p className="text-gray-500">
+					<p className="text-center text-gray-500">
 						Drag & drop your file here, or click to select
 					</p>
 					<input

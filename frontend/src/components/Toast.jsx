@@ -48,7 +48,7 @@ const Toast = ({ id, title, message, type, timeout }) => {
 			initial={{ opacity: 0, x: '110%' }}
 			animate={{ opacity: 1, x: 0 }}
 			exit={{ opacity: 0, x: '110%' }}
-			className="w-[380px] rounded-lg border-l-[6px] bg-gray-100 py-2 pr-1 shadow-lg"
+			className="w-[380px] max-w-[80vw] rounded-lg border-l-[6px] bg-gray-100 py-2 pr-1 shadow-lg"
 			style={{ borderColor: color }}
 		>
 			<div className="ml-3 flex items-center gap-3">
