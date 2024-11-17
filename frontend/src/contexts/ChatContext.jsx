@@ -4,7 +4,7 @@ import { useSocket } from '../hook/useSocket'
 import { useAuth } from '../hook/useAuth'
 export const ChatContext = createContext()
 
-const LIMIT = 20
+const LIMIT = 15
 export const ChatContextProvider = ({ children }) => {
 	const { socket } = useSocket()
 	const { user } = useAuth()
@@ -166,6 +166,7 @@ export const ChatContextProvider = ({ children }) => {
 				getChats,
 				openChat,
 				clearCurrent,
+				getCurrentChat,
 			}}
 		>
 			{children}

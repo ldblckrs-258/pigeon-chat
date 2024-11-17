@@ -92,6 +92,7 @@ const findUserChats = async (req, res) => {
         isMyMessage: false,
         read: true,
         isGroup: chat.members.length != 2,
+        calling: chat.calling,
         members: chat.members
           .filter((member) => member._id.toString() !== userId.toString())
           .map((member) => member._id),
@@ -152,6 +153,7 @@ const getChat = async (req, res) => {
       avatar: chat.avatar,
       members: chat.members,
       isGroup: chat.members.length != 2,
+      calling: chat.calling,
     }
 
     if (!modifiedChat.isGroup) {
