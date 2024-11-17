@@ -54,6 +54,22 @@ class ChatHistoryService {
       console.error(err)
     }
   }
+
+  endCalling = async (chatId) => {
+    try {
+      const chat = await chatModel.findById(chatId)
+      if (!chat) {
+        console.log("Chat not found !")
+        return
+      }
+      if (!chat.calling) return
+      chat.calling = null
+      await chat.save()
+      this.createSystemMessage(chat, "Voice call ended")
+    } catch (err) {
+      console.error(err)
+    }
+  }
 }
 
 module.exports = new ChatHistoryService()
