@@ -139,7 +139,7 @@ const ChatSidebar = ({ className = '' }) => {
 								</p>
 								<div className="flex w-full items-center gap-2">
 									<p
-										className={`line-clamp-1 w-full flex-1 text-xs text-primary-900 ${!chat.read && 'font-bold'}`}
+										className={`line-clamp-1 w-full flex-1 break-all text-xs text-primary-900 ${!chat.read && 'font-bold'}`}
 									>
 										{chat.isMyMessage && 'You: '}{' '}
 										{chat.lastMessage}

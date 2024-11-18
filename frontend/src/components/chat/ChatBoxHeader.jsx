@@ -16,10 +16,6 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 		)
 	}
 
-	useEffect(() => {
-		console.log('currentChat', currentChat)
-	}, [currentChat])
-
 	// const handleOpenVideoCall = () => {
 	// 	const url = `/video-call/${currentChat._id}`
 	// 	window.open(
