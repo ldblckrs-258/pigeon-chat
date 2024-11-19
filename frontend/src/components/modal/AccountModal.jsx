@@ -130,8 +130,8 @@ const AccountModal = ({ onClose }) => {
 	}
 
 	return (
-		<div className="fixed left-0 top-0 z-20 flex h-screen w-screen items-center justify-center bg-[#00000033]">
-			<div className="~w-[24rem]/[28rem] mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white px-4 py-6">
+		<div className="fixed left-0 top-0 z-20 flex h-dvh w-screen items-center justify-center bg-[#00000033]">
+			<div className="mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white px-4 py-6 ~w-[24rem]/[28rem]">
 				<div className="flex w-full items-center justify-between">
 					<div className="flex items-center gap-1">
 						<button

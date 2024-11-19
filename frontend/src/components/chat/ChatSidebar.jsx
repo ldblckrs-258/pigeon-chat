@@ -211,14 +211,19 @@ const ChatSidebar = ({ className = '' }) => {
 						<PiSignOutBold />
 					</button>
 				</div>
-				<button
-					className="absolute -right-6 top-1/2 z-10 -translate-y-1/2 rounded-r-xl bg-white p-1 py-5 shadow-[8px_0_20px_0_#00000015] xl:hidden"
-					onClick={() => setIsExpand(!isExpand)}
-				>
-					<PiCaretRightBold
-						className={`transition-all ${isExpand ? 'rotate-180' : ''}`}
-					/>
-				</button>
+				<div className="absolute -right-6 top-1/2 z-10 -translate-y-1/2 xl:hidden">
+					<button
+						className="relative rounded-r-xl bg-white p-1 py-5 shadow-[8px_0_20px_0_#00000015]"
+						onClick={() => setIsExpand(!isExpand)}
+					>
+						<PiCaretRightBold
+							className={`transition-all ${isExpand ? 'rotate-180' : ''}`}
+						/>
+						{unread > 0 && (
+							<span className="animate-ping-2 absolute right-1 top-[-2px] size-2 rounded-full bg-secondary-500/70"></span>
+						)}
+					</button>
+				</div>
 			</div>
 
 			{showAccountModal && (
