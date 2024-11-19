@@ -2,11 +2,9 @@ import { twMerge } from 'tailwind-merge'
 import { PiDotsThreeOutlineVerticalFill } from 'react-icons/pi'
 import { FiPhone, FiPhoneCall, FiVideo } from 'react-icons/fi'
 import { useChat } from '../../hook/useChat'
-import { useEffect } from 'react'
 
 const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 	const { currentChat } = useChat()
-
 	const handleOpenVoiceCall = () => {
 		const url = `/voice-call${currentChat?.isGroup ? '-group' : ''}/${currentChat._id}`
 		window.open(
@@ -26,7 +24,9 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 	// }
 
 	return (
-		<div className="absolute left-0 top-0 z-10 flex w-full items-center justify-between bg-white px-6 py-4 shadow-md">
+		<div
+			className={`absolute left-0 top-0 z-10 flex w-full items-center justify-between bg-white shadow-md ~px-5/6 ~py-3/4`}
+		>
 			<div className="flex flex-1 items-center justify-start">
 				<div className="relative h-10 w-10 border-gray-300">
 					<img

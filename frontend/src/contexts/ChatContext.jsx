@@ -66,7 +66,15 @@ export const ChatContextProvider = ({ children }) => {
 			const res = await axios.get('/api/chats/all', {
 				params: { ...(searchValue && { search: searchValue }) },
 			})
-			const data = res.data
+			let data = res.data
+			if (currentChatId) {
+				data = data.map((chat) => {
+					if (chat._id === currentChatId) {
+						chat.read = true
+					}
+					return chat
+				})
+			}
 			setChats(data)
 			setUnread(data.filter((chat) => !chat.read).length)
 		} catch (error) {
