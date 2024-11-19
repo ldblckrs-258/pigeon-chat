@@ -35,7 +35,7 @@ const ChatSidebar = ({ className = '' }) => {
 	const hiddenEmail = user.email.replace(/(?<=.{3}).(?=[^@]*?.@)/g, '*')
 	const [showAddModal, setShowAddModal] = useState(false)
 	const [showAccountModal, setShowAccountModal] = useState(false)
-	const { isWideScreen } = useWindowSize()
+	const { isWideScreen, width } = useWindowSize()
 	const [isExpand, setIsExpand] = useState(true)
 
 	useEffect(() => {
@@ -55,7 +55,15 @@ const ChatSidebar = ({ className = '' }) => {
 				'fixed left-0 top-0 z-[20] h-full w-[22rem] max-w-[calc(100vw-40px)] rounded-lg bg-gray-200 xl:relative',
 				className,
 			)}
-			animate={{ left: isWideScreen ? 0 : isExpand ? 0 : '-22rem' }}
+			animate={{
+				left: isWideScreen
+					? 0
+					: isExpand
+						? 0
+						: width < 392
+							? -width + 40
+							: '-22rem',
+			}}
 			transition={{ duration: 0.3 }}
 		>
 			{showAddModal && (
