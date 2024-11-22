@@ -9,6 +9,7 @@ export const ChatContextProvider = ({ children }) => {
 	const { socket } = useSocket()
 	const { user } = useAuth()
 	const [loading, setLoading] = useState(false)
+	const [chatsLoading, setChatsLoading] = useState(false)
 	const [currentChatId, setCurrentChatId] = useState(null)
 	const [currentChat, setCurrentChat] = useState(null)
 	const [chats, setChats] = useState([])
@@ -61,16 +62,27 @@ export const ChatContextProvider = ({ children }) => {
 		}
 	}
 
-	const getChats = async () => {
+	const getChats = async (isFirstLoad = false) => {
+		if (isFirstLoad) setChatsLoading(true)
 		try {
 			const res = await axios.get('/api/chats/all', {
 				params: { ...(searchValue && { search: searchValue }) },
 			})
-			const data = res.data
+			let data = res.data
+			if (currentChatId) {
+				data = data.map((chat) => {
+					if (chat._id === currentChatId) {
+						chat.read = true
+					}
+					return chat
+				})
+			}
 			setChats(data)
 			setUnread(data.filter((chat) => !chat.read).length)
 		} catch (error) {
 			console.error(error)
+		} finally {
+			setChatsLoading(false)
 		}
 	}
 
@@ -95,8 +107,23 @@ export const ChatContextProvider = ({ children }) => {
 	}
 
 	useEffect(() => {
+		if (!user || !user?.id) return
+		getChats(true)
+	}, [user])
+
+	useEffect(() => {
 		getChats()
-	}, [searchValue, user])
+	}, [searchValue])
+
+	useEffect(() => {
+		if (!user || !user?.id) {
+			setChats([])
+			setCurrentChat(null)
+			setCurrentChatId(null)
+			setMessages([])
+			setUnread(0)
+		}
+	}, [user])
 
 	useEffect(() => {
 		if (!currentChatId) return
@@ -154,6 +181,7 @@ export const ChatContextProvider = ({ children }) => {
 				setCurrentChat,
 				chats,
 				setChats,
+				chatsLoading,
 				searchValue,
 				setSearchValue,
 				unread,
