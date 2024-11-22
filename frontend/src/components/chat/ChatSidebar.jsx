@@ -26,6 +26,7 @@ const ChatSidebar = ({ className = '' }) => {
 		currentChatId,
 		unread,
 		getChats,
+		chatsLoading,
 		searchValue,
 		setSearchValue,
 		openChat,
@@ -108,7 +109,7 @@ const ChatSidebar = ({ className = '' }) => {
 						<PiPlusBold className="text-xl" />
 					</button>
 				</div>
-				<div className="h-min-0 flex w-full flex-1 flex-col items-center overflow-y-auto bg-white p-2">
+				<div className="h-min-0 flex w-full flex-1 flex-col items-center overflow-hidden overflow-y-auto bg-white p-2">
 					<div className="w-full px-4 py-2">
 						<TextField
 							className="w-full"
@@ -166,6 +167,17 @@ const ChatSidebar = ({ className = '' }) => {
 							)}
 						</div>
 					))}
+					{chatsLoading && (
+						<>
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/90" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/80" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/70" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/60" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/50" />
+						</>
+					)}
 				</div>
 				<div className="relative flex items-center justify-center rounded-br-lg bg-white px-6 py-4 xl:rounded-bl-lg">
 					<div className="flex flex-1 items-center justify-center">
