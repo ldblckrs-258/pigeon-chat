@@ -1,6 +1,7 @@
 const express = require("express")
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
+const path = require("path")
 require("dotenv").config()
 
 const { serverInfo } = require("./utils/network.util")
@@ -17,5 +18,6 @@ app.use(
 
 app.get("/", serverInfo)
 app.use(require("./routes"))
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 module.exports = app

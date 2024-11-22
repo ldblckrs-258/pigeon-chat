@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import App from './App.jsx'
 import './index.css'
 import { AuthContextProvider } from './contexts/AuthContext.jsx'
@@ -13,19 +14,21 @@ import { FileReceiveContextProvider } from './contexts/FileReceiveContext.jsx'
 import Compose from './contexts/Compose.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-	<BrowserRouter>
-		<Compose
-			components={[
-				AuthContextProvider,
-				ToastContextProvider,
-				LoaderContextProvider,
-				SocketContextProvider,
-				ChatContextProvider,
-				LightboxContextProvider,
-				FileReceiveContextProvider,
-			]}
-		>
-			<App />
-		</Compose>
-	</BrowserRouter>,
+	<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+		<BrowserRouter>
+			<Compose
+				components={[
+					AuthContextProvider,
+					ToastContextProvider,
+					LoaderContextProvider,
+					SocketContextProvider,
+					ChatContextProvider,
+					LightboxContextProvider,
+					FileReceiveContextProvider,
+				]}
+			>
+				<App />
+			</Compose>
+		</BrowserRouter>
+	</GoogleOAuthProvider>,
 )

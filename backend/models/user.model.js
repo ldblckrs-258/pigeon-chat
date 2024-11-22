@@ -10,8 +10,7 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default:
-        "https://static-00.iconduck.com/assets.00/avatar-default-icon-1024x1024-dvpl2mz1.png",
+      default: "default-avatar.png",
     },
     email: {
       type: String,

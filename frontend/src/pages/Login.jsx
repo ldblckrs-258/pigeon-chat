@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../hook/useAuth'
 import Checkbox from '../components/Checkbox'
 import TextField from '../components/TextField'
 import { useToast } from '../hook/useToast'
 import { useNavigate } from 'react-router-dom'
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google'
+import axios from 'axios'
 
 const emptyData = {
 	email: '',
@@ -11,7 +13,7 @@ const emptyData = {
 }
 
 const Login = () => {
-	const { login } = useAuth()
+	const { login, googleLogin } = useAuth()
 	const [formData, setFormData] = useState({
 		email: '',
 		password: '',
@@ -47,6 +49,14 @@ const Login = () => {
 		}
 
 		await login(formData.email, formData.password, formData.isRemember)
+	}
+
+	const handleGoogleLoginSuccess = async (response) => {
+		await googleLogin(response?.credential, formData.isRemember)
+	}
+
+	const handleGoogleLoginError = (error) => {
+		toast.error('Google login failed', error?.message, 5000)
 	}
 
 	return (
@@ -121,6 +131,14 @@ const Login = () => {
 				>
 					Login
 				</button>
+				<div className="mt-3 w-full">
+					<GoogleLogin
+						onSuccess={handleGoogleLoginSuccess}
+						onError={handleGoogleLoginError}
+						locale="en"
+					/>
+				</div>
+
 				<div className="mt-4 text-sm">
 					Don&apos;t have account?
 					<button

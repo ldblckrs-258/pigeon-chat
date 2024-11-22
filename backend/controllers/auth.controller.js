@@ -2,6 +2,10 @@ const userModel = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const validator = require("validator")
+const { OAuth2Client } = require("google-auth-library")
+const securePassword = require("secure-random-password")
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 const createToken = (_id, session = true) => {
   const secret = process.env.JWT_SECRET
@@ -174,6 +178,73 @@ const updateInfo = async (req, res) => {
   }
 }
 
+const verifyGoogleToken = async (token) => {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  })
+
+  return ticket.getPayload()
+}
+
+const googleLogin = async (req, res) => {
+  const { credential, isRemember } = req.body
+  if (!credential) {
+    return res.status(401).send({ message: "Unauthorized" })
+  }
+
+  try {
+    const payload = await verifyGoogleToken(credential)
+
+    let user = await userModel.findOne({ email: payload.email })
+
+    if (!user) {
+      const password = securePassword.randomPassword({
+        length: 16,
+        characters: [
+          securePassword.lower,
+          securePassword.upper,
+          securePassword.digits,
+          securePassword.symbols,
+        ],
+      })
+
+      const salt = await bcrypt.genSalt(10)
+      const hash = await bcrypt.hash(password, salt)
+
+      const newUser = new userModel({
+        name: payload.name,
+        email: payload.email,
+        password: hash,
+        avatar: payload.picture,
+      })
+
+      user = await newUser.save()
+    }
+
+    const token = createToken(user._id)
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      session: !isRemember,
+      ...(isRemember && { maxAge: 30 * 24 * 60 * 60 * 1000 }),
+    })
+
+    res.status(200).send({
+      message: "Logged in successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        avatar: user.avatar,
+        email: user.email,
+        role: user.role,
+      },
+    })
+  } catch (err) {
+    return res.status(401).send({ message: "Unauthorized" })
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -181,4 +252,5 @@ module.exports = {
   myAccount,
   changePassword,
   updateInfo,
+  googleLogin,
 }
