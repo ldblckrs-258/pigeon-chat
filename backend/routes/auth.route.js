@@ -9,5 +9,6 @@ router.post("/login", authController.login)
 router.get("/logout", authController.logout)
 router.put("/update/password", authenticate, authController.changePassword)
 router.put("/update/info", authenticate, authController.updateInfo)
+router.post("/google", authController.googleLogin)
 
 module.exports = router

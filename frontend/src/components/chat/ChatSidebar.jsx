@@ -26,6 +26,7 @@ const ChatSidebar = ({ className = '' }) => {
 		currentChatId,
 		unread,
 		getChats,
+		chatsLoading,
 		searchValue,
 		setSearchValue,
 		openChat,
@@ -35,7 +36,7 @@ const ChatSidebar = ({ className = '' }) => {
 	const hiddenEmail = user.email.replace(/(?<=.{3}).(?=[^@]*?.@)/g, '*')
 	const [showAddModal, setShowAddModal] = useState(false)
 	const [showAccountModal, setShowAccountModal] = useState(false)
-	const { isWideScreen } = useWindowSize()
+	const { isWideScreen, width } = useWindowSize()
 	const [isExpand, setIsExpand] = useState(true)
 
 	useEffect(() => {
@@ -55,7 +56,15 @@ const ChatSidebar = ({ className = '' }) => {
 				'fixed left-0 top-0 z-[20] h-full w-[22rem] max-w-[calc(100vw-40px)] rounded-lg bg-gray-200 xl:relative',
 				className,
 			)}
-			animate={{ left: isWideScreen ? 0 : isExpand ? 0 : '-22rem' }}
+			animate={{
+				left: isWideScreen
+					? 0
+					: isExpand
+						? 0
+						: width < 392
+							? -width + 40
+							: '-22rem',
+			}}
 			transition={{ duration: 0.3 }}
 		>
 			{showAddModal && (
@@ -100,7 +109,7 @@ const ChatSidebar = ({ className = '' }) => {
 						<PiPlusBold className="text-xl" />
 					</button>
 				</div>
-				<div className="h-min-0 flex w-full flex-1 flex-col items-center overflow-y-auto bg-white p-2">
+				<div className="h-min-0 flex w-full flex-1 flex-col items-center overflow-hidden overflow-y-auto bg-white p-2">
 					<div className="w-full px-4 py-2">
 						<TextField
 							className="w-full"
@@ -158,6 +167,17 @@ const ChatSidebar = ({ className = '' }) => {
 							)}
 						</div>
 					))}
+					{chatsLoading && (
+						<>
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/90" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/80" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/70" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/60" />
+							<div className="my-1 h-14 w-full animate-pulse items-center justify-center rounded-lg bg-gray-100/50" />
+						</>
+					)}
 				</div>
 				<div className="relative flex items-center justify-center rounded-br-lg bg-white px-6 py-4 xl:rounded-bl-lg">
 					<div className="flex flex-1 items-center justify-center">
@@ -211,14 +231,19 @@ const ChatSidebar = ({ className = '' }) => {
 						<PiSignOutBold />
 					</button>
 				</div>
-				<button
-					className="absolute -right-6 top-1/2 z-10 -translate-y-1/2 rounded-r-xl bg-white p-1 py-5 shadow-[8px_0_20px_0_#00000015] xl:hidden"
-					onClick={() => setIsExpand(!isExpand)}
-				>
-					<PiCaretRightBold
-						className={`transition-all ${isExpand ? 'rotate-180' : ''}`}
-					/>
-				</button>
+				<div className="absolute -right-6 top-1/2 z-10 -translate-y-1/2 xl:hidden">
+					<button
+						className="relative rounded-r-xl bg-white p-1 py-5 shadow-[8px_0_20px_0_#00000015]"
+						onClick={() => setIsExpand(!isExpand)}
+					>
+						<PiCaretRightBold
+							className={`transition-all ${isExpand ? 'rotate-180' : ''}`}
+						/>
+						{unread > 0 && (
+							<span className="animate-ping-2 absolute right-1 top-[-2px] size-2 rounded-full bg-secondary-500/70"></span>
+						)}
+					</button>
+				</div>
 			</div>
 
 			{showAccountModal && (

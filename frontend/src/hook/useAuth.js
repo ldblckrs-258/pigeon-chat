@@ -68,5 +68,22 @@ export const useAuth = () => {
 		setLoading(false)
 	}
 
-	return { login, register, logout, auth, user }
+	const googleLogin = async (credential, isRemember) => {
+		try {
+			const res = await axios.post('/api/auth/google', {
+				credential,
+				isRemember,
+			})
+			setUser(res.data?.user)
+			toast.success(
+				'Login successful',
+				`Welcome back, ${res.data.user.name}`,
+				2000,
+			)
+		} catch (err) {
+			toast.error('Login failed', err.response?.data?.message, 5000)
+		}
+	}
+
+	return { login, googleLogin, register, logout, auth, user }
 }

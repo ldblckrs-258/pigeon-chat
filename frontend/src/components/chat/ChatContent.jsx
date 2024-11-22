@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import SpinLoader from '../SpinLoader'
 import { useToast } from '../../hook/useToast'
@@ -12,6 +12,7 @@ import DefaultImg from '../../assets/default.png'
 import { trimFilename, byteToMb } from '../../utils/format'
 import FileIcon from '../FileIcon'
 import mql from '@microlink/mql'
+import { useSocket } from '../../hook/useSocket'
 const ChatContent = ({ className }) => {
 	const toast = useToast()
 	const {
@@ -19,9 +20,9 @@ const ChatContent = ({ className }) => {
 		haveMore,
 		loadMoreMessages,
 		loading,
-		chatId,
 		isGroup,
 	} = useChat()
+	const { onlineUsers } = useSocket()
 	const [messages, setMessages] = useState()
 	const handleDeleteMessage = async (messageId) => {
 		try {
@@ -100,6 +101,9 @@ const ChatContent = ({ className }) => {
 											message={message}
 											isGroup={isGroup}
 											onDelete={handleDeleteMessage}
+											isOnline={onlineUsers.includes(
+												message.sender._id,
+											)}
 										/>
 									)
 								if (message.type === 'system')
@@ -119,6 +123,9 @@ const ChatContent = ({ className }) => {
 											key={message._id}
 											message={message}
 											isGroup={isGroup}
+											isOnline={onlineUsers.includes(
+												message.sender._id,
+											)}
 											onDelete={handleDeleteMessage}
 										/>
 									)
@@ -129,6 +136,9 @@ const ChatContent = ({ className }) => {
 											key={message._id}
 											message={message}
 											isGroup={isGroup}
+											isOnline={onlineUsers.includes(
+												message.sender._id,
+											)}
 										/>
 									)
 							})
@@ -139,8 +149,7 @@ const ChatContent = ({ className }) => {
 	)
 }
 
-const TextMessage = ({ message, isGroup, onDelete }) => {
-	// tìm kiếm các hyperlink trong message.content, tách ra thành các phần tử trong mảng {type: '', content: ''}
+const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 	const [parts, setParts] = useState([])
 	const [firstLink, setFirstLink] = useState()
 	const [loading, setLoading] = useState(false)
@@ -198,15 +207,19 @@ const TextMessage = ({ message, isGroup, onDelete }) => {
 			)}
 		>
 			{!message.sender.isMine &&
-			isGroup &&
 			['end', 'alone'].includes(message?.position) ? (
-				<img
-					className="mb-1 h-7 w-7 rounded-full border border-gray-200 object-cover"
-					src={message.sender.avatar}
-					alt={`${message.sender.name} avatar`}
-				/>
+				<div className="relative">
+					<img
+						className="mb-1 h-7 w-7 rounded-full border border-gray-200 object-cover"
+						src={message.sender.avatar}
+						alt={`${message.sender.name} avatar`}
+					/>
+					{isOnline && (
+						<span className="absolute -right-0.5 bottom-1 size-3 rounded-full border-2 border-white bg-green-400"></span>
+					)}
+				</div>
 			) : (
-				<div className={isGroup ? 'w-7' : '~w-0/2'} />
+				<div className="w-7" />
 			)}
 
 			<div
@@ -320,7 +333,7 @@ const SystemMessage = ({ message }) => {
 	)
 }
 
-const IEMessage = ({ message, isGroup, onDelete }) => {
+const IEMessage = ({ message, isGroup, onDelete, isOnline }) => {
 	const { openLightbox } = useLightbox()
 
 	return (
@@ -331,15 +344,19 @@ const IEMessage = ({ message, isGroup, onDelete }) => {
 			)}
 		>
 			{!message.sender.isMine &&
-			isGroup &&
 			(message.position === 'end' || message.position === 'alone') ? (
-				<img
-					className="mb-1 h-7 w-7 rounded-full border border-gray-200 object-cover"
-					src={message.sender.avatar}
-					alt={`${message.sender.name} avatar`}
-				/>
+				<div className="relative">
+					<img
+						className="mb-1 h-7 w-7 rounded-full border border-gray-200 object-cover"
+						src={message.sender.avatar}
+						alt={`${message.sender.name} avatar`}
+					/>
+					{isOnline && (
+						<span className="absolute -right-0.5 bottom-1 size-3 rounded-full border-2 border-white bg-green-400"></span>
+					)}
+				</div>
 			) : (
-				<div className={isGroup ? 'w-7' : '~w-0/2'} />
+				<div className="w-7" />
 			)}
 
 			<div
@@ -384,7 +401,7 @@ const IEMessage = ({ message, isGroup, onDelete }) => {
 	)
 }
 
-const FileTransferHistory = ({ message, isGroup }) => {
+const FileTransferHistory = ({ message, isGroup, isOnline }) => {
 	return (
 		<div
 			className={twMerge(
@@ -392,35 +409,60 @@ const FileTransferHistory = ({ message, isGroup }) => {
 				message.sender.isMine ? 'justify-end pr-3' : 'justify-start',
 			)}
 		>
-			<div className={isGroup ? 'w-7' : '~w-0/2'} />
-
-			<div
-				className="relative flex max-w-[75%] items-center rounded-lg bg-gray-200/50 py-3 ~gap-3/4 ~pr-1.5/3 ~pl-4/6"
-				title={new Date(message.createdAt).toLocaleString()}
-			>
-				<div className="flex size-7 items-center justify-center">
-					<FileIcon ext={message?.content?.split('.').pop()} />
+			{!message.sender.isMine &&
+			(message.position === 'end' || message.position === 'alone') ? (
+				<div className="relative">
+					<img
+						className="mb-1 h-7 w-7 rounded-full border border-gray-200 object-cover"
+						src={message.sender.avatar}
+						alt={`${message.sender.name} avatar`}
+					/>
+					{isOnline && (
+						<span className="absolute -right-0.5 bottom-1 size-3 rounded-full border-2 border-white bg-green-400"></span>
+					)}
 				</div>
+			) : (
+				<div className="w-7" />
+			)}
+			<div
+				className={`relative flex max-w-[75%] flex-col justify-start gap-1 xl:max-w-[45%] ${['start', 'alone'].includes(message?.position) && 'mt-4'}`}
+			>
+				{isGroup &&
+					!message.sender.isMine &&
+					(message.position === 'start' ||
+						message.position === 'alone') && (
+						<div className="pl-2 text-xs">
+							{message.sender.name}
+						</div>
+					)}
+				<div
+					className="relative flex items-center rounded-lg bg-gray-200/50 py-3 ~gap-3/4 ~pr-1.5/3 ~pl-4/6"
+					title={new Date(message.createdAt).toLocaleString()}
+				>
+					<div className="flex size-7 items-center justify-center">
+						<FileIcon ext={message?.content?.split('.').pop()} />
+					</div>
 
-				<div className="">
-					<p className="line-clamp-1 w-[200px] flex-1 font-semibold text-gray-700 ~text-xs/sm">
-						{trimFilename(message?.content, 24)}
-					</p>
-					<span>
-						<p className="inline text-gray-600 ~text-[0.7rem]/xs">
-							{byteToMb(message?.size)} MB
+					<div className="">
+						<p className="line-clamp-1 w-[200px] flex-1 font-semibold text-gray-700 ~text-xs/sm">
+							{trimFilename(message?.content, 24)}
 						</p>
-						<PiDot className="inline text-gray-600" />
-						<p
-							className={`inline capitalize text-gray-600 ~text-[0.7rem]/xs ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
-						>
-							{message?.status}
-						</p>
+						<span>
+							<p className="inline text-gray-600 ~text-[0.7rem]/xs">
+								{byteToMb(message?.size)} MB
+							</p>
+							<PiDot className="inline text-gray-600" />
+							<p
+								className={`inline capitalize text-gray-600 ~text-[0.7rem]/xs ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
+							>
+								{message?.status}
+							</p>
+						</span>
+					</div>
+					<span className="absolute right-1.5 top-1.5 flex items-center justify-center rounded-full text-[10px] text-primary-500/70">
+						<PiArrowsLeftRightBold />
 					</span>
 				</div>
-				<span className="absolute right-1.5 top-1.5 flex items-center justify-center rounded-full text-[10px] text-primary-500/70">
-					<PiArrowsLeftRightBold />
-				</span>
 			</div>
 		</div>
 	)
