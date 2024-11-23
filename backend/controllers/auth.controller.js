@@ -145,6 +145,7 @@ const login = async (req, res) => {
         avatar: user.avatar,
         email: user.email,
         role: user.role,
+        isVerified: user.isVerified,
       },
     })
   } catch (err) {
@@ -263,6 +264,7 @@ const googleLogin = async (req, res) => {
         email: payload.email,
         password: hash,
         avatar: payload.picture,
+        isVerified: true,
       })
 
       user = await newUser.save()
@@ -284,6 +286,7 @@ const googleLogin = async (req, res) => {
         avatar: user.avatar,
         email: user.email,
         role: user.role,
+        isVerified: true,
       },
     })
   } catch (err) {
