@@ -25,7 +25,7 @@ class ChatHistoryService {
 
   createFileTransferHistory = async (
     chatId,
-    senderId,
+    sender,
     fileName,
     fileSize,
     status
@@ -38,16 +38,56 @@ class ChatHistoryService {
       }
       const newMessage = new messageModel({
         chatId,
-        senderId,
+        senderId: sender._id,
         content: fileName,
         type: "fileTransfer",
         status: status,
         size: fileSize,
-        readerIds: [senderId],
+        readerIds: [sender._id],
       })
       await newMessage.save()
+
+      const members = chat.members.map((member) => member.toString())
+
+      const message = {
+        ...newMessage._doc,
+        sender,
+      }
+      messageSocket.sendMessage(message, members)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  createFileUploadHistory = async (
+    chatId,
+    sender,
+    fileName,
+    fileSize,
+    status
+  ) => {
+    try {
+      const chat = await chatModel.findById(chatId)
+      if (!chat) {
+        console.log("Chat not found !")
+        return
+      }
+      const newMessage = new messageModel({
+        chatId,
+        senderId: sender._id,
+        content: fileName,
+        type: "file",
+        status: status,
+        size: fileSize,
+        readerIds: [sender._id],
+      })
+      await newMessage.save()
+      const message = {
+        ...newMessage._doc,
+        sender,
+      }
       messageSocket.sendMessage(
-        newMessage._doc,
+        message,
         chat.members.map((member) => member.toString())
       )
     } catch (err) {

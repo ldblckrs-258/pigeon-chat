@@ -132,11 +132,13 @@ const Login = () => {
 					Login
 				</button>
 				<div className="mt-3 w-full">
-					<GoogleLogin
-						onSuccess={handleGoogleLoginSuccess}
-						onError={handleGoogleLoginError}
-						locale="en"
-					/>
+					<div className="mx-auto">
+						<GoogleLogin
+							onSuccess={handleGoogleLoginSuccess}
+							onError={handleGoogleLoginError}
+							use_fedcm_for_prompt={false}
+						/>
+					</div>
 				</div>
 
 				<div className="mt-4 text-sm">
