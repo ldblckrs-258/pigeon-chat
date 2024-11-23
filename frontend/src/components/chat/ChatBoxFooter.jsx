@@ -5,15 +5,19 @@ import {
 	PiSmileyFill,
 	PiArrowsLeftRightBold,
 	PiXBold,
+	PiUploadBold,
+	PiCircleNotchBold,
 } from 'react-icons/pi'
 import { FaThumbsUp } from 'react-icons/fa'
 import EmojiPicker from 'emoji-picker-react'
 import FileSender from '../modal/FileSender'
-import DefaultImg from '../../assets/default.png'
 import { useChat } from '../../hook/useChat'
 import { useAuth } from '../../hook/useAuth'
 import useWindowSize from '../../hook/useWindowSize'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+import SpinLoader from '../SpinLoader'
+import axios from 'axios'
+import { useToast } from '../../hook/useToast'
 
 const ChatBoxFooter = ({ userOnline }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)
@@ -21,8 +25,17 @@ const ChatBoxFooter = ({ userOnline }) => {
 	const inputRef = useRef(null)
 	const [isTyping, setIsTyping] = useState(false)
 	const inputImgRef = useRef(null)
+	const inputFileRef = useRef(null)
+	const [uploading, setUploading] = useState(false)
+	const toast = useToast()
 	const { user } = useAuth()
-	const { currentChat, sendAMessage, sendThumbUp, uploadImage } = useChat()
+	const {
+		currentChat,
+		currentChatId,
+		sendAMessage,
+		sendThumbUp,
+		uploadImage,
+	} = useChat()
 	const [image, setImage] = useState(null)
 	const [openFileTransfer, setOpenFileTransfer] = useState(false)
 	const { width } = useWindowSize()
@@ -31,7 +44,7 @@ const ChatBoxFooter = ({ userOnline }) => {
 	}
 
 	const handleSendMessage = () => {
-		if (image && image !== DefaultImg) {
+		if (image && image !== 'loading') {
 			sendAMessage(image)
 			setImage(null)
 		} else {
@@ -44,15 +57,49 @@ const ChatBoxFooter = ({ userOnline }) => {
 	const handleUploadImage = (e) => {
 		const file = e.target.files[0]
 		if (file) {
-			setImage(DefaultImg)
+			setImage('loading')
 			uploadImage(file).then((res) => {
 				setImage(res)
 			})
 		}
 	}
 
+	const handleUploadFile = async (e) => {
+		const file = e.target.files[0]
+		if (file) {
+			setUploading(true)
+
+			const formData = new FormData()
+			formData.append('file', file)
+			formData.append('chatId', currentChatId)
+
+			try {
+				toast.info('Uploading file...', 'Please wait', 4000)
+				const res = await axios.post(
+					'/api/messages/sendFile',
+					formData,
+					{
+						headers: {
+							'Content-Type': 'multipart/form-data',
+						},
+					},
+				)
+				console.log(res?.data)
+			} catch (error) {
+				console.error(error)
+				toast.error(
+					'Failed to upload file',
+					'Please try again later',
+					4000,
+				)
+			}
+
+			setUploading(false)
+		}
+	}
+
 	return (
-		<div className="z-5 ~px-4/6 ~py-3/4 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white">
+		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white ~px-4/6 ~py-3/4">
 			{openEmoji && (
 				<div className="absolute -top-0 left-6 z-[100] translate-y-[-100%] text-sm">
 					<EmojiPicker
@@ -84,16 +131,23 @@ const ChatBoxFooter = ({ userOnline }) => {
 						onChange={handleUploadImage}
 					/>
 				</button>
-
-				<div className="relative">
-					<button
-						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
-						onClick={() => setOpenEmoji(!openEmoji)}
-					>
-						<PiSmileyFill />
-					</button>
-				</div>
-
+				<button
+					className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+					onClick={() => inputFileRef.current.click()}
+				>
+					{uploading ? (
+						<PiCircleNotchBold className="animate-spin" />
+					) : (
+						<PiUploadBold />
+					)}
+					<input
+						type="file"
+						accept="*"
+						className="hidden"
+						ref={inputFileRef}
+						onChange={handleUploadFile}
+					/>
+				</button>
 				{!currentChat?.isGroup && userOnline ? (
 					<div>
 						<button
@@ -124,6 +178,15 @@ const ChatBoxFooter = ({ userOnline }) => {
 						)}
 					</div>
 				) : null}
+
+				<div className="relative">
+					<button
+						className="relative flex h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
+						onClick={() => setOpenEmoji(!openEmoji)}
+					>
+						<PiSmileyFill />
+					</button>
+				</div>
 			</motion.div>
 			<div className="relative mx-2 flex-1">
 				<input
@@ -153,11 +216,17 @@ const ChatBoxFooter = ({ userOnline }) => {
 				</button>
 				{image && (
 					<div className="absolute -top-2 left-2 h-20 w-20 translate-y-[-100%] rounded-lg shadow-custom">
-						<img
-							className="h-full w-full rounded-lg object-cover"
-							src={image}
-							alt="uploaded-image"
-						/>
+						{image === 'loading' ? (
+							<div className="flex h-full w-full items-center justify-center rounded-lg bg-gray-100">
+								<SpinLoader className="size-6" />
+							</div>
+						) : (
+							<img
+								className="h-full w-full rounded-lg object-cover"
+								src={image}
+								alt="uploaded-image"
+							/>
+						)}
 						<button
 							className="absolute -right-3 -top-3 flex h-6 w-6 items-center justify-center rounded-full border border-gray-400 bg-white text-sm text-gray-700 transition-colors hover:bg-gray-200"
 							onClick={() => setImage(null)}
