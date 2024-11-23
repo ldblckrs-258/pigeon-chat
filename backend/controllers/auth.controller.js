@@ -5,8 +5,6 @@ const validator = require("validator")
 const { OAuth2Client } = require("google-auth-library")
 const securePassword = require("secure-random-password")
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
-
 const createToken = (_id, session = true) => {
   const secret = process.env.JWT_SECRET
 
@@ -178,23 +176,21 @@ const updateInfo = async (req, res) => {
   }
 }
 
-const verifyGoogleToken = async (token) => {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  })
-
-  return ticket.getPayload()
-}
-
 const googleLogin = async (req, res) => {
-  const { credential, isRemember } = req.body
-  if (!credential) {
+  const { access_token, isRemember } = req.body
+  if (!access_token) {
     return res.status(401).send({ message: "Unauthorized" })
   }
 
   try {
-    const payload = await verifyGoogleToken(credential)
+    const googleRes = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`
+    )
+    const payload = await googleRes.json()
+
+    if (!payload?.email) {
+      return res.status(401).send({ message: "Unauthorized" })
+    }
 
     let user = await userModel.findOne({ email: payload.email })
 
