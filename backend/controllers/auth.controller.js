@@ -2,7 +2,7 @@ const userModel = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const validator = require("validator")
-const { OAuth2Client } = require("google-auth-library")
+const emailService = require("../services/email.service")
 const securePassword = require("secure-random-password")
 
 const createToken = (_id, session = true) => {
@@ -55,12 +55,61 @@ const register = async (req, res) => {
 
     await user.save()
 
+    const token = createToken(user._id)
+    await emailService.sendVerificationEmail(user.email, user.name, token)
+
     res.status(201).send({
-      message: "User created successfully",
+      message: "Please check your email to verify your account",
     })
   } catch (err) {
     console.error(err)
     res.status(500).send({ message: err })
+  }
+}
+
+const resendVerificationEmail = async (req, res) => {
+  const user = req.user
+
+  if (user?.isVerified) {
+    return res.status(400).send({ message: "Account already verified" })
+  }
+
+  try {
+    const token = createToken(user._id)
+    await emailService.sendVerificationEmail(user.email, user.name, token)
+
+    res.status(200).send({ message: "Verification email sent" })
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({ message: err })
+  }
+}
+
+const verify = async (req, res) => {
+  const token = req.query.token
+  try {
+    if (!token) {
+      return res.status(400).send({ message: "Token is required" })
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const user = await userModel.findById(decoded._id)
+
+    if (!user) {
+      return res.status(400).send({ message: "User not found" })
+    }
+
+    if (user.isVerified) {
+      return res.status(200).send({ message: "Account already verified" })
+    }
+
+    user.isVerified = true
+    await user.save()
+
+    res.status(200).send({ message: "Account verified successfully" })
+  } catch (err) {
+    console.error(err)
+    res.status(400).send({ message: "Invalid token" })
   }
 }
 
@@ -118,6 +167,7 @@ const myAccount = (req, res) => {
       avatar: req.user.avatar,
       email: req.user.email,
       role: req.user.role,
+      isVerified: req.user.isVerified,
     },
   })
 }
@@ -249,4 +299,6 @@ module.exports = {
   changePassword,
   updateInfo,
   googleLogin,
+  verify,
+  resendVerificationEmail,
 }
