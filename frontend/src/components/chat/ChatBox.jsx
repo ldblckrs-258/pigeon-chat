@@ -31,7 +31,7 @@ const ChatBox = ({ className = '', isInfoExpand, onClickInfoButton }) => {
 				onClickInfoButton={onClickInfoButton}
 				isInfoExpand={isInfoExpand}
 			/>
-			<div className="~mt-[3.875rem]]/[4.375rem] relative h-full min-h-0 w-full bg-white pl-4 pr-1 ~pb-[4rem]/[4.875rem]">
+			<div className="relative h-full min-h-0 w-full bg-white pl-4 pr-1 ~mt-[3.875rem]/[4.375rem] ~pb-[4rem]/[4.875rem]">
 				<ChatContent />
 			</div>
 			<ChatBoxFooter userOnline={userOnline} />
