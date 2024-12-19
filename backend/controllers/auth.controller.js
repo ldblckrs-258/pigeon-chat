@@ -5,11 +5,26 @@ const validator = require("validator")
 const emailService = require("../services/email.service")
 const securePassword = require("secure-random-password")
 
-const createToken = (_id, session = true) => {
+const createToken = (_id, type = "session-login") => {
   const secret = process.env.JWT_SECRET
 
+  let expires
+  switch (type) {
+    case "session-login":
+      expires = "1d"
+      break
+    case "remember-login":
+      expires = "30d"
+      break
+    case "verify":
+      expires = "5m"
+      break
+    default:
+      expires = "1d"
+  }
+
   return jwt.sign({ _id }, secret, {
-    expiresIn: session ? "1d" : "30d",
+    expiresIn: expires,
   })
 }
 
@@ -55,7 +70,7 @@ const register = async (req, res) => {
 
     await user.save()
 
-    const token = createToken(user._id)
+    const token = createToken(user._id, "verify")
     await emailService.sendVerificationEmail(user.email, user.name, token)
 
     res.status(201).send({
@@ -75,7 +90,7 @@ const resendVerificationEmail = async (req, res) => {
   }
 
   try {
-    const token = createToken(user._id)
+    const token = createToken(user._id, "verify")
     await emailService.sendVerificationEmail(user.email, user.name, token)
 
     res.status(200).send({ message: "Verification email sent" })
@@ -129,7 +144,10 @@ const login = async (req, res) => {
       return res.status(400).send({ message: "Invalid password" })
     }
 
-    const token = createToken(user._id, !isRemember)
+    const token = createToken(
+      user._id,
+      isRemember ? "remember-login" : "session-login"
+    )
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -270,7 +288,15 @@ const googleLogin = async (req, res) => {
       user = await newUser.save()
     }
 
-    const token = createToken(user._id)
+    if (!user.isVerified) {
+      user.isVerified = true
+      await user.save()
+    }
+
+    const token = createToken(
+      user._id,
+      isRemember ? "remember-login" : "session-login"
+    )
 
     res.cookie("token", token, {
       httpOnly: true,
