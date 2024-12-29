@@ -1,5 +1,4 @@
 import { twMerge } from 'tailwind-merge'
-import PropsType from 'prop-types'
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 const TextField = ({

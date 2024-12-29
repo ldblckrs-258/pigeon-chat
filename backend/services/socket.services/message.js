@@ -30,8 +30,8 @@ class Message {
       _io.to(r.socketId).emit("newMessage", {
         ...data,
         sender: {
-          name: data?.sender.name,
-          avatar: data?.sender.avatar,
+          name: data?.sender?.name,
+          avatar: data?.sender?.avatar,
           _id: data?.senderId,
           isMine: data?.senderId?.toString() === r.userId,
         },

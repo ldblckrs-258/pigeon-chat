@@ -85,7 +85,7 @@ const ChatContent = ({ className }) => {
 					<SpinLoader className="m-auto ~size-12/16" />
 				) : null}
 				{!loading && !messages?.length ? (
-					<div className="m-auto text-3xl font-semibold text-gray-500">
+					<div className="m-auto font-semibold text-gray-500 ~text-xl/3xl">
 						No messages yet
 					</div>
 				) : null}
@@ -198,7 +198,7 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 	const getData = async () => {
 		setLoading(true)
 		const { status, data } = await mql(firstLink, {
-			screenshot: true,
+			screenshot: false,
 		})
 		if (status === 'success') {
 			setData(data)
@@ -313,7 +313,7 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 												className={`h-fit w-full py-2 text-gray-950 ~px-3/4 ${message.sender.isMine ? 'bg-gray-100' : 'bg-gray-200'}`}
 											>
 												<h4
-													className="cursor-pointer pb-1 font-semibold ~text-[0.95rem]/sm ~leading-[1rem]/5 hover:underline"
+													className="cursor-pointer pb-1 font-semibold ~text-[0.85rem]/sm ~leading-[1rem]/5 hover:underline"
 													onClick={() =>
 														window.open(firstLink)
 													}
@@ -462,8 +462,8 @@ const FileTransferHistory = ({ message, isGroup, isOnline }) => {
 					</div>
 
 					<div className="">
-						<p className="line-clamp-1 w-[200px] flex-1 font-semibold text-gray-700 ~text-xs/sm">
-							{trimFilename(message?.content, 24)}
+						<p className="line-clamp-1 flex-1 font-semibold text-gray-700 ~text-xs/sm ~w-[10rem]/[12.5rem]">
+							{trimFilename(message?.content, 26)}
 						</p>
 						<span>
 							<p className="inline text-gray-600 ~text-[0.7rem]/xs">
@@ -533,8 +533,8 @@ const FileUploaded = ({ message, isGroup, isOnline, onDelete }) => {
 					</div>
 
 					<div className="">
-						<p className="line-clamp-1 w-[200px] flex-1 font-semibold text-gray-700 ~text-xs/sm">
-							{trimFilename(message?.content, 24)}
+						<p className="line-clamp-1 flex-1 font-semibold text-gray-700 ~text-xs/sm ~w-[10rem]/[12.5rem]">
+							{trimFilename(message?.content, 26)}
 						</p>
 						<span>
 							<p className="inline text-gray-600 ~text-[0.7rem]/xs">

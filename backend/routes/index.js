@@ -7,5 +7,6 @@ router.use("/messages", require("./message.route"))
 router.use("/tools", require("./tool.route"))
 router.use("/users", require("./user.route"))
 router.use("/calls", require("./calls.route"))
+router.use("/friendships", require("./friendship.route"))
 
 module.exports = router

@@ -13,11 +13,13 @@ const createChat = async (req, res) => {
 
   try {
     const chat = await chatModel.findOne({
-      members: { $eq: members },
+      members: { $all: members },
     })
 
     if (chat) {
-      return res.status(400).send({ message: "Chat already exists" })
+      return res
+        .status(400)
+        .send({ message: "Chat already exists", chatId: chat._id })
     }
 
     let name = "New Chat"
@@ -39,6 +41,7 @@ const createChat = async (req, res) => {
 
     res.status(201).send({
       message: "Chat created successfully",
+      chatId: newChat._id,
     })
   } catch (err) {
     console.error(err)

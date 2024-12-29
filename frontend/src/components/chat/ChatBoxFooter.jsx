@@ -236,7 +236,7 @@ const ChatBoxFooter = ({ userOnline }) => {
 					</div>
 				)}
 			</div>
-			{isTyping && width < 448 ? null : (
+			{(isTyping && width < 448) || width < 365 ? null : (
 				<button
 					className="relative h-9 w-9 items-center justify-center rounded-full text-xl text-primary-400 transition-colors hover:bg-gray-100 active:bg-gray-200"
 					onClick={() => sendThumbUp()}

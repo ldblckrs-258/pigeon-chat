@@ -40,7 +40,7 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 				</div>
 
 				<div className="ml-3">
-					<p className="text-sm font-semibold text-primary-900">
+					<p className="line-clamp-1 text-sm font-semibold text-primary-900">
 						{currentChat.name}
 					</p>
 					<p className="text-xs text-primary-700">

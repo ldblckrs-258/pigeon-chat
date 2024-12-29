@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../hook/useAuth'
-import { PiPenFill, PiXBold } from 'react-icons/pi'
+import { PiPenFill, PiXCircleBold } from 'react-icons/pi'
 import { useToast } from '../../hook/useToast'
 import TextField from '../TextField'
 import axios from 'axios'
@@ -130,8 +130,11 @@ const AccountModal = ({ onClose }) => {
 	}
 
 	return (
-		<div className="fixed left-0 top-0 z-20 flex h-dvh w-screen items-center justify-center bg-[#00000033]">
-			<div className="mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white px-4 py-6 ~w-[24rem]/[28rem]">
+		<div
+			className="fixed left-0 top-0 z-20 flex h-dvh w-screen items-center justify-center bg-[#00000033]"
+			onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+		>
+			<div className="mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white px-4 ~w-[24rem]/[28rem] ~py-4/6">
 				<div className="flex w-full items-center justify-between">
 					<div className="flex items-center gap-1">
 						<button
@@ -148,10 +151,10 @@ const AccountModal = ({ onClose }) => {
 						</button>
 					</div>
 					<button
-						className="flex h-8 w-8 items-center justify-center rounded-full text-2xl text-gray-500 hover:text-secondary-500"
+						className="flex h-8 w-8 items-center justify-center rounded-full text-3xl text-secondary-500 opacity-80 hover:text-secondary-600"
 						onClick={onClose}
 					>
-						<PiXBold />
+						<PiXCircleBold />
 					</button>
 				</div>
 				{tabIndex === 0 ? (
