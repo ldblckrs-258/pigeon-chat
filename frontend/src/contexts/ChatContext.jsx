@@ -2,12 +2,14 @@ import { createContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import { useSocket } from '../hook/useSocket'
 import { useAuth } from '../hook/useAuth'
+import { useToast } from '../hook/useToast'
 export const ChatContext = createContext()
 
 const LIMIT = 15
 export const ChatContextProvider = ({ children }) => {
 	const { socket } = useSocket()
 	const { user } = useAuth()
+	const toast = useToast()
 	const [loading, setLoading] = useState(false)
 	const [chatsLoading, setChatsLoading] = useState(false)
 	const [currentChatId, setCurrentChatId] = useState(null)
@@ -17,6 +19,7 @@ export const ChatContextProvider = ({ children }) => {
 	const [unread, setUnread] = useState(0)
 	const [messages, setMessages] = useState([])
 	const [haveMore, setHaveMore] = useState(true)
+	const [friendRequests, setFriendRequests] = useState([])
 
 	const getCurrentChat = async () => {
 		if (!currentChatId) return
@@ -106,9 +109,19 @@ export const ChatContextProvider = ({ children }) => {
 		getChats()
 	}
 
+	const getFriendRequests = async () => {
+		try {
+			const res = await axios.get('/api/friendships/requests')
+			setFriendRequests(res.data)
+		} catch (error) {
+			console.error(error)
+		}
+	}
+
 	useEffect(() => {
 		if (!user || !user?.id) return
 		getChats(true)
+		getFriendRequests()
 	}, [user])
 
 	useEffect(() => {
@@ -161,6 +174,22 @@ export const ChatContextProvider = ({ children }) => {
 				)
 			}
 		})
+		socket.on('friendRequest', (name) => {
+			toast.info(
+				'New friend request',
+				`${name} sent you a friend request`,
+				5000,
+			)
+			getFriendRequests()
+		})
+		socket.on('friendRequestAccepted', (name) => {
+			toast.success(
+				'Friend request accepted',
+				`You and ${name} are now friends`,
+				5000,
+			)
+			getFriendRequests()
+		})
 		return () => {
 			socket.off('newMessage')
 			socket.off('updateChat')
@@ -195,6 +224,8 @@ export const ChatContextProvider = ({ children }) => {
 				openChat,
 				clearCurrent,
 				getCurrentChat,
+				friendRequests,
+				setFriendRequests,
 			}}
 		>
 			{children}

@@ -7,13 +7,11 @@ import { useAuth } from '../../hook/useAuth'
 import { useSocket } from '../../hook/useSocket'
 import { isOnline } from '../../utils/validate'
 import { useChat } from '../../hook/useChat'
-import useWindowSize from '../../hook/useWindowSize'
 const ChatBox = ({ className = '', isInfoExpand, onClickInfoButton }) => {
 	const { user } = useAuth()
 	const { onlineUsers } = useSocket()
 	const [userOnline, setUserOnline] = useState(false)
 	const { currentChat } = useChat()
-	const { height } = useWindowSize()
 
 	useEffect(() => {
 		setUserOnline(isOnline(currentChat.members, user.id, onlineUsers))
