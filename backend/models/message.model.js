@@ -21,6 +21,7 @@ const messageSchema = new mongoose.Schema(
         "fileTransfer",
         "voiceCall",
         "videoCall",
+        "file",
       ],
       default: "text",
     },

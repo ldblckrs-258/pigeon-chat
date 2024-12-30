@@ -2,6 +2,7 @@ const messageModel = require("../models/message.model")
 const chatModel = require("../models/chat.model")
 const messageSocket = require("../services/socket.services/message")
 const ChatHistoryService = require("../services/chatHistory.service")
+const fs = require("fs")
 const createMessage = async (req, res) => {
   const chatId = req.body.chatId
   const content = req.body.content
@@ -208,6 +209,10 @@ const deleteMessage = async (req, res) => {
 
     messageSocket.deleteMessage(message.chatId, messageId, memberIds)
 
+    if (message.type === "file") {
+      fs.unlink(`./uploads/${message.content}`, (err) => {})
+    }
+
     res.status(200).send({ message: "Message deleted successfully" })
   } catch (err) {
     console.error(err)
@@ -217,7 +222,7 @@ const deleteMessage = async (req, res) => {
 
 const createFileTransferHistory = async (req, res) => {
   const chatId = req.body.chatId
-  const senderId = req.body.senderId
+  const user = req.user
   const fileName = req.body.fileName
   const fileSize = req.body.fileSize
   const status = req.body.status || "completed"
@@ -225,7 +230,7 @@ const createFileTransferHistory = async (req, res) => {
   try {
     await ChatHistoryService.createFileTransferHistory(
       chatId,
-      senderId,
+      user,
       fileName,
       fileSize,
       status
@@ -240,10 +245,33 @@ const createFileTransferHistory = async (req, res) => {
   }
 }
 
+const sendFile = async (req, res) => {
+  try {
+    const file = req.file
+    if (!file) {
+      return res.status(400).send({ message: "No file found" })
+    }
+
+    await ChatHistoryService.createFileUploadHistory(
+      req.body.chatId,
+      req.user,
+      file.path.slice(8),
+      file.size,
+      "completed"
+    )
+
+    res.status(201).send({ message: "File uploaded successfully" })
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({ message: "Request failed, please try again later." })
+  }
+}
+
 module.exports = {
   createMessage,
   getChatMessages,
   getNewMessages,
   deleteMessage,
   createFileTransferHistory,
+  sendFile,
 }

@@ -11,14 +11,20 @@ import {
 	PiSignOutBold,
 	PiGearFill,
 	PiCaretRightBold,
+	PiListBold,
+	PiXBold,
+	PiUsersThreeBold,
+	PiGearBold,
 } from 'react-icons/pi'
+import { TbEdit } from 'react-icons/tb'
 import { twMerge } from 'tailwind-merge'
 import { useSocket } from '../../hook/useSocket'
 import { useChat } from '../../hook/useChat'
 import MemberModal from '../modal/MemberModal'
 import useWindowSize from '../../hook/useWindowSize'
-import { motion } from 'framer-motion'
-const ChatSidebar = ({ className = '' }) => {
+import { AnimatePresence, motion } from 'framer-motion'
+import FriendModal from '../friends/FriendModal'
+const ChatSidebar = ({ className = '', setPage }) => {
 	const { user, logout } = useAuth()
 	const { onlineUsers } = useSocket()
 	const {
@@ -30,12 +36,13 @@ const ChatSidebar = ({ className = '' }) => {
 		searchValue,
 		setSearchValue,
 		openChat,
+		friendRequests,
 	} = useChat()
 	const [showEmail, setShowEmail] = useState(false)
 	const [isHoverAvatar, setIsHoverAvatar] = useState(false)
 	const hiddenEmail = user.email.replace(/(?<=.{3}).(?=[^@]*?.@)/g, '*')
-	const [showAddModal, setShowAddModal] = useState(false)
-	const [showAccountModal, setShowAccountModal] = useState(false)
+	const [showModal, setShowModal] = useState(false) // 'add' | 'account' | 'friend'
+	const [showMenu, setShowMenu] = useState(false)
 	const { isWideScreen, width } = useWindowSize()
 	const [isExpand, setIsExpand] = useState(true)
 
@@ -67,18 +74,6 @@ const ChatSidebar = ({ className = '' }) => {
 			}}
 			transition={{ duration: 0.3 }}
 		>
-			{showAddModal && (
-				<MemberModal
-					type="create"
-					onClose={() => {
-						setShowAddModal(false)
-					}}
-					onSubmit={() => {
-						getChats()
-						setShowAddModal(false)
-					}}
-				/>
-			)}
 			<div className="relative flex h-full w-full flex-col gap-1 max-xl:shadow-[8px_0_20px_0_#00000015]">
 				<div
 					className={`flex w-full items-center justify-center rounded-tr-lg bg-white px-6 py-4 xl:rounded-tl-lg`}
@@ -89,9 +84,9 @@ const ChatSidebar = ({ className = '' }) => {
 						>
 							<IoIosChatbubbles className="text-2xl text-gray-100" />
 						</div>
-						<div className="tiem-center flex flex-1">
+						<div className="flex flex-1 items-center">
 							<h1 className="ml-4 mr-1 text-lg font-semibold text-gray-800">
-								Messages
+								Chat Rooms
 							</h1>
 							{unread > 0 && (
 								<span className="h-5 -translate-y-2 rounded-full bg-red-300 px-2 py-0.5 text-xs font-semibold text-gray-700">
@@ -100,14 +95,95 @@ const ChatSidebar = ({ className = '' }) => {
 							)}
 						</div>
 					</div>
-					<button
-						onClick={() => {
-							setShowAddModal(true)
-						}}
-						className="flex h-8 w-8 items-center justify-center gap-1 rounded-full bg-primary-300 text-sm font-semibold text-white transition-colors hover:bg-primary-400 active:bg-primary-500"
+					<div
+						className="relative z-10"
+						onClick={() => setShowMenu(!showMenu)}
 					>
-						<PiPlusBold className="text-xl" />
-					</button>
+						<AnimatePresence>
+							{showMenu && (
+								<motion.button
+									className="absolute flex h-8 w-8 items-center justify-center gap-1 rounded-full bg-primary-50 text-lg font-semibold text-primary-600 shadow-[0_0_8px_2px_#00000030] hover:bg-primary-100"
+									title="New Chat"
+									onClick={() => setShowModal('add')}
+									initial={{ top: 0, left: -12, opacity: 0 }}
+									animate={{
+										top: -8,
+										left: -46,
+										opacity: 1,
+									}}
+									exit={{ top: 0, left: -12, opacity: 0 }}
+									transition={{
+										duration: 0.2,
+									}}
+								>
+									<TbEdit />
+								</motion.button>
+							)}
+						</AnimatePresence>
+						<AnimatePresence>
+							{showMenu && (
+								<motion.button
+									className="absolute flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-lg font-semibold text-primary-600 shadow-[0_0_8px_2px_#00000030] hover:bg-primary-100"
+									title="Friends"
+									onClick={() => setShowModal('friend')}
+									initial={{
+										bottom: 0,
+										left: -12,
+										opacity: 0,
+									}}
+									animate={{
+										bottom: -37.46,
+										left: -37.46,
+										opacity: 1,
+									}}
+									exit={{ bottom: 0, left: -12, opacity: 0 }}
+									transition={{ duration: 0.2, delay: 0.1 }}
+								>
+									<PiUsersThreeBold />
+									<div className="relative size-0">
+										{friendRequests.length > 0 && (
+											<div className="absolute -right-2 -top-4 animate-ping rounded-full bg-red-400 ~size-2/2.5"></div>
+										)}
+									</div>
+								</motion.button>
+							)}
+						</AnimatePresence>
+						<AnimatePresence>
+							{showMenu && (
+								<motion.button
+									className="absolute flex h-8 w-8 items-center justify-center gap-1 rounded-full bg-primary-50 text-lg font-semibold text-primary-600 shadow-[0_0_8px_2px_#00000030] hover:bg-primary-100"
+									title="Account Settings"
+									onClick={() => setShowModal('account')}
+									initial={{
+										left: 0,
+										bottom: -12,
+										opacity: 0,
+									}}
+									animate={{
+										left: 8,
+										bottom: -46,
+										opacity: 1,
+									}}
+									exit={{ left: 0, bottom: -12, opacity: 0 }}
+									transition={{ duration: 0.2, delay: 0.2 }}
+								>
+									<PiGearBold />
+								</motion.button>
+							)}
+						</AnimatePresence>
+						<div className="relative">
+							<button
+								className={`flex h-8 w-8 items-center justify-center gap-1 rounded-full text-xl font-semibold transition-all ${showMenu ? 'z-10 bg-secondary-100/70 text-secondary-600 shadow-[0_0_8px_2px_#00000030] hover:bg-secondary-100' : 'bg-primary-100/70 text-primary-600 hover:bg-primary-100'} `}
+								title="Show Menu"
+								onClick={() => setShowMenu(!showMenu)}
+							>
+								{showMenu ? <PiXBold /> : <PiListBold />}
+							</button>
+							{friendRequests.length > 0 && !showMenu && (
+								<div className="absolute -right-0.5 -top-0.5 animate-ping rounded-full bg-red-400 ~size-2/2.5"></div>
+							)}
+						</div>
+					</div>
 				</div>
 				<div className="h-min-0 flex w-full flex-1 flex-col items-center overflow-hidden overflow-y-auto bg-white p-2">
 					<div className="w-full px-4 py-2">
@@ -123,13 +199,13 @@ const ChatSidebar = ({ className = '' }) => {
 						<div
 							key={chat._id}
 							className={twMerge(
-								'relative flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-gray-100',
+								'relative flex w-full cursor-pointer items-center justify-center rounded-lg transition-colors ~gap-2/3 ~px-3/4 ~py-2/3 hover:bg-gray-100',
 								currentChatId === chat._id ? 'bg-gray-100' : '',
 								chat?.calling ? 'bg-primary-50' : '',
 							)}
 							onClick={() => openChat(chat._id)}
 						>
-							<div className={`relative size-10`}>
+							<div className={`relative ~size-9/10`}>
 								<img
 									className="h-full w-full rounded-full border border-gray-300 object-cover"
 									src={chat.avatar}
@@ -143,12 +219,12 @@ const ChatSidebar = ({ className = '' }) => {
 							</div>
 
 							<div className="flex-1">
-								<p className="line-clamp-1 w-full text-sm font-semibold text-primary-900">
+								<p className="line-clamp-1 w-full font-semibold text-primary-900 ~text-xs/sm">
 									{chat.name}
 								</p>
 								<div className="flex w-full items-center gap-2">
 									<p
-										className={`line-clamp-1 w-full flex-1 break-all text-xs text-primary-900 ${!chat.read && 'font-bold'}`}
+										className={`line-clamp-1 w-full flex-1 break-all leading-4 text-primary-900 ~text-[0.65rem]/[0.75rem] ${!chat.read && 'font-bold'}`}
 									>
 										{chat.isMyMessage && 'You: '}{' '}
 										{chat.lastMessage}
@@ -194,7 +270,7 @@ const ChatSidebar = ({ className = '' }) => {
 							{isHoverAvatar && (
 								<div
 									className="absolute left-0 top-0 flex h-full w-full cursor-pointer items-center justify-center bg-[#00000069]"
-									onClick={() => setShowAccountModal(true)}
+									onClick={() => setShowModal('account')}
 								>
 									<PiGearFill className="text-white" />
 								</div>
@@ -246,8 +322,23 @@ const ChatSidebar = ({ className = '' }) => {
 				</div>
 			</div>
 
-			{showAccountModal && (
-				<AccountModal onClose={() => setShowAccountModal(false)} />
+			{showModal === 'account' && (
+				<AccountModal onClose={() => setShowModal(null)} />
+			)}
+			{showModal === 'add' && (
+				<MemberModal
+					type="create"
+					onClose={() => {
+						setShowModal(null)
+					}}
+					onSubmit={() => {
+						getChats()
+						setShowModal(null)
+					}}
+				/>
+			)}
+			{showModal === 'friend' && (
+				<FriendModal onClose={() => setShowModal(null)} />
 			)}
 		</motion.div>
 	)

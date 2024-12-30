@@ -2,16 +2,29 @@ const userModel = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const validator = require("validator")
-const { OAuth2Client } = require("google-auth-library")
+const emailService = require("../services/email.service")
 const securePassword = require("secure-random-password")
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
-
-const createToken = (_id, session = true) => {
+const createToken = (_id, type = "session-login") => {
   const secret = process.env.JWT_SECRET
 
+  let expires
+  switch (type) {
+    case "session-login":
+      expires = "1d"
+      break
+    case "remember-login":
+      expires = "30d"
+      break
+    case "verify":
+      expires = "5m"
+      break
+    default:
+      expires = "1d"
+  }
+
   return jwt.sign({ _id }, secret, {
-    expiresIn: session ? "1d" : "30d",
+    expiresIn: expires,
   })
 }
 
@@ -57,12 +70,61 @@ const register = async (req, res) => {
 
     await user.save()
 
+    const token = createToken(user._id, "verify")
+    await emailService.sendVerificationEmail(user.email, user.name, token)
+
     res.status(201).send({
-      message: "User created successfully",
+      message: "Please check your email to verify your account",
     })
   } catch (err) {
     console.error(err)
     res.status(500).send({ message: err })
+  }
+}
+
+const resendVerificationEmail = async (req, res) => {
+  const user = req.user
+
+  if (user?.isVerified) {
+    return res.status(400).send({ message: "Account already verified" })
+  }
+
+  try {
+    const token = createToken(user._id, "verify")
+    await emailService.sendVerificationEmail(user.email, user.name, token)
+
+    res.status(200).send({ message: "Verification email sent" })
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({ message: err })
+  }
+}
+
+const verify = async (req, res) => {
+  const token = req.query.token
+  try {
+    if (!token) {
+      return res.status(400).send({ message: "Token is required" })
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const user = await userModel.findById(decoded._id)
+
+    if (!user) {
+      return res.status(400).send({ message: "User not found" })
+    }
+
+    if (user.isVerified) {
+      return res.status(200).send({ message: "Account already verified" })
+    }
+
+    user.isVerified = true
+    await user.save()
+
+    res.status(200).send({ message: "Account verified successfully" })
+  } catch (err) {
+    console.error(err)
+    res.status(400).send({ message: "Invalid token" })
   }
 }
 
@@ -82,7 +144,10 @@ const login = async (req, res) => {
       return res.status(400).send({ message: "Invalid password" })
     }
 
-    const token = createToken(user._id, !isRemember)
+    const token = createToken(
+      user._id,
+      isRemember ? "remember-login" : "session-login"
+    )
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -98,6 +163,7 @@ const login = async (req, res) => {
         avatar: user.avatar,
         email: user.email,
         role: user.role,
+        isVerified: user.isVerified,
       },
     })
   } catch (err) {
@@ -120,6 +186,7 @@ const myAccount = (req, res) => {
       avatar: req.user.avatar,
       email: req.user.email,
       role: req.user.role,
+      isVerified: req.user.isVerified,
     },
   })
 }
@@ -178,23 +245,21 @@ const updateInfo = async (req, res) => {
   }
 }
 
-const verifyGoogleToken = async (token) => {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  })
-
-  return ticket.getPayload()
-}
-
 const googleLogin = async (req, res) => {
-  const { credential, isRemember } = req.body
-  if (!credential) {
+  const { access_token, isRemember } = req.body
+  if (!access_token) {
     return res.status(401).send({ message: "Unauthorized" })
   }
 
   try {
-    const payload = await verifyGoogleToken(credential)
+    const googleRes = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`
+    )
+    const payload = await googleRes.json()
+
+    if (!payload?.email) {
+      return res.status(401).send({ message: "Unauthorized" })
+    }
 
     let user = await userModel.findOne({ email: payload.email })
 
@@ -217,12 +282,21 @@ const googleLogin = async (req, res) => {
         email: payload.email,
         password: hash,
         avatar: payload.picture,
+        isVerified: true,
       })
 
       user = await newUser.save()
     }
 
-    const token = createToken(user._id)
+    if (!user.isVerified) {
+      user.isVerified = true
+      await user.save()
+    }
+
+    const token = createToken(
+      user._id,
+      isRemember ? "remember-login" : "session-login"
+    )
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -238,6 +312,7 @@ const googleLogin = async (req, res) => {
         avatar: user.avatar,
         email: user.email,
         role: user.role,
+        isVerified: true,
       },
     })
   } catch (err) {
@@ -253,4 +328,6 @@ module.exports = {
   changePassword,
   updateInfo,
   googleLogin,
+  verify,
+  resendVerificationEmail,
 }

@@ -37,6 +37,7 @@
     "mongodb": "^6.7.0",
     "mongoose": "^8.4.1",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.16",
     "secure-random-password": "^0.2.3",
     "socket.io": "^4.7.5",
     "validator": "^13.12.0"

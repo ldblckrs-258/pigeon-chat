@@ -68,10 +68,10 @@ export const useAuth = () => {
 		setLoading(false)
 	}
 
-	const googleLogin = async (credential, isRemember) => {
+	const googleLogin = async (access_token, isRemember) => {
 		try {
 			const res = await axios.post('/api/auth/google', {
-				credential,
+				access_token,
 				isRemember,
 			})
 			setUser(res.data?.user)

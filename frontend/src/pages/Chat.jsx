@@ -11,7 +11,7 @@ const Chat = () => {
 
 	return (
 		<div
-			className={`xs:p-2 flex h-dvh w-full items-center gap-1 overflow-hidden bg-gray-100 p-0 transition-all sm:gap-3 sm:p-4`}
+			className={`flex h-dvh w-full items-center gap-1 overflow-hidden bg-gray-100 p-0 transition-all xs:p-2 sm:gap-3 sm:p-4`}
 		>
 			<ChatSidebar />
 			{currentChat && (
@@ -24,7 +24,7 @@ const Chat = () => {
 				<AnimatePresence>
 					{isInfoExpand && (
 						<ChatInfo
-							className="xs:py-2 fixed right-0 top-0 z-[20] h-full rounded-lg sm:py-4 xl:relative xl:py-0"
+							className="fixed right-0 top-0 h-full rounded-lg max-xl:z-10 xs:py-2 sm:py-4 xl:relative xl:py-0"
 							onClose={() => setIsInfoExpand(false)}
 						/>
 					)}

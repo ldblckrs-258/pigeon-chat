@@ -26,6 +26,8 @@ export const useChat = () => {
 		openChat,
 		clearCurrent,
 		getCurrentChat,
+		friendRequests,
+		setFriendRequests,
 	} = useContext(ChatContext)
 	const toast = useToast()
 
@@ -126,5 +128,7 @@ export const useChat = () => {
 		uploadImage,
 		clearCurrent,
 		getCurrentChat,
+		friendRequests,
+		setFriendRequests,
 	}
 }

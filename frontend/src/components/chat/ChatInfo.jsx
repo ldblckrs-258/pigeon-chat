@@ -175,7 +175,7 @@ const ChatInfo = ({ className, onClose }) => {
 						onEnter={handleEditChat}
 					/>
 				) : (
-					<h3 className="line-clamp-1 pt-2 text-lg font-semibold">
+					<h3 className="mx-3 line-clamp-1 pt-2 text-lg font-semibold">
 						{chatInfo.name}
 					</h3>
 				)}

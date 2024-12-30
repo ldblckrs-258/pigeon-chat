@@ -1,51 +1,55 @@
-import { PiXCircleBold, PiXBold } from 'react-icons/pi'
+import { PiXCircleBold, PiXBold, PiPlusBold } from 'react-icons/pi'
 import TextField from '../TextField'
 import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../../hook/useToast'
 import { useAuth } from '../../hook/useAuth'
+import { useSocket } from '../../hook/useSocket'
+import useDebounce from '../../hook/useDebounce'
+import SpinLoader from '../SpinLoader'
+import { useChat } from '../../hook/useChat'
 
 // type: create | add
 const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 	const [email, setEmail] = useState('')
 	const [members, setMembers] = useState([])
+	const [friends, setFriends] = useState([])
+	const [searchValue, setSearchValue] = useState('')
+	const [pending, setPending] = useState(false)
 	const toast = useToast()
+	const { onlineUsers } = useSocket()
 	const { user } = useAuth()
+	const { setCurrentChatId } = useChat()
 	const createMode = type === 'create'
 
-	const handleAddMember = async () => {
-		if (!email) return
-		if (email === user.email) {
-			toast.error(
-				'Invalid email',
-				'You do not need to add yourself',
-				3000,
-			)
-			return
-		}
-		if (members.find((member) => member.email === email)) {
-			return toast.error(
-				'User already added',
-				'This user is already added',
-				3000,
-			)
-		}
-
-		let addUser = null
-
+	const getFriends = async () => {
+		setPending(true)
 		try {
-			const res = await axios.get('/api/users/find', {
-				params: { email },
+			const res = await axios.get('/api/friendships/friends', {
+				params: { search: searchValue },
 			})
-			addUser = res.data.user
-		} catch (error) {
-			return toast.error(
-				'User not found',
-				'This user does not exist',
-				3000,
-			)
+			let friends = res.data
+			if (!createMode) {
+				friends = friends.filter((friend) => {
+					return !chatInfo.members.find((m) => m._id === friend._id)
+				})
+			}
+			setFriends(friends)
+		} catch (err) {
+			console.error(err)
 		}
+		setPending(false)
+	}
 
+	const toggleMember = (member) => {
+		if (members.find((m) => m._id === member._id)) {
+			setMembers((prev) => prev.filter((m) => m._id !== member._id))
+		} else {
+			setMembers((prev) => [...prev, member])
+		}
+	}
+
+	const handleAddMember = async (id) => {
 		if (
 			!createMode &&
 			chatInfo.members.find((member) => member._id === addUser._id)
@@ -56,21 +60,25 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 				3000,
 			)
 		}
-
-		setMembers((prev) => [...prev, { ...addUser, email }])
-		setEmail('')
 	}
 
-	const handleRemoveMember = (id) => {
-		setMembers((prev) => prev.filter((member) => member._id !== id))
-	}
+	useDebounce(
+		() => {
+			getFriends()
+		},
+		[searchValue],
+		500,
+	)
 
 	const createChat = async () => {
 		try {
-			await axios.post('/api/chats/create', {
+			const res = await axios.post('/api/chats/create', {
 				members: members.map((member) => member._id),
 			})
 			toast.success('Chat created', 'New chat has been created', 3000)
+			if (res.data.chatId) {
+				setCurrentChatId(res.data.chatId)
+			}
 		} catch (error) {
 			if (error.response) {
 				toast.error(
@@ -130,8 +138,11 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 	}
 
 	return (
-		<div className="fixed left-0 top-0 z-20 flex h-screen w-screen items-center justify-center bg-[#00000033]">
-			<div className="~w-[24rem]/[28rem] mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white">
+		<div
+			className="fixed left-0 top-0 z-[30] flex h-screen w-screen items-center justify-center bg-[#00000033]"
+			onClick={(e) => e.target === e.currentTarget && onClose()}
+		>
+			<div className="mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white ~w-[24rem]/[28rem]">
 				<div className="relative w-full px-4 py-4 text-center text-xl font-semibold shadow-lg">
 					{createMode ? 'Create new chat' : 'Add members'}
 					<button
@@ -141,44 +152,104 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 						<PiXCircleBold />
 					</button>
 				</div>
-				<div className="flex w-full flex-col px-10 pb-4 pt-6">
+				<div className="relative flex w-full flex-col px-10 pb-4 pt-6">
 					<TextField
-						label="Enter email"
-						type="email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+						label="Enter friend's name or email"
+						type="text"
+						value={searchValue}
+						onChange={(e) => setSearchValue(e.target.value)}
 						onEnter={handleAddMember}
 					/>
 				</div>
-				<div className="flex min-h-20 w-full flex-col px-10">
-					{members.length === 0 && (
-						<p className="py-5 text-center text-sm text-primary-800">
-							Press enter to add member via email
-						</p>
-					)}
-					{members.map((member, index) => (
-						<div
-							key={member._id}
-							className={`flex items-center justify-between gap-2 border-b border-gray-300 py-1 pl-4 pr-2 hover:bg-primary-100 ${index % 2 === 0 ? 'bg-gray-100' : ''} `}
-						>
-							<p className="text-sm text-primary-900">
-								{member.name}
-							</p>
-							<button
-								className="flex h-6 w-6 items-center justify-center rounded-full hover:text-secondary-500"
-								onClick={() => handleRemoveMember(member._id)}
-							>
-								<PiXBold />
-							</button>
+				<div className="flex h-[40vh] w-full flex-col ~px-3/4 xl:h-[35vh]">
+					{friends.length === 0 && !pending && (
+						<div className="flex h-full w-full items-center justify-center text-center font-semibold text-gray-500 ~text-base/lg">
+							No friends found
 						</div>
-					))}
+					)}
+					{pending && (
+						<div className="flex h-full w-full items-center justify-center">
+							<SpinLoader className="~size-10/12" />
+						</div>
+					)}
+					<div className="w-full flex-1 overflow-hidden">
+						<div className="h-full w-full overflow-y-auto">
+							<div className="w-full">
+								{friends.map((friend) => (
+									<div
+										key={friend._id}
+										className="flex items-center justify-between gap-2 rounded-md py-2.5 ~px-3/4 hover:bg-gray-200"
+									>
+										<div className="flex w-full items-center gap-2">
+											<div className="relative">
+												<img
+													src={friend.avatar}
+													alt={friend.name}
+													className="rounded-full ~size-8/9"
+												/>
+												{onlineUsers.includes(
+													friend._id,
+												) && (
+													<div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500"></div>
+												)}
+											</div>
+											<div className="flex flex-col">
+												<span className="font-semibold ~text-[0.8rem]/[0.9rem] ~leading-4/5">
+													{friend.name}
+												</span>
+												<span className="text-gray-500 ~text-[0.75rem]/[0.8rem] ~leading-3/4">
+													{friend.email}
+												</span>
+											</div>
+											<button
+												className={`ml-auto flex size-6 items-center justify-center rounded-full text-sm transition-colors ${
+													members.find(
+														(m) =>
+															m._id ===
+															friend._id,
+													)
+														? 'border border-secondary-500 bg-secondary-100 text-secondary-500 hover:bg-secondary-200'
+														: 'bg-primary-400 text-white hover:bg-primary-500'
+												}`}
+												onClick={() => {
+													toggleMember(friend)
+												}}
+											>
+												{members.find(
+													(m) => m._id === friend._id,
+												) ? (
+													<PiXBold className="mr-[-1px]" />
+												) : (
+													<PiPlusBold className="mr-[-1px]" />
+												)}
+											</button>
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					</div>
 				</div>
-				<div className="mb-4 mt-6 flex w-full items-center justify-end px-6">
+				<div className="mb-4 mt-6 flex w-full items-center gap-1 ~px-4/6">
+					<div className="flex -space-x-3 overflow-hidden rtl:space-x-reverse">
+						{members.map((member) => (
+							<div
+								key={member._id}
+								className="flex items-center gap-2 rounded-full bg-primary-100"
+							>
+								<img
+									src={member.avatar}
+									alt={member.name}
+									className="rounded-full ~size-6/7"
+								/>
+							</div>
+						))}
+					</div>
 					<button
-						className="flex h-8 items-center justify-center gap-2 rounded-lg bg-primary-400 px-6 font-semibold text-white transition-colors hover:bg-primary-500 active:bg-primary-600"
+						className="ml-auto flex h-8 items-center justify-center gap-2 rounded-lg bg-primary-400 px-4 font-semibold text-white transition-colors hover:bg-primary-500 active:bg-primary-600"
 						onClick={handleSubmit}
 					>
-						{createMode ? 'Create chat' : 'Add members'}
+						{createMode ? 'Create' : 'Add'}
 					</button>
 				</div>
 			</div>

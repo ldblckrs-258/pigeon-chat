@@ -52,12 +52,17 @@ const Login = () => {
 	}
 
 	const handleGoogleLoginSuccess = async (response) => {
-		await googleLogin(response?.credential, formData.isRemember)
+		await googleLogin(response?.access_token, formData.isRemember)
 	}
 
 	const handleGoogleLoginError = (error) => {
 		toast.error('Google login failed', error?.message, 5000)
 	}
+
+	const loginWithGoogle = useGoogleLogin({
+		onSuccess: handleGoogleLoginSuccess,
+		onError: handleGoogleLoginError,
+	})
 
 	return (
 		<div className="relative flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-secondary-50 to-primary-100">
@@ -131,13 +136,27 @@ const Login = () => {
 				>
 					Login
 				</button>
-				<div className="mt-3 w-full">
-					<GoogleLogin
-						onSuccess={handleGoogleLoginSuccess}
-						onError={handleGoogleLoginError}
-						locale="en"
+				<button
+					className="mt-3 flex h-10 w-full items-center justify-center gap-1 rounded border border-gray-300 text-sm font-semibold tracking-wide text-gray-700 transition-all hover:ring-1"
+					onClick={loginWithGoogle}
+				>
+					<img
+						className="size-7"
+						src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png"
+						alt="google-icon"
 					/>
-				</div>
+					Login with Google
+				</button>
+
+				{/* <div className="mt-3 w-full">
+					<div className="mx-auto">
+						<GoogleLogin
+							onSuccess={handleGoogleLoginSuccess}
+							onError={handleGoogleLoginError}
+							use_fedcm_for_prompt={false}
+						/>
+					</div>
+				</div> */}
 
 				<div className="mt-4 text-sm">
 					Don&apos;t have account?

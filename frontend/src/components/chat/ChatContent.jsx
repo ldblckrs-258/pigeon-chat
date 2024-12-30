@@ -5,7 +5,12 @@ import { useToast } from '../../hook/useToast'
 import axios from 'axios'
 import { useChat } from '../../hook/useChat'
 import { useLightbox } from '../../hook/useLightbox'
-import { PiArrowsLeftRightBold, PiDot, PiTrashBold } from 'react-icons/pi'
+import {
+	PiArrowsLeftRightBold,
+	PiDot,
+	PiDownloadBold,
+	PiTrashBold,
+} from 'react-icons/pi'
 import { AnimatePresence, motion } from 'framer-motion'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import DefaultImg from '../../assets/default.png'
@@ -80,7 +85,7 @@ const ChatContent = ({ className }) => {
 					<SpinLoader className="m-auto ~size-12/16" />
 				) : null}
 				{!loading && !messages?.length ? (
-					<div className="m-auto text-3xl font-semibold text-gray-500">
+					<div className="m-auto font-semibold text-gray-500 ~text-xl/3xl">
 						No messages yet
 					</div>
 				) : null}
@@ -141,6 +146,19 @@ const ChatContent = ({ className }) => {
 											)}
 										/>
 									)
+
+								if (message.type === 'file')
+									return (
+										<FileUploaded
+											key={message._id}
+											message={message}
+											isGroup={isGroup}
+											isOnline={onlineUsers.includes(
+												message.sender._id,
+											)}
+											onDelete={handleDeleteMessage}
+										/>
+									)
 							})
 						: null}
 				</InfiniteScroll>
@@ -180,7 +198,7 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 	const getData = async () => {
 		setLoading(true)
 		const { status, data } = await mql(firstLink, {
-			screenshot: true,
+			screenshot: false,
 		})
 		if (status === 'success') {
 			setData(data)
@@ -295,7 +313,7 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 												className={`h-fit w-full py-2 text-gray-950 ~px-3/4 ${message.sender.isMine ? 'bg-gray-100' : 'bg-gray-200'}`}
 											>
 												<h4
-													className="cursor-pointer pb-1 font-semibold ~text-[0.95rem]/sm ~leading-[1rem]/5 hover:underline"
+													className="cursor-pointer pb-1 font-semibold ~text-[0.85rem]/sm ~leading-[1rem]/5 hover:underline"
 													onClick={() =>
 														window.open(firstLink)
 													}
@@ -444,8 +462,8 @@ const FileTransferHistory = ({ message, isGroup, isOnline }) => {
 					</div>
 
 					<div className="">
-						<p className="line-clamp-1 w-[200px] flex-1 font-semibold text-gray-700 ~text-xs/sm">
-							{trimFilename(message?.content, 24)}
+						<p className="line-clamp-1 flex-1 font-semibold text-gray-700 ~text-xs/sm ~w-[10rem]/[12.5rem]">
+							{trimFilename(message?.content, 26)}
 						</p>
 						<span>
 							<p className="inline text-gray-600 ~text-[0.7rem]/xs">
@@ -459,11 +477,89 @@ const FileTransferHistory = ({ message, isGroup, isOnline }) => {
 							</p>
 						</span>
 					</div>
+
 					<span className="absolute right-1.5 top-1.5 flex items-center justify-center rounded-full text-[10px] text-primary-500/70">
 						<PiArrowsLeftRightBold />
 					</span>
 				</div>
 			</div>
+		</div>
+	)
+}
+
+const FileUploaded = ({ message, isGroup, isOnline, onDelete }) => {
+	return (
+		<div
+			className={twMerge(
+				'group flex w-full items-end gap-2',
+				message.sender.isMine ? 'justify-end pr-3' : 'justify-start',
+			)}
+		>
+			{!message.sender.isMine &&
+			(message.position === 'end' || message.position === 'alone') ? (
+				<div className="relative">
+					<img
+						className="mb-1 h-7 w-7 rounded-full border border-gray-200 object-cover"
+						src={message.sender.avatar}
+						alt={`${message.sender.name} avatar`}
+					/>
+					{isOnline && (
+						<span className="absolute -right-0.5 bottom-1 size-3 rounded-full border-2 border-white bg-green-400"></span>
+					)}
+				</div>
+			) : (
+				<div className="w-7" />
+			)}
+			<a
+				className={`relative flex max-w-[75%] cursor-pointer flex-col justify-start gap-1 xl:max-w-[45%] ${['start', 'alone'].includes(message?.position) && 'mt-4'}`}
+				href={`/api/uploads/${message.content}`}
+				download={message.content}
+				target="_blank"
+			>
+				{isGroup &&
+					!message.sender.isMine &&
+					(message.position === 'start' ||
+						message.position === 'alone') && (
+						<div className="pl-2 text-xs">
+							{message.sender.name}
+						</div>
+					)}
+				<div
+					className="relative flex items-center rounded-lg bg-gray-200/50 py-3 ~gap-3/4 ~pr-1.5/3 ~pl-4/6"
+					title={new Date(message.createdAt).toLocaleString()}
+				>
+					<div className="flex size-7 items-center justify-center">
+						<FileIcon ext={message?.content?.split('.').pop()} />
+					</div>
+
+					<div className="">
+						<p className="line-clamp-1 flex-1 font-semibold text-gray-700 ~text-xs/sm ~w-[10rem]/[12.5rem]">
+							{trimFilename(message?.content, 26)}
+						</p>
+						<span>
+							<p className="inline text-gray-600 ~text-[0.7rem]/xs">
+								{byteToMb(message?.size)} MB
+							</p>
+							<PiDot className="inline text-gray-600" />
+							<p
+								className={`inline capitalize text-primary-600 ~text-[0.7rem]/xs hover:underline`}
+							>
+								<PiDownloadBold className="mr-1 inline" />
+								Download
+							</p>
+						</span>
+					</div>
+				</div>
+				<button
+					className={`absolute -left-7 bottom-1/2 hidden h-5 w-5 translate-y-1/2 items-center justify-center rounded-full text-gray-500 hover:text-secondary-500 ${message.sender.isMine ? 'group-hover:flex' : ''}`}
+					onClick={(e) => {
+						e.preventDefault()
+						onDelete(message._id)
+					}}
+				>
+					<PiTrashBold />
+				</button>
+			</a>
 		</div>
 	)
 }
