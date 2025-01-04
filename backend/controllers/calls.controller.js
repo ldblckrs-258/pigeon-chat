@@ -61,7 +61,12 @@ const endVoiceCall = async (req, res) => {
     await chat.save()
 
     chatHistoryService.createSystemMessage(chat, "Voice call ended")
-    voiceCallSocket.voiceCallEnd(chatId)
+
+    let receivers = chat.members
+      .map((m) => m.toString())
+      .filter((m) => m !== userId.toString())
+
+    voiceCallSocket.voiceCallEnd(chatId, receivers)
 
     res.status(200).send({ message: "Voice call ended" })
   } catch (err) {
