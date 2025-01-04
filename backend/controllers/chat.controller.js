@@ -13,7 +13,7 @@ const createChat = async (req, res) => {
 
   try {
     const chat = await chatModel.findOne({
-      members: { $all: members },
+      members: { $size: members.length, $all: members },
     })
 
     if (chat) {

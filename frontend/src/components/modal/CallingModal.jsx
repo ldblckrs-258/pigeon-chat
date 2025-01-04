@@ -25,6 +25,7 @@ export default function CallingModal() {
 	const playAudio = () => {
 		audioRef.current.play().catch((error) => {
 			console.error('Error playing audio:', error)
+			alert('Unable to play audio. Please check your browser settings.')
 		})
 	}
 
