@@ -105,12 +105,6 @@ export default function CallingModal() {
 		titleNotify(`${chat?.name} is calling...`)
 		windowNotify('Incoming call', `${chat?.name} is calling, pick up!`)
 		setShowModal(true)
-
-		const timer = setTimeout(() => {
-			close()
-		}, 30000) // 30 seconds
-
-		return () => clearTimeout(timer)
 	}, [chat])
 
 	if (!showModal) return null
