@@ -1,10 +1,11 @@
 import { PiX } from 'react-icons/pi'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSocket } from '../../hook/useSocket'
 import { useNotification } from '../../hook/useNotification'
 import { PiPhoneCallFill, PiXBold } from 'react-icons/pi'
 import { useChat } from '../../hook/useChat'
 import axios from 'axios'
+import CallingSound from '../../assets/calling.mp3'
 
 export default function CallingModal() {
 	const [showModal, setShowModal] = useState(false)
@@ -12,6 +13,25 @@ export default function CallingModal() {
 	const { getCurrentChat, currentChatId } = useChat()
 	const { titleNotify, windowNotify } = useNotification()
 	const [chat, setChat] = useState(null)
+
+	const audioRef = useRef(new Audio(CallingSound))
+
+	useEffect(() => {
+		audioRef.current.onerror = (e) => {
+			console.error('Error loading audio file:', e)
+		}
+	}, [])
+
+	const playAudio = () => {
+		audioRef.current.play().catch((error) => {
+			console.error('Error playing audio:', error)
+		})
+	}
+
+	const stopAudio = () => {
+		audioRef.current.pause()
+		audioRef.current.currentTime = 0
+	}
 
 	const getChatInfo = async (chatId) => {
 		if (currentChatId === chatId) getCurrentChat()
@@ -33,6 +53,7 @@ export default function CallingModal() {
 	}
 
 	const close = () => {
+		stopAudio()
 		if (!chat?.isGroup) {
 			endVoiceCall()
 		}
@@ -41,6 +62,7 @@ export default function CallingModal() {
 	}
 
 	const open = () => {
+		stopAudio()
 		setShowModal(false)
 		const url = `/voice-call${chat?.isGroup ? '-group' : ''}/${chat._id}`
 		window.open(
@@ -52,30 +74,47 @@ export default function CallingModal() {
 
 	useEffect(() => {
 		if (!socket) return
-		socket.on('voiceCallStart', getChatInfo)
+		socket.on('voiceCallStart', (chatId) => {
+			getChatInfo(chatId)
+			playAudio()
+		})
 		socket.on('voiceDeviceJoined', close)
 		return () => {
 			socket.off('incomingCall')
+			socket.off('voiceDeviceJoined')
 		}
 	}, [socket])
+
+	useEffect(() => {
+		if (!socket) return
+
+		socket.on('voiceCallEnd', (chatId) => {
+			if (chatId === chat?._id) {
+				close()
+			}
+		})
+
+		return () => {
+			socket.off('voiceCallEnd')
+		}
+	}, [socket, chat])
 
 	useEffect(() => {
 		if (!chat) return
 		titleNotify(`${chat?.name} is calling...`)
 		windowNotify('Incoming call', `${chat?.name} is calling, pick up!`)
 		setShowModal(true)
+
+		const timer = setTimeout(() => {
+			close()
+		}, 30000) // 30 seconds
+
+		return () => clearTimeout(timer)
 	}, [chat])
 
 	if (!showModal) return null
 	return (
-		<div
-			className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50"
-			onClick={(e) => {
-				if (e.target === e.currentTarget) {
-					close()
-				}
-			}}
-		>
+		<div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50">
 			<div className="relative flex w-auto max-w-[80vw] flex-col items-center justify-center gap-2 rounded-lg bg-white px-6 py-4 sm:min-h-[40vh] sm:max-w-[20vw]">
 				<button
 					className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full text-xl hover:bg-gray-100"

@@ -4,10 +4,10 @@ class VoiceCall {
     socket.on("joinVoiceRoom", (chatId, userId) => {
       socket.join(chatId)
       const user = _onlineUsers.find((u) => u.userId === userId)
-      console.log("joinVoiceRoom", chatId, userId, user)
+
       const users = new Set([...this.callingUsers(chatId), user?.userId])
       const userIds = [...users].filter(Boolean)
-      console.log("joinVoiceRoom", userIds)
+
       socket.emit("callingUsers", userIds)
       socket.to(chatId).emit("callingUsers", userIds)
     })
@@ -62,9 +62,15 @@ class VoiceCall {
     })
   }
 
-  voiceCallEnd(chatId) {
+  voiceCallEnd(chatId, receiverIds) {
     _io.to(chatId).emit("voiceCallEnd")
     chatHistoryService.endCalling(chatId)
+    if (receiverIds?.length == 1) {
+      const receiver = _onlineUsers.find((u) => u.userId === receiverIds[0])
+      if (receiver) {
+        _io.to(receiver.socketId).emit("voiceCallEnd", chatId)
+      }
+    }
   }
 
   callingUsers(chatId) {
