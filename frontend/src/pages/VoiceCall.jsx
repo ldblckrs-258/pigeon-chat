@@ -28,6 +28,7 @@ const VoiceCallPage = () => {
 	const [receivingAudio, setReceivingAudio] = useState(false)
 	const audioTimeoutRef = useRef(null)
 	const [currentMic, setCurrentMic] = useState(null)
+	const [isPickedUp, setIsPickedUp] = useState(false)
 
 	const startVoiceCall = async () => {
 		try {
@@ -126,6 +127,7 @@ const VoiceCallPage = () => {
 	}
 
 	const receiveAudioStream = (stream) => {
+		if (!isPickedUp) setIsPickedUp(true)
 		var data = stream.split(';')
 		data[0] = 'data:audio/ogg'
 		data = data.join(';')
@@ -202,6 +204,11 @@ const VoiceCallPage = () => {
 			<h3 className="z-10 mt-3 text-2xl font-semibold">
 				{currentChat?.name}
 			</h3>
+			{!isPickedUp && (
+				<p className="z-10 text-center text-sm text-gray-500">
+					Waiting for recipient to pick up...
+				</p>
+			)}
 			<aside className="fixed bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-6">
 				<button
 					className={`flex size-14 items-center justify-center rounded-full text-2xl transition-colors ${enableMic ? 'bg-mantis-500 hover:bg-mantis-600' : 'bg-slate-500 hover:bg-slate-600'}`}

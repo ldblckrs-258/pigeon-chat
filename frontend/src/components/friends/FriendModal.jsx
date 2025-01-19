@@ -107,10 +107,6 @@ const FriendModal = ({ onClose }) => {
 		else setSearchValue('')
 	}, [tabIndex])
 
-	useEffect(() => {
-		console.log('onlineUsers', onlineUsers)
-	}, [onlineUsers])
-
 	return (
 		<div
 			className="fixed left-0 top-0 z-20 flex h-dvh w-screen items-center justify-center bg-[#00000033]"
