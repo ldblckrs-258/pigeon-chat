@@ -29,23 +29,23 @@ mongoose
     console.error(err)
   })
 
-function reloadWebsite() {
-  fetch(process.env.SERVER_URI)
-    .then((response) => {
-      console.log(
-        `Reloaded at ${new Date().toISOString()}: Status Code ${
-          response.status
-        }`
-      )
-    })
-    .catch((error) => {
-      console.error(
-        `Error reloading at ${new Date().toISOString()}:`,
-        error.message
-      )
-    })
-}
+// function reloadWebsite() {
+//   fetch(process.env.SERVER_URI)
+//     .then((response) => {
+//       console.log(
+//         `Reloaded at ${new Date().toISOString()}: Status Code ${
+//           response.status
+//         }`
+//       )
+//     })
+//     .catch((error) => {
+//       console.error(
+//         `Error reloading at ${new Date().toISOString()}:`,
+//         error.message
+//       )
+//     })
+// }
 
-if (process.env.SERVER_URI) {
-  setInterval(reloadWebsite, 1000 * 60 * 10)
-}
+// if (process.env.SERVER_URI) {
+//   setInterval(reloadWebsite, 1000 * 60 * 10)
+// }
