@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '../../hook/useAuth'
-import { PiXCircleBold } from 'react-icons/pi'
-import TextField from '../TextField'
 import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { PiXCircleBold } from 'react-icons/pi'
+import { useAuth } from '../../hook/useAuth'
+import { useChat } from '../../hook/useChat'
 import useDebounce from '../../hook/useDebounce'
+import { useSocket } from '../../hook/useSocket'
 import SpinLoader from '../SpinLoader'
+import TextField from '../TextField'
+import FindList from './FindList'
 import FriendList from './FriendList'
 import Request from './Request'
 import SentRequest from './SentRequest'
-import FindList from './FindList'
-import { useChat } from '../../hook/useChat'
-import { useSocket } from '../../hook/useSocket'
 
 const FriendModal = ({ onClose }) => {
 	const { user } = useAuth()
@@ -27,12 +27,12 @@ const FriendModal = ({ onClose }) => {
 			const res = await axios.get('/api/friendships/search-by-email', {
 				params: { email: searchValue },
 			})
-			setFriends([res.data])
+			setFriends([res.data.data])
 		} else {
 			const res = await axios.get('/api/friendships/search-for-friends', {
 				params: { search: searchValue },
 			})
-			setFriends(res.data)
+			setFriends(res.data.data)
 		}
 	}
 
@@ -41,7 +41,7 @@ const FriendModal = ({ onClose }) => {
 			const res = await axios.get('/api/friendships/friends', {
 				params: { search: searchValue },
 			})
-			setFriends(res.data)
+			setFriends(res.data.data)
 		} catch (err) {
 			console.error(err)
 		}
@@ -56,8 +56,8 @@ const FriendModal = ({ onClose }) => {
 			const res = await axios.get('/api/friendships/requests', {
 				params: { search: searchValue },
 			})
-			setFriends(res.data)
-			setFriendRequests(res.data)
+			setFriends(res.data.data)
+			setFriendRequests(res.data.data)
 		} catch (err) {
 			console.error(err)
 		}
@@ -68,7 +68,7 @@ const FriendModal = ({ onClose }) => {
 			const res = await axios.get('/api/friendships/sent-requests', {
 				params: { search: searchValue },
 			})
-			setFriends(res.data)
+			setFriends(res.data.data)
 		} catch (err) {
 			console.error(err)
 		}
@@ -112,32 +112,32 @@ const FriendModal = ({ onClose }) => {
 			className="fixed left-0 top-0 z-20 flex h-dvh w-screen items-center justify-center bg-[#00000033]"
 			onMouseDown={(e) => e.target === e.currentTarget && onClose()}
 		>
-			<div className="mx-auto flex h-[70vh] max-w-[95vw] flex-col items-center overflow-hidden rounded-lg bg-white ~w-[24rem]/[28rem] ~gap-2/3 ~px-3/5 ~py-3/5 sm:h-[60vh]">
+			<div className="~w-[24rem]/[28rem] ~gap-2/3 ~px-3/5 ~py-3/5 mx-auto flex h-[70vh] max-w-[95vw] flex-col items-center overflow-hidden rounded-lg bg-white sm:h-[60vh]">
 				<div className="flex w-full items-center justify-between gap-2">
-					<div className="flex items-center ~text-[0.785rem]/[0.95rem] ~gap-0/1 ~leading-4/5">
+					<div className="~text-[0.785rem]/[0.95rem] ~gap-0/1 ~leading-4/5 flex items-center">
 						<button
-							className={`rounded py-1 font-semibold ~px-2/4 ${tabIndex === 0 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
+							className={`~px-2/4 rounded py-1 font-semibold ${tabIndex === 0 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
 							onClick={() => setTabIndex(0)}
 						>
 							Friends
 						</button>
 						<button
-							className={`relative rounded py-1 font-semibold ~px-2/4 ${tabIndex === 1 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
+							className={`~px-2/4 relative rounded py-1 font-semibold ${tabIndex === 1 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
 							onClick={() => setTabIndex(1)}
 						>
 							Requests
 							{friendRequests.length > 0 && (
-								<div className="absolute -top-0.5 right-0 rounded-full bg-red-400 ~size-2/2.5"></div>
+								<div className="~size-2/2.5 absolute -top-0.5 right-0 rounded-full bg-red-400"></div>
 							)}
 						</button>
 						<button
-							className={`rounded py-1 font-semibold ~px-2/4 ${tabIndex === 2 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
+							className={`~px-2/4 rounded py-1 font-semibold ${tabIndex === 2 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
 							onClick={() => setTabIndex(2)}
 						>
 							Sent
 						</button>
 						<button
-							className={`rounded py-1 font-semibold ~px-2/4 ${tabIndex === 3 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
+							className={`~px-2/4 rounded py-1 font-semibold ${tabIndex === 3 ? 'bg-primary-100 text-primary-600' : 'text-primary-900 hover:bg-gray-100'}`}
 							onClick={() => setTabIndex(3)}
 						>
 							Find
@@ -185,7 +185,7 @@ const FriendModal = ({ onClose }) => {
 						</div>
 					)}
 					{friends?.length === 0 && !pending && (
-						<div className="flex h-full w-full items-center justify-center font-semibold text-gray-500 ~text-base/lg">
+						<div className="~text-base/lg flex h-full w-full items-center justify-center font-semibold text-gray-500">
 							Nothing to show
 						</div>
 					)}

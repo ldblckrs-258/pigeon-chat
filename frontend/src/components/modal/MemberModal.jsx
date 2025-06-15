@@ -1,13 +1,13 @@
-import { PiXCircleBold, PiXBold, PiPlusBold } from 'react-icons/pi'
-import TextField from '../TextField'
-import { useState } from 'react'
 import axios from 'axios'
-import { useToast } from '../../hook/useToast'
+import { useState } from 'react'
+import { PiPlusBold, PiXBold, PiXCircleBold } from 'react-icons/pi'
 import { useAuth } from '../../hook/useAuth'
-import { useSocket } from '../../hook/useSocket'
-import useDebounce from '../../hook/useDebounce'
-import SpinLoader from '../SpinLoader'
 import { useChat } from '../../hook/useChat'
+import useDebounce from '../../hook/useDebounce'
+import { useSocket } from '../../hook/useSocket'
+import { useToast } from '../../hook/useToast'
+import SpinLoader from '../SpinLoader'
+import TextField from '../TextField'
 
 // type: create | add
 const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
@@ -28,7 +28,7 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 			const res = await axios.get('/api/friendships/friends', {
 				params: { search: searchValue },
 			})
-			let friends = res.data
+			let friends = res.data.data
 			if (!createMode) {
 				friends = friends.filter((friend) => {
 					return !chatInfo.members.find((m) => m._id === friend._id)
@@ -142,7 +142,7 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 			className="fixed left-0 top-0 z-[30] flex h-screen w-screen items-center justify-center bg-[#00000033]"
 			onClick={(e) => e.target === e.currentTarget && onClose()}
 		>
-			<div className="mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white ~w-[24rem]/[28rem]">
+			<div className="~w-[24rem]/[28rem] mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white">
 				<div className="relative w-full px-4 py-4 text-center text-xl font-semibold shadow-lg">
 					{createMode ? 'Create new chat' : 'Add members'}
 					<button
@@ -161,9 +161,9 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 						onEnter={handleAddMember}
 					/>
 				</div>
-				<div className="flex h-[40vh] w-full flex-col ~px-3/4 xl:h-[35vh]">
+				<div className="~px-3/4 flex h-[40vh] w-full flex-col xl:h-[35vh]">
 					{friends.length === 0 && !pending && (
-						<div className="flex h-full w-full items-center justify-center text-center font-semibold text-gray-500 ~text-base/lg">
+						<div className="~text-base/lg flex h-full w-full items-center justify-center text-center font-semibold text-gray-500">
 							No friends found
 						</div>
 					)}
@@ -178,14 +178,14 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 								{friends.map((friend) => (
 									<div
 										key={friend._id}
-										className="flex items-center justify-between gap-2 rounded-md py-2.5 ~px-3/4 hover:bg-gray-200"
+										className="~px-3/4 flex items-center justify-between gap-2 rounded-md py-2.5 hover:bg-gray-200"
 									>
 										<div className="flex w-full items-center gap-2">
 											<div className="relative">
 												<img
 													src={friend.avatar}
 													alt={friend.name}
-													className="rounded-full ~size-8/9"
+													className="~size-8/9 rounded-full"
 												/>
 												{onlineUsers.includes(
 													friend._id,
@@ -194,10 +194,10 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 												)}
 											</div>
 											<div className="flex flex-col">
-												<span className="font-semibold ~text-[0.8rem]/[0.9rem] ~leading-4/5">
+												<span className="~text-[0.8rem]/[0.9rem] ~leading-4/5 font-semibold">
 													{friend.name}
 												</span>
-												<span className="text-gray-500 ~text-[0.75rem]/[0.8rem] ~leading-3/4">
+												<span className="~text-[0.75rem]/[0.8rem] ~leading-3/4 text-gray-500">
 													{friend.email}
 												</span>
 											</div>
@@ -230,7 +230,7 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 						</div>
 					</div>
 				</div>
-				<div className="mb-4 mt-6 flex w-full items-center gap-1 ~px-4/6">
+				<div className="~px-4/6 mb-4 mt-6 flex w-full items-center gap-1">
 					<div className="flex -space-x-3 overflow-hidden rtl:space-x-reverse">
 						{members.map((member) => (
 							<div
@@ -240,7 +240,7 @@ const MemberModal = ({ type, onClose, onSubmit, chatInfo }) => {
 								<img
 									src={member.avatar}
 									alt={member.name}
-									className="rounded-full ~size-6/7"
+									className="~size-6/7 rounded-full"
 								/>
 							</div>
 						))}

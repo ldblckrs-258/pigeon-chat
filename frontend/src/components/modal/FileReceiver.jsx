@@ -1,13 +1,15 @@
-import { useSocket } from '../../hook/useSocket'
-import { useEffect, useState, useRef } from 'react'
+import axios from 'axios'
+import { useEffect, useRef, useState } from 'react'
 import { PiArrowsDownUpBold, PiX } from 'react-icons/pi'
+import { useSocket } from '../../hook/useSocket'
 import { useToast } from '../../hook/useToast'
-import { STATUS } from './constants'
-import FileIcon from '../FileIcon'
-import { trimFilename, byteToMb } from '../../utils/format'
 import useWindowSize from '../../hook/useWindowSize'
+import { byteToMb, trimFilename } from '../../utils/format'
+import FileIcon from '../FileIcon'
+import { STATUS } from './constants'
 
 export default function FileReceiver({ sender, metadata, onClose }) {
+	console.log('sender', sender)
 	const [status, setStatus] = useState(STATUS.PENDING)
 	const [dataChannel, setDataChannel] = useState(null)
 	const { width } = useWindowSize()
@@ -24,7 +26,7 @@ export default function FileReceiver({ sender, metadata, onClose }) {
 			const response = await axios.get(
 				'/api/tools/ice-servers?types=private,cloudflare',
 			)
-			return response.data
+			return response.data.data
 		} catch (error) {
 			console.error('Error getting ICE servers', error)
 			return []

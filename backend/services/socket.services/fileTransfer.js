@@ -43,6 +43,7 @@ class FileTransfer {
 
     socket.on('receiverDesc', (desc, senderId) => {
       const sender = _onlineUsers.find(u => u.userId === senderId)
+      console.log('receiverDesc', sender)
       if (sender) {
         _io.to(sender.socketId).emit('receiverDesc', desc)
       } else {

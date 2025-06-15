@@ -1,9 +1,9 @@
-import { AuthContext } from '../contexts/AuthContext'
-import { useContext } from 'react'
 import axios from 'axios'
-import { useToast } from './useToast'
-import useLoader from './useLoader'
+import { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from '../contexts/AuthContext'
+import useLoader from './useLoader'
+import { useToast } from './useToast'
 
 export const useAuth = () => {
 	const { user, setUser } = useContext(AuthContext)

@@ -1,13 +1,13 @@
-import { useSocket } from '../../hook/useSocket'
 import axios from 'axios'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PiTrash, PiX } from 'react-icons/pi'
-import { useToast } from '../../hook/useToast'
-import { useChat } from '../../hook/useChat'
 import { useAuth } from '../../hook/useAuth'
+import { useChat } from '../../hook/useChat'
+import { useSocket } from '../../hook/useSocket'
+import { useToast } from '../../hook/useToast'
 import { byteToMb, trimFilename } from '../../utils/format'
-import { STATUS } from './constants'
 import FileIcon from '../FileIcon'
+import { STATUS } from './constants'
 
 export default function FileSender({ targetId, onClose }) {
 	const { currentChat } = useChat()
@@ -26,7 +26,7 @@ export default function FileSender({ targetId, onClose }) {
 			const response = await axios.get(
 				'/api/tools/ice-servers?types=private,cloudflare',
 			)
-			return response.data
+			return response.data.data
 		} catch (error) {
 			console.error('Error getting ICE servers', error)
 			return []

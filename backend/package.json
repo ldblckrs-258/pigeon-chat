@@ -38,7 +38,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
     "google-auth-library": "^9.15.0",
+    "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.7.0",
     "mongoose": "^8.4.1",
@@ -46,7 +48,8 @@
     "nodemailer": "^6.9.16",
     "secure-random-password": "^0.2.3",
     "socket.io": "^4.7.5",
-    "validator": "^13.12.0"
+    "validator": "^13.12.0",
+    "zod": "^3.25.64"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

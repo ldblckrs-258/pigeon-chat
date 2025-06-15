@@ -1,29 +1,29 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { useAuth } from '../../hook/useAuth'
-import { timeAgo } from '../../utils/time'
 import { IoIosChatbubbles } from 'react-icons/io'
-import TextField from '../TextField'
-import AccountModal from '../modal/AccountModal'
 import {
-	PiPlusBold,
+	PiCaretRightBold,
 	PiEyeBold,
 	PiEyeClosedBold,
-	PiSignOutBold,
-	PiGearFill,
-	PiCaretRightBold,
-	PiListBold,
-	PiXBold,
-	PiUsersThreeBold,
 	PiGearBold,
+	PiGearFill,
+	PiListBold,
+	PiPlusBold,
+	PiSignOutBold,
+	PiUsersThreeBold,
+	PiXBold,
 } from 'react-icons/pi'
 import { TbEdit } from 'react-icons/tb'
 import { twMerge } from 'tailwind-merge'
-import { useSocket } from '../../hook/useSocket'
+import { useAuth } from '../../hook/useAuth'
 import { useChat } from '../../hook/useChat'
-import MemberModal from '../modal/MemberModal'
+import { useSocket } from '../../hook/useSocket'
 import useWindowSize from '../../hook/useWindowSize'
-import { AnimatePresence, motion } from 'framer-motion'
+import { timeAgo } from '../../utils/time'
+import TextField from '../TextField'
 import FriendModal from '../friends/FriendModal'
+import AccountModal from '../modal/AccountModal'
+import MemberModal from '../modal/MemberModal'
 const ChatSidebar = ({ className = '', setPage }) => {
 	const { user, logout } = useAuth()
 	const { onlineUsers } = useSocket()
@@ -142,7 +142,7 @@ const ChatSidebar = ({ className = '', setPage }) => {
 									<PiUsersThreeBold />
 									<div className="relative size-0">
 										{friendRequests.length > 0 && (
-											<div className="absolute -right-2 -top-4 animate-ping rounded-full bg-red-400 ~size-2/2.5"></div>
+											<div className="~size-2/2.5 absolute -right-2 -top-4 animate-ping rounded-full bg-red-400"></div>
 										)}
 									</div>
 								</motion.button>
@@ -180,7 +180,7 @@ const ChatSidebar = ({ className = '', setPage }) => {
 								{showMenu ? <PiXBold /> : <PiListBold />}
 							</button>
 							{friendRequests.length > 0 && !showMenu && (
-								<div className="absolute -right-0.5 -top-0.5 animate-ping rounded-full bg-red-400 ~size-2/2.5"></div>
+								<div className="~size-2/2.5 absolute -right-0.5 -top-0.5 animate-ping rounded-full bg-red-400"></div>
 							)}
 						</div>
 					</div>
@@ -189,6 +189,7 @@ const ChatSidebar = ({ className = '', setPage }) => {
 					<div className="w-full px-4 py-2">
 						<TextField
 							className="w-full"
+							id="search-chat"
 							label="Search chat"
 							value={searchValue}
 							type="text"
@@ -199,13 +200,13 @@ const ChatSidebar = ({ className = '', setPage }) => {
 						<div
 							key={chat._id}
 							className={twMerge(
-								'relative flex w-full cursor-pointer items-center justify-center rounded-lg transition-colors ~gap-2/3 ~px-3/4 ~py-2/3 hover:bg-gray-100',
+								'~gap-2/3 ~px-3/4 ~py-2/3 relative flex w-full cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-100',
 								currentChatId === chat._id ? 'bg-gray-100' : '',
 								chat?.calling ? 'bg-primary-50' : '',
 							)}
 							onClick={() => openChat(chat._id)}
 						>
-							<div className={`relative ~size-9/10`}>
+							<div className={`~size-9/10 relative`}>
 								<img
 									className="h-full w-full rounded-full border border-gray-300 object-cover"
 									src={chat.avatar}
@@ -219,12 +220,12 @@ const ChatSidebar = ({ className = '', setPage }) => {
 							</div>
 
 							<div className="flex-1">
-								<p className="line-clamp-1 w-full font-semibold text-primary-900 ~text-xs/sm">
+								<p className="~text-xs/sm line-clamp-1 w-full font-semibold text-primary-900">
 									{chat.name}
 								</p>
 								<div className="flex w-full items-center gap-2">
 									<p
-										className={`line-clamp-1 w-full flex-1 break-all leading-4 text-primary-900 ~text-[0.65rem]/[0.75rem] ${!chat.read && 'font-bold'}`}
+										className={`~text-[0.65rem]/[0.75rem] line-clamp-1 w-full flex-1 break-all leading-4 text-primary-900 ${!chat.read && 'font-bold'}`}
 									>
 										{chat.isMyMessage && 'You: '}{' '}
 										{chat.lastMessage}

@@ -1,5 +1,6 @@
-const chatModel = require("../models/chat.model");
-const chatHistoryService = require("./chatHistory.service");
+const chatModel = require('../models/chat.model')
+const chatHistoryService = require('./chatHistory.service')
+const { createNotFoundError, createConflictError } = require('../utils/errorTypes')
 
 class CallsService {
   /**
@@ -9,33 +10,28 @@ class CallsService {
     const chat = await chatModel.findOne({
       _id: chatId,
       members: { $in: [userId] },
-    });
+    })
 
     if (!chat) {
-      throw new Error("Chat not found");
+      throw createNotFoundError('Chat not found')
     }
 
     if (chat.calling) {
-      throw new Error("Chat is already in a call");
+      throw createConflictError('Chat is already in a call')
     }
 
-    chat.calling = "voice";
-    await chat.save();
+    chat.calling = 'voice'
+    await chat.save()
 
-    await chatHistoryService.createSystemMessage(
-      chat,
-      `${userName} started a voice call`,
-    );
+    await chatHistoryService.createSystemMessage(chat, `${userName} started a voice call`)
 
     // Return receivers (all members except the caller)
-    const receivers = chat.members
-      .map((m) => m.toString())
-      .filter((m) => m !== userId.toString());
+    const receivers = chat.members.map(m => m.toString()).filter(m => m !== userId.toString())
 
     return {
       chat,
       receivers,
-    };
+    }
   }
 
   /**
@@ -45,38 +41,36 @@ class CallsService {
     const chat = await chatModel.findOne({
       _id: chatId,
       members: { $in: [userId] },
-    });
+    })
 
     if (!chat) {
-      throw new Error("Chat not found");
+      throw createNotFoundError('Chat not found')
     }
 
     if (!chat.calling) {
-      throw new Error("Chat is not in a call");
+      throw createConflictError('Chat is not in a call')
     }
 
-    chat.calling = null;
-    await chat.save();
+    chat.calling = null
+    await chat.save()
 
-    await chatHistoryService.createSystemMessage(chat, "Voice call ended");
+    await chatHistoryService.createSystemMessage(chat, 'Voice call ended')
 
     // Return receivers (all members except the caller)
-    const receivers = chat.members
-      .map((m) => m.toString())
-      .filter((m) => m !== userId.toString());
+    const receivers = chat.members.map(m => m.toString()).filter(m => m !== userId.toString())
 
     return {
       chat,
       receivers,
-    };
+    }
   }
 
   /**
    * Check if a chat is currently in a call
    */
   async isChatInCall(chatId) {
-    const chat = await chatModel.findById(chatId).select("calling");
-    return chat ? !!chat.calling : false;
+    const chat = await chatModel.findById(chatId).select('calling')
+    return chat ? !!chat.calling : false
   }
 
   /**
@@ -86,17 +80,17 @@ class CallsService {
     const chat = await chatModel.findOne({
       _id: chatId,
       members: { $in: [userId] },
-    });
+    })
 
     if (!chat) {
-      throw new Error("Chat not found");
+      throw createNotFoundError('Chat not found')
     }
 
     return {
       isInCall: !!chat.calling,
       callType: chat.calling,
-    };
+    }
   }
 }
 
-module.exports = new CallsService();
+module.exports = new CallsService()

@@ -1,35 +1,42 @@
-const userModel = require("../models/user.model");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const validator = require("validator");
-const emailService = require("./email.service");
-const securePassword = require("secure-random-password");
+const userModel = require('../models/user.model')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const validator = require('validator')
+const emailService = require('./email.service')
+const securePassword = require('secure-random-password')
+const {
+  createBadRequestError,
+  createUnauthorizedError,
+  createNotFoundError,
+  createConflictError,
+  createValidationError,
+} = require('../utils/errorTypes')
 
 class AuthService {
   /**
    * Create JWT token with different expiration types
    */
-  createToken(_id, type = "session-login") {
-    const secret = process.env.JWT_SECRET;
+  createToken(_id, type = 'session-login') {
+    const secret = process.env.JWT_SECRET
 
-    let expires;
+    let expires
     switch (type) {
-      case "session-login":
-        expires = "1d";
-        break;
-      case "remember-login":
-        expires = "30d";
-        break;
-      case "verify":
-        expires = "5m";
-        break;
+      case 'session-login':
+        expires = '1d'
+        break
+      case 'remember-login':
+        expires = '30d'
+        break
+      case 'verify':
+        expires = '5m'
+        break
       default:
-        expires = "1d";
+        expires = '1d'
     }
 
     return jwt.sign({ _id }, secret, {
       expiresIn: expires,
-    });
+    })
   }
 
   /**
@@ -37,23 +44,23 @@ class AuthService {
    */
   validateRegistration(name, email, password) {
     if (!name || !email || !password) {
-      throw new Error("All fields are required");
+      throw createBadRequestError('All fields are required')
     }
 
     if (!validator.isEmail(email)) {
-      throw new Error("Invalid email");
+      throw createBadRequestError('Invalid email')
     }
 
     if (!validator.isStrongPassword(password)) {
-      const error = new Error("Password is not strong enough");
+      const error = createValidationError('Password is not strong enough')
       error.requirements = [
-        "At least 8 characters",
-        "At least 1 lowercase letter",
-        "At least 1 uppercase letter",
-        "At least 1 number",
-        "At least 1 symbol",
-      ];
-      throw error;
+        'At least 8 characters',
+        'At least 1 lowercase letter',
+        'At least 1 uppercase letter',
+        'At least 1 number',
+        'At least 1 symbol',
+      ]
+      throw error
     }
   }
 
@@ -62,85 +69,82 @@ class AuthService {
    */
   async registerUser(name, email, password) {
     // Check if user already exists
-    const existingUser = await userModel.findOne({ email });
+    const existingUser = await userModel.findOne({ email })
     if (existingUser) {
-      throw new Error("User already exists");
+      throw createConflictError('User already exists')
     }
 
     // Validate input
-    this.validateRegistration(name, email, password);
+    this.validateRegistration(name, email, password)
 
     // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
+    const salt = await bcrypt.genSalt(10)
+    const hash = await bcrypt.hash(password, salt)
 
     // Create user
     const user = new userModel({
       name,
       email,
       password: hash,
-    });
+    })
 
-    await user.save();
+    await user.save()
 
     // Send verification email
-    const token = this.createToken(user._id, "verify");
-    await emailService.sendVerificationEmail(user.email, user.name, token);
+    const token = this.createToken(user._id, 'verify')
+    await emailService.sendVerificationEmail(user.email, user.name, token)
 
-    return user;
+    return user
   }
 
   // Resend verification email
   async resendVerificationEmail(user) {
     if (user?.isVerified) {
-      throw new Error("Account already verified");
+      throw createBadRequestError('Account already verified')
     }
 
-    const token = this.createToken(user._id, "verify");
-    await emailService.sendVerificationEmail(user.email, user.name, token);
+    const token = this.createToken(user._id, 'verify')
+    await emailService.sendVerificationEmail(user.email, user.name, token)
   }
 
   // Verify user email
   async verifyEmail(token) {
     if (!token) {
-      throw new Error("Token is required");
+      throw createBadRequestError('Token is required')
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await userModel.findById(decoded._id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const user = await userModel.findById(decoded._id)
 
     if (!user) {
-      throw new Error("User not found");
+      throw createNotFoundError('User not found')
     }
 
     if (user.isVerified) {
-      return { message: "Account already verified" };
+      return { message: 'Account already verified' }
     }
 
-    user.isVerified = true;
-    await user.save();
+    user.isVerified = true
+    await user.save()
 
-    return { message: "Account verified successfully" };
+    return { message: 'Account verified successfully' }
   }
 
   // Login user
   async loginUser(email, password, isRemember = false) {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email })
 
     if (!user) {
-      throw new Error("This email is not registered");
+      throw createBadRequestError('This email is not registered')
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password)
 
     if (!validPassword) {
-      throw new Error("Invalid password");
+      throw createBadRequestError('Invalid password')
     }
 
-    const token = this.createToken(
-      user._id,
-      isRemember ? "remember-login" : "session-login",
-    );
+    const token = this.createToken(user._id, isRemember ? 'remember-login' : 'session-login')
 
     return {
       token,
@@ -152,46 +156,46 @@ class AuthService {
         role: user.role,
         isVerified: user.isVerified,
       },
-    };
+    }
   }
 
   /**
    * Change user password
    */
   async changePassword(user, oldPassword, newPassword) {
-    const validPassword = await bcrypt.compare(oldPassword, user.password);
+    const validPassword = await bcrypt.compare(oldPassword, user.password)
 
     if (!validPassword) {
-      throw new Error("Old password is incorrect");
+      throw createBadRequestError('Old password is incorrect')
     }
 
     if (!validator.isStrongPassword(newPassword)) {
-      const error = new Error("Password is not strong enough");
+      const error = createValidationError('Password is not strong enough')
       error.requirements = [
-        "At least 8 characters",
-        "At least 1 lowercase letter",
-        "At least 1 uppercase letter",
-        "At least 1 number",
-        "At least 1 symbol",
-      ];
-      throw error;
+        'At least 8 characters',
+        'At least 1 lowercase letter',
+        'At least 1 uppercase letter',
+        'At least 1 number',
+        'At least 1 symbol',
+      ]
+      throw error
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(newPassword, salt);
+    const salt = await bcrypt.genSalt(10)
+    const hash = await bcrypt.hash(newPassword, salt)
 
-    user.password = hash;
-    await user.save();
+    user.password = hash
+    await user.save()
   }
 
   /**
    * Update user name and avatar
    */
   async updateUserInfo(user, name, avatar) {
-    user.name = name || user.name;
-    user.avatar = avatar || user.avatar;
+    user.name = name || user.name
+    user.avatar = avatar || user.avatar
 
-    await user.save();
+    await user.save()
   }
 
   /**
@@ -199,21 +203,21 @@ class AuthService {
    */
   async googleLogin(accessToken, isRemember = false) {
     if (!accessToken) {
-      throw new Error("Unauthorized");
+      throw createUnauthorizedError('Unauthorized')
     }
 
     try {
       // Fetch user info from Google API
       const googleRes = await fetch(
-        `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`,
-      );
-      const payload = await googleRes.json();
+        `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`
+      )
+      const payload = await googleRes.json()
 
       if (!payload?.email) {
-        throw new Error("Unauthorized");
+        throw createUnauthorizedError('Unauthorized')
       }
 
-      let user = await userModel.findOne({ email: payload.email });
+      let user = await userModel.findOne({ email: payload.email })
 
       // If user doesn't exist, create new account
       if (!user) {
@@ -225,10 +229,10 @@ class AuthService {
             securePassword.digits,
             securePassword.symbols,
           ],
-        });
+        })
 
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
+        const salt = await bcrypt.genSalt(10)
+        const hash = await bcrypt.hash(password, salt)
 
         const newUser = new userModel({
           name: payload.name,
@@ -236,21 +240,18 @@ class AuthService {
           password: hash,
           avatar: payload.picture,
           isVerified: true,
-        });
+        })
 
-        user = await newUser.save();
+        user = await newUser.save()
       }
 
       // Ensure user is verified (Google accounts are pre-verified)
       if (!user.isVerified) {
-        user.isVerified = true;
-        await user.save();
+        user.isVerified = true
+        await user.save()
       }
 
-      const token = this.createToken(
-        user._id,
-        isRemember ? "remember-login" : "session-login",
-      );
+      const token = this.createToken(user._id, isRemember ? 'remember-login' : 'session-login')
 
       return {
         token,
@@ -262,12 +263,12 @@ class AuthService {
           role: user.role,
           isVerified: true,
         },
-      };
+      }
     } catch (error) {
-      console.error("Google login error:", error);
-      throw new Error("Unauthorized");
+      console.error('Google login error:', error)
+      throw createUnauthorizedError('Unauthorized')
     }
   }
 }
 
-module.exports = new AuthService();
+module.exports = new AuthService()

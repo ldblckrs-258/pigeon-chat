@@ -1,88 +1,85 @@
-const userModel = require("../models/user.model");
+const userModel = require('../models/user.model')
+const { createNotFoundError } = require('../utils/errorTypes')
 
 class UserService {
   /**
    * Get user by ID
    */
   async getUserById(userId) {
-    const user = await userModel.findById(userId).select("-password");
+    const user = await userModel.findById(userId).select('-password')
 
     if (!user) {
-      throw new Error("User not found");
+      throw createNotFoundError('User not found')
     }
 
-    return user;
+    return user
   }
 
   /**
    * Find user by email
    */
   async findUserByEmail(email) {
-    const user = await userModel
-      .findOne({ email: email })
-      .select("_id name avatar");
+    const user = await userModel.findOne({ email: email }).select('_id name avatar')
 
     if (!user) {
-      throw new Error("User not found");
+      throw createNotFoundError('User not found')
     }
 
-    return user;
+    return user
   }
 
   /**
    * Search users by name or email
    */
-  async searchUsers(search = "") {
+  async searchUsers(search = '') {
     const users = await userModel
       .find({
-        $or: [{ name: { $regex: search, $options: "i" } }, { email: search }],
+        $or: [{ name: { $regex: search, $options: 'i' } }, { email: search }],
       })
-      .select("_id name avatar email");
+      .select('_id name avatar email')
 
     if (!users || users.length === 0) {
-      throw new Error("No users found");
+      throw createNotFoundError('No users found')
     }
 
-    return users;
+    return users
   }
 
   // Get user by ID for authentication purposes (includes password)
   async getUserForAuth(userId) {
-    return await userModel.findById(userId);
+    return await userModel.findById(userId)
   }
 
   // Update user profile
   async updateUserProfile(userId, updateData) {
-    const user = await userModel.findById(userId);
+    const user = await userModel.findById(userId)
 
     if (!user) {
-      throw new Error("User not found");
+      throw createNotFoundError('User not found')
     }
 
     // Update only allowed fields
-    const allowedFields = ["name", "avatar"];
-    allowedFields.forEach((field) => {
+    const allowedFields = ['name', 'avatar']
+    allowedFields.forEach(field => {
       if (updateData[field] !== undefined) {
-        user[field] = updateData[field];
+        user[field] = updateData[field]
       }
-    });
+    })
 
-    await user.save();
-    return user;
+    await user.save()
+    return user
   }
 
   // Check if user exists by email
   async userExistsByEmail(email) {
-    const user = await userModel.findOne({ email });
-    return !!user;
+    const user = await userModel.findOne({ email })
+    return !!user
   }
 
   // Get multiple users by IDs
   async getUsersByIds(userIds) {
-    return await userModel
-      .find({ _id: { $in: userIds } })
-      .select("_id name avatar email");
+    return await userModel.find({ _id: { $in: userIds } }).select('_id name avatar email')
   }
 }
 
-module.exports = new UserService();
+module.exports = new UserService()

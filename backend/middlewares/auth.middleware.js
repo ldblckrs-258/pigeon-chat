@@ -1,50 +1,42 @@
 const userModel = require('../models/user.model')
 const jwt = require('jsonwebtoken')
+const catchAsync = require('../utils/catchAsync')
+const { createUnauthorizedError } = require('../utils/errorTypes')
 
-const authenticate = async (req, res, next) => {
+const authenticate = catchAsync(async (req, res, next) => {
   const token = req.cookies?.token
 
   if (!token) {
-    return res.status(401).send({ message: 'Unauthorized' })
+    throw createUnauthorizedError('Unauthorized')
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    const detectedUser = await userModel.findById(decoded._id)
+  const decoded = jwt.verify(token, process.env.JWT_SECRET)
+  const detectedUser = await userModel.findById(decoded._id)
 
-    if (!detectedUser) {
-      return res.status(401).send({ message: 'Unauthorized' })
-    }
-
-    req.user = detectedUser
-    next()
-  } catch (err) {
-    console.error(err)
-    res.status(500).send({ message: err })
+  if (!detectedUser) {
+    throw createUnauthorizedError('Unauthorized')
   }
-}
 
-const simpleAuth = async (req, res, next) => {
+  req.user = detectedUser
+  next()
+})
+
+const simpleAuth = catchAsync(async (req, res, next) => {
   const token = req.cookies?.token
 
   if (!token) {
-    return res.status(401).send({ message: 'Unauthorized' })
+    throw createUnauthorizedError('Unauthorized')
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+  const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-    if (!decoded || !decoded._id) {
-      return res.status(401).send({ message: 'Unauthorized' })
-    }
-
-    req.user = { _id: decoded._id }
-    next()
-  } catch (err) {
-    console.error(err)
-    res.status(500).send({ message: err })
+  if (!decoded || !decoded._id) {
+    throw createUnauthorizedError('Unauthorized')
   }
-}
+
+  req.user = { _id: decoded._id }
+  next()
+})
 
 module.exports = {
   authenticate,

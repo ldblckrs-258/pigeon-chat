@@ -1,7 +1,8 @@
-import { twMerge } from 'tailwind-merge'
-import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 const TextField = ({
+	id = '',
 	label = 'Label',
 	value = '',
 	onChange,
@@ -15,7 +16,7 @@ const TextField = ({
 	const [isFocus, setIsFocus] = useState(false)
 	const inputRef = useRef(null)
 	return (
-		<div className={twMerge('relative', className)}>
+		<div id={id} className={twMerge('relative', className)}>
 			<motion.label
 				className={twMerge(
 					'absolute left-3 top-3 bg-white px-1.5 text-gray-500',

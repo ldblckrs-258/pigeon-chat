@@ -1,8 +1,8 @@
+import axios from 'axios'
 import { createContext, useEffect, useState } from 'react'
 import FileReceiver from '../components/modal/FileReceiver'
-import { useSocket } from '../hook/useSocket'
 import { useNotification } from '../hook/useNotification'
-import axios from 'axios'
+import { useSocket } from '../hook/useSocket'
 import { byteToMb } from '../utils/format'
 export const FileReceiveContext = createContext()
 
@@ -26,7 +26,7 @@ export const FileReceiveContextProvider = ({ children }) => {
 			},
 		})
 
-		setSender(res.data)
+		setSender(res.data.user)
 	}
 
 	useEffect(() => {

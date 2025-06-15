@@ -1,7 +1,7 @@
-import { createContext, useEffect, useState } from 'react'
 import axios from 'axios'
-import { useSocket } from '../hook/useSocket'
+import { createContext, useEffect, useState } from 'react'
 import { useAuth } from '../hook/useAuth'
+import { useSocket } from '../hook/useSocket'
 import { useToast } from '../hook/useToast'
 export const ChatContext = createContext()
 
@@ -71,7 +71,7 @@ export const ChatContextProvider = ({ children }) => {
 			const res = await axios.get('/api/chats/all', {
 				params: { ...(searchValue && { search: searchValue }) },
 			})
-			let data = res.data
+			let data = res.data.data
 			if (currentChatId) {
 				data = data.map((chat) => {
 					if (chat._id === currentChatId) {
@@ -112,7 +112,7 @@ export const ChatContextProvider = ({ children }) => {
 	const getFriendRequests = async () => {
 		try {
 			const res = await axios.get('/api/friendships/requests')
-			setFriendRequests(res.data)
+			setFriendRequests(res.data.data)
 		} catch (error) {
 			console.error(error)
 		}

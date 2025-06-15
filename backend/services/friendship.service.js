@@ -1,36 +1,37 @@
-const friendshipModel = require("../models/friendship.model");
-const userModel = require("../models/user.model");
+const friendshipModel = require('../models/friendship.model')
+const userModel = require('../models/user.model')
+const { createNotFoundError, createConflictError } = require('../utils/errorTypes')
 
 class FriendshipService {
   /**
    * Get friends of a user with optional search functionality
    */
-  async getFriends(userId, search = "") {
+  async getFriends(userId, search = '') {
     const friendships = await friendshipModel
       .find({
         $or: [
-          { user1: userId, status: "accepted" },
-          { user2: userId, status: "accepted" },
+          { user1: userId, status: 'accepted' },
+          { user2: userId, status: 'accepted' },
         ],
       })
       .populate({
-        path: "user1 user2",
-        select: "name avatar email",
+        path: 'user1 user2',
+        select: 'name avatar email',
         match: {
           $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
           ],
         },
-      });
+      })
 
     const friends = friendships
-      .map((f) => [f.user1, f.user2])
+      .map(f => [f.user1, f.user2])
       .flat()
-      .filter((user) => user && user._id.toString() !== userId.toString())
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter(user => user && user._id.toString() !== userId.toString())
+      .sort((a, b) => a.name.localeCompare(b.name))
 
-    return friends;
+    return friends
   }
 
   /**
@@ -42,54 +43,50 @@ class FriendshipService {
         { user1: userId, user2: friendId },
         { user1: friendId, user2: userId },
       ],
-      status: "accepted",
-    });
+      status: 'accepted',
+    })
 
     if (!friendship) {
-      throw new Error("Invalid friend");
+      throw createNotFoundError('Invalid friend')
     }
 
-    return friendship;
+    return friendship
   }
 
   /**
    * Get pending friend requests received by the user
    */
-  async getFriendRequests(userId, search = "") {
-    const requests = await friendshipModel
-      .find({ user2: userId, status: "pending" })
-      .populate({
-        path: "user1",
-        select: "name avatar email",
-        match: {
-          $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-          ],
-        },
-      });
+  async getFriendRequests(userId, search = '') {
+    const requests = await friendshipModel.find({ user2: userId, status: 'pending' }).populate({
+      path: 'user1',
+      select: 'name avatar email',
+      match: {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      },
+    })
 
-    return requests;
+    return requests
   }
 
   /**
    * Get sent friend requests by the user
    */
-  async getSentRequests(userId, search = "") {
-    const requests = await friendshipModel
-      .find({ user1: userId, status: "pending" })
-      .populate({
-        path: "user2",
-        select: "name avatar email",
-        match: {
-          $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-          ],
-        },
-      });
+  async getSentRequests(userId, search = '') {
+    const requests = await friendshipModel.find({ user1: userId, status: 'pending' }).populate({
+      path: 'user2',
+      select: 'name avatar email',
+      match: {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      },
+    })
 
-    return requests;
+    return requests
   }
 
   /**
@@ -100,47 +97,47 @@ class FriendshipService {
     const existingRequest = await friendshipModel.findOne({
       user1: userId,
       user2: friendId,
-    });
+    })
 
     if (existingRequest) {
-      throw new Error("Friend request already sent");
+      throw createConflictError('Friend request already sent')
     }
 
     // Check if there's a pending request from the other user
     const existingPending = await friendshipModel.findOne({
       user1: friendId,
       user2: userId,
-      status: "pending",
-    });
+      status: 'pending',
+    })
 
     if (existingPending) {
       // Auto-accept the request
-      existingPending.status = "accepted";
-      await existingPending.save();
-      return { type: "auto-accepted", friendship: existingPending };
+      existingPending.status = 'accepted'
+      await existingPending.save()
+      return { type: 'auto-accepted', friendship: existingPending }
     }
 
     // Create new request
-    const newRequest = new friendshipModel({ user1: userId, user2: friendId });
-    await newRequest.save();
+    const newRequest = new friendshipModel({ user1: userId, user2: friendId })
+    await newRequest.save()
 
-    return { type: "sent", friendship: newRequest };
+    return { type: 'sent', friendship: newRequest }
   }
 
   /**
    * Accept a friend request from another user
    */
   async acceptFriendRequest(userId, requestId) {
-    const request = await friendshipModel.findById(requestId);
+    const request = await friendshipModel.findById(requestId)
 
     if (!request || request.user2.toString() !== userId.toString()) {
-      throw new Error("Invalid request");
+      throw createNotFoundError('Invalid request')
     }
 
-    request.status = "accepted";
-    await request.save();
+    request.status = 'accepted'
+    await request.save()
 
-    return request;
+    return request
   }
 
   /**
@@ -150,14 +147,14 @@ class FriendshipService {
     const request = await friendshipModel.findOneAndDelete({
       _id: requestId,
       user1: userId,
-      status: "pending",
-    });
+      status: 'pending',
+    })
 
     if (!request) {
-      throw new Error("Invalid request");
+      throw createNotFoundError('Invalid request')
     }
 
-    return request;
+    return request
   }
 
   /**
@@ -167,83 +164,79 @@ class FriendshipService {
     const request = await friendshipModel.findOneAndDelete({
       _id: requestId,
       user2: userId,
-      status: "pending",
-    });
+      status: 'pending',
+    })
 
     if (!request) {
-      throw new Error("Invalid request");
+      throw createNotFoundError('Invalid request')
     }
 
-    return request;
+    return request
   }
 
   /**
    * Search for friends of friends based on the user's current friends
    */
-  async searchForFriends(userId, search = "") {
+  async searchForFriends(userId, search = '') {
     // Get current friends
     const friendships = await friendshipModel
       .find({
         $or: [
-          { user1: userId, status: "accepted" },
-          { user2: userId, status: "accepted" },
+          { user1: userId, status: 'accepted' },
+          { user2: userId, status: 'accepted' },
         ],
       })
-      .populate("user1 user2", "name avatar email");
+      .populate('user1 user2', 'name avatar email')
 
-    const friends = friendships.map((f) =>
-      f.user1._id.equals(userId) ? f.user2 : f.user1,
-    );
+    const friends = friendships.map(f => (f.user1._id.equals(userId) ? f.user2 : f.user1))
 
     // Get friends of friends
     const friendsOfFriends = await friendshipModel
       .find({
         $or: [
-          { user1: { $in: friends.map((f) => f._id) }, status: "accepted" },
-          { user2: { $in: friends.map((f) => f._id) }, status: "accepted" },
+          { user1: { $in: friends.map(f => f._id) }, status: 'accepted' },
+          { user2: { $in: friends.map(f => f._id) }, status: 'accepted' },
         ],
       })
       .populate({
-        path: "user1 user2",
-        select: "name avatar email",
+        path: 'user1 user2',
+        select: 'name avatar email',
         match: {
           $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
           ],
         },
-      });
+      })
 
     let result = friendsOfFriends
-      .map((f) => [f.user1, f.user2])
+      .map(f => [f.user1, f.user2])
       .flat()
       .filter(
-        (user) =>
+        user =>
           user &&
           user._id.toString() !== userId.toString() &&
-          !friends.find((f) => f._id.equals(user._id)),
-      );
+          !friends.find(f => f._id.equals(user._id))
+      )
 
     // Filter out users who already have pending requests
     const sentRequests = await friendshipModel
-      .find({ user1: userId, status: "pending" })
-      .select("user2");
+      .find({ user1: userId, status: 'pending' })
+      .select('user2')
 
-    result = result.filter(
-      (user) => !sentRequests.find((r) => r.user2.equals(user._id)),
-    );
+    result = result.filter(user => !sentRequests.find(r => r.user2.equals(user._id)))
 
-    return result;
+    return result
   }
 
   /**
    * Search for a user by email
    */
   async searchByEmail(userId, email) {
-    let user = await userModel.findOne({ email }).select("name avatar email");
+    let user = await userModel.findOne({ email }).select('name avatar email')
 
     if (!user) {
-      throw new Error("User not found");
+      throw createNotFoundError('User not found')
     }
 
     // Check existing friendship
@@ -252,13 +245,13 @@ class FriendshipService {
         { user1: userId, user2: user._id },
         { user1: user._id, user2: userId },
       ],
-    });
+    })
 
     if (existingFriend) {
-      user = { ...user._doc, status: existingFriend.status };
+      user = { ...user._doc, status: existingFriend.status }
     }
 
-    return user;
+    return user
   }
 
   /**
@@ -270,18 +263,18 @@ class FriendshipService {
         { user1: userId, user2: targetId },
         { user1: targetId, user2: userId },
       ],
-    });
+    })
 
     if (!friendship) {
-      return { status: "none" };
+      return { status: 'none' }
     }
 
     return {
       status: friendship.status,
       friendship: friendship,
       isRequester: friendship.user1.toString() === userId.toString(),
-    };
+    }
   }
 }
 
-module.exports = new FriendshipService();
+module.exports = new FriendshipService()
