@@ -1,17 +1,12 @@
-const express = require("express")
-const multer = require("multer")
-const toolController = require("../controllers/tool.controller")
-const authenticate = require("../middlewares/auth.middleware")
+const express = require('express')
+const multer = require('multer')
+const toolController = require('../controllers/tool.controller')
+const { simpleAuth } = require('../middlewares/auth.middleware')
 
 const router = express.Router()
-const upload = multer({ dest: "uploads/" })
+const upload = multer({ dest: 'uploads/' })
 
-router.post(
-  "/upload/image",
-  authenticate,
-  upload.single("image"),
-  toolController.uploadImage
-)
+router.post('/upload/image', simpleAuth, upload.single('image'), toolController.uploadImage)
 
 /**
  * /api/tools/ice-servers
@@ -19,6 +14,6 @@ router.post(
  * @type {string} - "free" | "metered" | "cloudflare" | "all"
  * @returns {Array<Object>} - An array of ICE servers
  */
-router.get("/ice-servers", authenticate, toolController.getIceServers)
+router.get('/ice-servers', simpleAuth, toolController.getIceServers)
 
 module.exports = router

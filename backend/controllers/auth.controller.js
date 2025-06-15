@@ -1,185 +1,147 @@
-const userModel = require("../models/user.model")
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
-const validator = require("validator")
-const emailService = require("../services/email.service")
-const securePassword = require("secure-random-password")
+const authService = require('../services/auth.service')
 
-const createToken = (_id, type = "session-login") => {
-  const secret = process.env.JWT_SECRET
-
-  let expires
-  switch (type) {
-    case "session-login":
-      expires = "1d"
-      break
-    case "remember-login":
-      expires = "30d"
-      break
-    case "verify":
-      expires = "5m"
-      break
-    default:
-      expires = "1d"
-  }
-
-  return jwt.sign({ _id }, secret, {
-    expiresIn: expires,
-  })
-}
-
+/**
+ * Registers a new user.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.name - User's full name
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's password
+ * @param {Object} res - Express response object
+ */
 const register = async (req, res) => {
   const { name, email, password } = req.body
 
   try {
-    let user = await userModel.findOne({ email })
+    await authService.registerUser(name, email, password)
 
-    if (user) {
-      return res.status(400).send({ message: "User already exists" })
+    res.status(201).send({
+      message: 'Please check your email to verify your account',
+    })
+  } catch (err) {
+    console.error(err)
+
+    if (err.message === 'User already exists') {
+      return res.status(400).send({ message: err.message })
     }
 
-    if (!name || !email || !password) {
-      return res.status(400).send({ message: "All fields are required" })
+    if (err.message === 'All fields are required' || err.message === 'Invalid email') {
+      return res.status(400).send({ message: err.message })
     }
 
-    if (!validator.isEmail(email)) {
-      return res.status(400).send({ message: "Invalid email" })
-    }
-
-    if (!validator.isStrongPassword(password)) {
+    if (err.message === 'Password is not strong enough') {
       return res.status(400).send({
-        message: "Password is not strong enough",
-        requirements: [
-          "At least 8 characters",
-          "At least 1 lowercase letter",
-          "At least 1 uppercase letter",
-          "At least 1 number",
-          "At least 1 symbol",
-        ],
+        message: err.message,
+        requirements: err.requirements,
       })
     }
 
-    const salt = await bcrypt.genSalt(10)
-    const hash = await bcrypt.hash(password, salt)
-
-    user = new userModel({
-      name,
-      email,
-      password: hash,
-    })
-
-    await user.save()
-
-    const token = createToken(user._id, "verify")
-    await emailService.sendVerificationEmail(user.email, user.name, token)
-
-    res.status(201).send({
-      message: "Please check your email to verify your account",
-    })
-  } catch (err) {
-    console.error(err)
-    res.status(500).send({ message: err })
+    res.status(500).send({ message: err.message || 'Registration failed' })
   }
 }
 
+/**
+ * Resends verification email to user.
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const resendVerificationEmail = async (req, res) => {
   const user = req.user
 
-  if (user?.isVerified) {
-    return res.status(400).send({ message: "Account already verified" })
-  }
-
   try {
-    const token = createToken(user._id, "verify")
-    await emailService.sendVerificationEmail(user.email, user.name, token)
-
-    res.status(200).send({ message: "Verification email sent" })
+    await authService.resendVerificationEmail(user)
+    res.status(200).send({ message: 'Verification email sent' })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: err })
+
+    if (err.message === 'Account already verified') {
+      return res.status(400).send({ message: err.message })
+    }
+
+    res.status(500).send({ message: err.message || 'Failed to send verification email' })
   }
 }
 
+/**
+ * Verifies user email using verification token.
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.token - Email verification token
+ * @param {Object} res - Express response object
+ */
 const verify = async (req, res) => {
   const token = req.query.token
+
   try {
-    if (!token) {
-      return res.status(400).send({ message: "Token is required" })
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    const user = await userModel.findById(decoded._id)
-
-    if (!user) {
-      return res.status(400).send({ message: "User not found" })
-    }
-
-    if (user.isVerified) {
-      return res.status(200).send({ message: "Account already verified" })
-    }
-
-    user.isVerified = true
-    await user.save()
-
-    res.status(200).send({ message: "Account verified successfully" })
+    const result = await authService.verifyEmail(token)
+    res.status(200).send(result)
   } catch (err) {
     console.error(err)
-    res.status(400).send({ message: "Invalid token" })
+
+    if (err.message === 'Token is required' || err.message === 'User not found') {
+      return res.status(400).send({ message: err.message })
+    }
+
+    res.status(400).send({ message: 'Invalid token' })
   }
 }
 
+/**
+ * Authenticates user and creates session.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's password
+ * @param {boolean} [req.body.isRemember=false] - Whether to remember session
+ * @param {Object} res - Express response object
+ */
 const login = async (req, res) => {
   const { email, password, isRemember } = req.body
 
   try {
-    let user = await userModel.findOne({ email })
+    const { token, user } = await authService.loginUser(email, password, isRemember)
 
-    if (!user) {
-      return res.status(400).send({ message: "This email is not registered" })
-    }
-
-    const validPassword = await bcrypt.compare(password, user.password)
-
-    if (!validPassword) {
-      return res.status(400).send({ message: "Invalid password" })
-    }
-
-    const token = createToken(
-      user._id,
-      isRemember ? "remember-login" : "session-login"
-    )
-
-    res.cookie("token", token, {
+    res.cookie('token', token, {
       httpOnly: true,
       session: !isRemember,
       ...(isRemember && { maxAge: 30 * 24 * 60 * 60 * 1000 }),
     })
 
     res.status(200).send({
-      message: "Logged in successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        avatar: user.avatar,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
+      message: 'Logged in successfully',
+      user,
     })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: err })
+
+    if (err.message === 'This email is not registered' || err.message === 'Invalid password') {
+      return res.status(400).send({ message: err.message })
+    }
+
+    res.status(500).send({ message: err.message || 'Login failed' })
   }
 }
 
+/**
+ * Logs out user by clearing authentication cookie.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const logout = (req, res) => {
-  res.clearCookie("token")
-  res.status(200).send({ message: "Logged out successfully" })
+  res.clearCookie('token')
+  res.status(200).send({ message: 'Logged out successfully' })
 }
 
+/**
+ * Returns current authenticated user information.
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const myAccount = (req, res) => {
   res.status(200).send({
-    message: "Authenticated successfully",
+    message: 'Authenticated successfully',
     user: {
       id: req.user._id,
       name: req.user.name,
@@ -191,132 +153,92 @@ const myAccount = (req, res) => {
   })
 }
 
+/**
+ * Changes user password after validating current password.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.oldPassword - Current password
+ * @param {string} req.body.newPassword - New password
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const changePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body
 
   try {
-    const user = req.user
-    const validPassword = await bcrypt.compare(oldPassword, user.password)
+    await authService.changePassword(req.user, oldPassword, newPassword)
+    res.status(200).send({ message: 'Password changed successfully' })
+  } catch (err) {
+    console.error(err)
 
-    if (!validPassword) {
-      return res.status(400).send({ message: "Old password is incorrect" })
+    if (err.message === 'Old password is incorrect') {
+      return res.status(400).send({ message: err.message })
     }
 
-    if (!validator.isStrongPassword(newPassword)) {
+    if (err.message === 'Password is not strong enough') {
       return res.status(400).send({
-        message: "Password is not strong enough",
-        requirements: [
-          "At least 8 characters",
-          "At least 1 lowercase letter",
-          "At least 1 uppercase letter",
-          "At least 1 number",
-          "At least 1 symbol",
-        ],
+        message: err.message,
+        requirements: err.requirements,
       })
     }
 
-    const salt = await bcrypt.genSalt(10)
-    const hash = await bcrypt.hash(newPassword, salt)
-
-    user.password = hash
-    await user.save()
-
-    res.status(200).send({ message: "Password changed successfully" })
-  } catch (err) {
-    console.error(err)
-    res.status(500).send({ message: err.message })
+    res.status(500).send({ message: err.message || 'Password change failed' })
   }
 }
 
+/**
+ * Updates user profile information.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} [req.body.name] - User's full name
+ * @param {string} [req.body.avatar] - User's avatar URL or base64 image
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const updateInfo = async (req, res) => {
   const { name, avatar } = req.body
 
   try {
-    const user = req.user
-    user.name = name || user.name
-    user.avatar = avatar || user.avatar
-
-    await user.save()
-
-    res.status(200).send({ message: "Information updated successfully" })
+    await authService.updateUserInfo(req.user, name, avatar)
+    res.status(200).send({ message: 'Information updated successfully' })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: err })
+    res.status(500).send({ message: err.message || 'Information update failed' })
   }
 }
 
+/**
+ * Authenticates user using Google OAuth access token.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.access_token - Google OAuth access token
+ * @param {boolean} [req.body.isRemember=false] - Whether to remember session
+ * @param {Object} res - Express response object
+ */
 const googleLogin = async (req, res) => {
   const { access_token, isRemember } = req.body
-  if (!access_token) {
-    return res.status(401).send({ message: "Unauthorized" })
-  }
 
   try {
-    const googleRes = await fetch(
-      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`
-    )
-    const payload = await googleRes.json()
+    const { token, user } = await authService.googleLogin(access_token, isRemember)
 
-    if (!payload?.email) {
-      return res.status(401).send({ message: "Unauthorized" })
-    }
-
-    let user = await userModel.findOne({ email: payload.email })
-
-    if (!user) {
-      const password = securePassword.randomPassword({
-        length: 16,
-        characters: [
-          securePassword.lower,
-          securePassword.upper,
-          securePassword.digits,
-          securePassword.symbols,
-        ],
-      })
-
-      const salt = await bcrypt.genSalt(10)
-      const hash = await bcrypt.hash(password, salt)
-
-      const newUser = new userModel({
-        name: payload.name,
-        email: payload.email,
-        password: hash,
-        avatar: payload.picture,
-        isVerified: true,
-      })
-
-      user = await newUser.save()
-    }
-
-    if (!user.isVerified) {
-      user.isVerified = true
-      await user.save()
-    }
-
-    const token = createToken(
-      user._id,
-      isRemember ? "remember-login" : "session-login"
-    )
-
-    res.cookie("token", token, {
+    res.cookie('token', token, {
       httpOnly: true,
       session: !isRemember,
       ...(isRemember && { maxAge: 30 * 24 * 60 * 60 * 1000 }),
     })
 
     res.status(200).send({
-      message: "Logged in successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        avatar: user.avatar,
-        email: user.email,
-        role: user.role,
-        isVerified: true,
-      },
+      message: 'Logged in successfully',
+      user,
     })
   } catch (err) {
-    return res.status(401).send({ message: "Unauthorized" })
+    console.error(err)
+
+    if (err.message === 'Unauthorized') {
+      return res.status(401).send({ message: err.message })
+    }
+
+    res.status(500).send({ message: err.message || 'Google login failed' })
   }
 }
 

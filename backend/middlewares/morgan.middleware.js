@@ -1,14 +1,14 @@
-const morgan = require("morgan")
-const { getTime } = require("../utils/time.util")
-morgan.token("preciseTime", getTime)
+const morgan = require('morgan')
+const { getTime } = require('../utils/time.util')
+morgan.token('preciseTime', getTime)
 
 const options = [
-  ":preciseTime",
-  ":method",
-  ":url",
-  ":status",
-  ":response-time ms",
-  "from :remote-addr",
+  ':preciseTime',
+  ':method',
+  ':url',
+  ':status',
+  ':response-time ms',
+  'from :remote-addr',
 ]
 
-module.exports = morgan(options.join(" "))
+module.exports = morgan(options.join(' '))

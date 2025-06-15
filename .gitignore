@@ -11,3 +11,4 @@
 *.local
 *.log
 */.env
+*_plan.md

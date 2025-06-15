@@ -1,34 +1,25 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose')
 
 const messageSchema = new mongoose.Schema(
   {
     chatId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Chat",
+      ref: 'Chat',
     },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     content: String,
     type: {
       type: String,
-      enum: [
-        "text",
-        "image",
-        "system",
-        "emoji",
-        "fileTransfer",
-        "voiceCall",
-        "videoCall",
-        "file",
-      ],
-      default: "text",
+      enum: ['text', 'image', 'system', 'emoji', 'fileTransfer', 'voiceCall', 'videoCall', 'file'],
+      default: 'text',
     },
     status: {
       type: String,
-      enum: ["pending", "cancelled", "completed"],
-      default: "pending",
+      enum: ['pending', 'cancelled', 'completed'],
+      default: 'pending',
     },
     size: {
       type: Number,
@@ -37,13 +28,13 @@ const messageSchema = new mongoose.Schema(
     readerIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: 'User',
       },
     ],
   },
   { timestamps: true }
 )
 
-const messageModel = mongoose.model("Message", messageSchema)
+const messageModel = mongoose.model('Message', messageSchema)
 
 module.exports = messageModel

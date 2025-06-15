@@ -1,45 +1,17 @@
-const express = require("express")
+const express = require('express')
 const router = express.Router()
-const authMiddleware = require("../middlewares/auth.middleware")
-const friendshipController = require("../controllers/friendship.controller")
+const { authenticate, simpleAuth } = require('../middlewares/auth.middleware')
+const friendshipController = require('../controllers/friendship.controller')
 
-router.get("/friends", authMiddleware, friendshipController.getFriends)
-router.get("/requests", authMiddleware, friendshipController.getFriendRequests)
-router.get(
-  "/sent-requests",
-  authMiddleware,
-  friendshipController.getSentRequests
-)
-router.post("/remove-friend", authMiddleware, friendshipController.removeFriend)
-router.post(
-  "/send-request",
-  authMiddleware,
-  friendshipController.sendFriendRequest
-)
-router.post(
-  "/cancel-request",
-  authMiddleware,
-  friendshipController.cancelFriendRequest
-)
-router.post(
-  "/accept-request",
-  authMiddleware,
-  friendshipController.acceptFriendRequest
-)
-router.post(
-  "/reject-request",
-  authMiddleware,
-  friendshipController.rejectFriendRequest
-)
-router.get(
-  "/search-for-friends",
-  authMiddleware,
-  friendshipController.searchForFriends
-)
-router.get(
-  "/search-by-email",
-  authMiddleware,
-  friendshipController.searchByEmail
-)
+router.get('/friends', simpleAuth, friendshipController.getFriends)
+router.get('/requests', simpleAuth, friendshipController.getFriendRequests)
+router.get('/sent-requests', simpleAuth, friendshipController.getSentRequests)
+router.post('/remove-friend', simpleAuth, friendshipController.removeFriend)
+router.post('/send-request', authenticate, friendshipController.sendFriendRequest)
+router.post('/cancel-request', simpleAuth, friendshipController.cancelFriendRequest)
+router.post('/accept-request', authenticate, friendshipController.acceptFriendRequest)
+router.post('/reject-request', simpleAuth, friendshipController.rejectFriendRequest)
+router.get('/search-for-friends', simpleAuth, friendshipController.searchForFriends)
+router.get('/search-by-email', simpleAuth, friendshipController.searchByEmail)
 
 module.exports = router

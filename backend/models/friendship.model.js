@@ -1,26 +1,26 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose')
 
 const friendshipSchema = new mongoose.Schema(
   {
     user1: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     user2: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     status: {
       type: String,
-      enum: ["pending", "accepted"],
-      default: "pending",
+      enum: ['pending', 'accepted'],
+      default: 'pending',
     },
   },
   { timestamps: true }
 )
 
-const friendshipModel = mongoose.model("Friendship", friendshipSchema)
+const friendshipModel = mongoose.model('Friendship', friendshipSchema)
 
 module.exports = friendshipModel

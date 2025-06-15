@@ -1,10 +1,10 @@
-require("dotenv").config()
+require('dotenv').config()
 
 const freeIceServers = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun.l.google.com:5349" },
-  { urls: "stun:freestun.net:3478" },
-  { urls: "turn:freestun.net:3478", username: "free", credential: "free" },
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun.l.google.com:5349' },
+  { urls: 'stun:freestun.net:3478' },
+  { urls: 'turn:freestun.net:3478', username: 'free', credential: 'free' },
 ]
 
 const meteredIceServers = async () => {
@@ -22,9 +22,9 @@ const meteredIceServers = async () => {
 
 const cloudflareIceServers = async () => {
   try {
-    let stun = { urls: "stun:stun.cloudflare.com:3478" }
-    let turn = { urls: "turn:turn.speed.cloudflare.com:50000" }
-    const response = await fetch("https://speed.cloudflare.com/turn-creds")
+    let stun = { urls: 'stun:stun.cloudflare.com:3478' }
+    let turn = { urls: 'turn:turn.speed.cloudflare.com:50000' }
+    const response = await fetch('https://speed.cloudflare.com/turn-creds')
     const { username, credential } = await response.json()
     return [{ ...stun }, { ...turn, username, credential }]
   } catch (error) {
@@ -38,10 +38,10 @@ const privateCloudflareIceServers = async () => {
     const response = await fetch(
       `https://rtc.live.cloudflare.com/v1/turn/keys/${process.env.CLOUDFLARE_TURN_TOKEN}/credentials/generate`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ttl: 86400,

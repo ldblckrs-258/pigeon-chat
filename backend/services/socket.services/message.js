@@ -1,33 +1,33 @@
-const { getTime } = require("../../utils/time.util")
+const { getTime } = require('../../utils/time.util')
 
 class Message {
   handler(socket) {
-    socket.on("sendMsg", (chatId, memberIds) => {
+    socket.on('sendMsg', (chatId, memberIds) => {
       const time = getTime()
-      memberIds.forEach((id) => {
-        const user = _onlineUsers.find((u) => u.userId === id)
-        const type = "message"
+      memberIds.forEach(id => {
+        const user = _onlineUsers.find(u => u.userId === id)
+        const type = 'message'
         if (user) {
-          _io.to(user.socketId).emit("updated", type, time, chatId)
+          _io.to(user.socketId).emit('updated', type, time, chatId)
         }
       })
     })
-    socket.on("updateChat", (chatId, memberIds) => {
+    socket.on('updateChat', (chatId, memberIds) => {
       const time = getTime()
-      memberIds.forEach((id) => {
-        const user = _onlineUsers.find((u) => u.userId === id)
-        const type = "chat"
+      memberIds.forEach(id => {
+        const user = _onlineUsers.find(u => u.userId === id)
+        const type = 'chat'
         if (user) {
-          _io.to(user.socketId).emit("updated", type, time, chatId)
+          _io.to(user.socketId).emit('updated', type, time, chatId)
         }
       })
     })
   }
   sendMessage(data, memberIds) {
-    let receivers = _onlineUsers.filter((u) => memberIds.includes(u.userId))
+    let receivers = _onlineUsers.filter(u => memberIds.includes(u.userId))
     if (receivers.length === 0) return
-    receivers.forEach((r) => {
-      _io.to(r.socketId).emit("newMessage", {
+    receivers.forEach(r => {
+      _io.to(r.socketId).emit('newMessage', {
         ...data,
         sender: {
           name: data?.sender?.name,
@@ -40,42 +40,34 @@ class Message {
   }
 
   deleteMessage(chatId, messageId, memberIds) {
-    let receiverIds = _onlineUsers
-      .filter((u) => memberIds.includes(u.userId))
-      .map((u) => u.socketId)
+    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
     if (receiverIds.length === 0) return
-    receiverIds.forEach((id) => {
-      _io.to(id).emit("deleteMessage", chatId, messageId)
+    receiverIds.forEach(id => {
+      _io.to(id).emit('deleteMessage', chatId, messageId)
     })
   }
 
   updateChat(chatId, memberIds) {
-    let receiverIds = _onlineUsers
-      .filter((u) => memberIds.includes(u.userId))
-      .map((u) => u.socketId)
+    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
     if (receiverIds.length === 0) return
-    receiverIds.forEach((id) => {
-      _io.to(id).emit("updateChat", chatId)
+    receiverIds.forEach(id => {
+      _io.to(id).emit('updateChat', chatId)
     })
   }
 
   joinChat(memberIds) {
-    let receiverIds = _onlineUsers
-      .filter((u) => memberIds.includes(u.userId))
-      .map((u) => u.socketId)
+    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
     if (receiverIds.length === 0) return
-    receiverIds.forEach((id) => {
-      _io.to(id).emit("joinChat")
+    receiverIds.forEach(id => {
+      _io.to(id).emit('joinChat')
     })
   }
 
   outChat(chatId, memberIds) {
-    let receiverIds = _onlineUsers
-      .filter((u) => memberIds.includes(u.userId))
-      .map((u) => u.socketId)
+    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
     if (receiverIds.length === 0) return
-    receiverIds.forEach((id) => {
-      _io.to(id).emit("outChat", chatId)
+    receiverIds.forEach(id => {
+      _io.to(id).emit('outChat', chatId)
     })
   }
 }

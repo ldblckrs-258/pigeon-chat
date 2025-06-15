@@ -1,36 +1,32 @@
-const messageModel = require("../models/message.model")
-const chatModel = require("../models/chat.model")
-const messageSocket = require("../services/socket.services/message")
-const ChatHistoryService = require("../services/chatHistory.service")
-const fs = require("fs")
+const messageService = require('../services/message.service')
+const messageSocket = require('../services/socket.services/message')
+const ChatHistoryService = require('../services/chatHistory.service')
+
+/**
+ * Creates a new message in a chat.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.chatId - ID of the chat to send message to
+ * @param {string} req.body.content - Message content
+ * @param {string} [req.body.type='text'] - Message type (text, image, file, etc.)
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const createMessage = async (req, res) => {
   const chatId = req.body.chatId
   const content = req.body.content
-  const type = req.body.type || "text"
+  const type = req.body.type || 'text'
 
   try {
-    const chatRoom = await chatModel.findById(chatId)
-    if (!chatRoom) {
-      return res.status(404).send({ message: "Chat not found" })
-    }
-    const newMessage = new messageModel({
+    const { message, chatRoom, memberIds } = await messageService.createMessage(
       chatId,
-      senderId: req.user._id,
+      req.user._id,
       content,
-      type,
-      status: "completed",
-      readerIds: [req.user._id],
-    })
-
-    const response = await newMessage.save()
-
-    const memberIds = chatRoom.members.map((member) => {
-      if (member.toString() !== req.user._id.toString())
-        return member.toString()
-    })
+      type
+    )
 
     let data = {
-      ...response?._doc,
+      ...message._doc,
       sender: {
         isMine: false,
         _id: req.user._id,
@@ -48,10 +44,26 @@ const createMessage = async (req, res) => {
     })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: "Request failed, please try again later." })
+
+    if (err.message === 'Chat not found') {
+      return res.status(404).send({ message: err.message })
+    }
+
+    res.status(500).send({ message: 'Request failed, please try again later.' })
   }
 }
 
+/**
+ * Retrieves paginated messages from a specific chat.
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Route parameters
+ * @param {string} req.params.chatId - ID of the chat to get messages from
+ * @param {Object} req.query - Query parameters
+ * @param {number} [req.query.skip=0] - Number of messages to skip for pagination
+ * @param {number} [req.query.limit=10] - Maximum number of messages to return
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const getChatMessages = async (req, res) => {
   const userId = req.user._id
   const chatId = req.params.chatId
@@ -59,197 +71,146 @@ const getChatMessages = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10
 
   try {
-    const totalMessages = await messageModel.countDocuments({ chatId })
+    const { messages, haveMore, total } = await messageService.getChatMessages(
+      chatId,
+      userId,
+      skip,
+      limit
+    )
 
-    if (totalMessages === 0 || skip >= totalMessages) {
+    if (messages.length === 0) {
       return res.status(200).send({
-        message: "No messages found",
+        message: 'No messages found',
         data: [],
       })
     }
 
-    const haveMore = totalMessages > skip + limit
-
-    const messages = await messageModel
-      .find({ chatId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select("-updatedAt -__v -chatId")
-      .populate("senderId", "name avatar")
-
-    if (!messages || messages?.length === 0)
-      return res.status(200).send({
-        message: "No messages found",
-        data: [],
-      })
-
-    messages?.forEach((message) => {
-      if (!message.readerIds.includes(userId)) {
-        message.readerIds.push(userId)
-        message.save()
-      }
-    })
-
-    let modifiedMessages = messages?.map((message) => {
-      let sender = null
-      if (message.senderId) {
-        sender = {
-          isMine: message.senderId._id.toString() === userId.toString(),
-          _id: message.senderId._id,
-          name: message.senderId.name,
-          avatar: message.senderId.avatar,
-        }
-      }
-
-      return {
-        _id: message._id,
-        sender,
-        content: message.content,
-        type: message.type,
-        size: message?.size || 0,
-        status: message.status || "completed",
-        createdAt: message.createdAt,
-      }
-    })
-
     res.status(200).send({
-      message: "Messages retrieved successfully",
-      data: modifiedMessages,
+      message: 'Messages retrieved successfully',
+      data: messages,
       haveMore,
     })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: "Request failed, please try again later." })
+    res.status(500).send({ message: 'Request failed, please try again later.' })
   }
 }
 
+/**
+ * Retrieves new messages in a chat after a specific message.
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Route parameters
+ * @param {string} req.params.chatId - ID of the chat to get new messages from
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.lastMessageId - ID of the last message the client has
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const getNewMessages = async (req, res) => {
   const userId = req.user._id
   const chatId = req.params.chatId
   const lastMessageId = req.query.lastMessageId
 
   try {
-    const lastMessage = await messageModel.findById(lastMessageId)
-    if (!lastMessage) {
-      return res.status(404).send({ message: "Message not found" })
-    }
+    const messages = await messageService.getNewMessages(chatId, userId, lastMessageId)
 
-    const messages = await messageModel
-      .find({ chatId, createdAt: { $gt: lastMessage.createdAt } })
-      .select("-updatedAt -__v -chatId")
-      .populate("senderId", "name avatar")
-
-    if (!messages || messages.length === 0)
+    if (!messages || messages.length === 0) {
       return res.status(200).send({
-        message: "No new messages found",
+        message: 'No new messages found',
         data: [],
       })
-
-    messages.forEach((message) => {
-      if (!message.readerIds.includes(userId)) {
-        message.readerIds.push(userId)
-        message.save()
-      }
-    })
-
-    let modifiedMessages = messages.map((message) => {
-      let sender = null
-      if (message.senderId) {
-        sender = {
-          isMine: message.senderId._id.toString() === userId.toString(),
-          _id: message.senderId._id,
-          name: message.senderId.name,
-          avatar: message.senderId.avatar,
-        }
-      }
-
-      return {
-        _id: message._id,
-        sender,
-        content: message.content,
-        type: message.type,
-        createdAt: message.createdAt,
-      }
-    })
+    }
 
     res.status(200).send({
-      message: "New messages retrieved successfully",
-      data: modifiedMessages,
+      message: 'New messages retrieved successfully',
+      data: messages,
     })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: "Request failed, please try again later." })
+
+    if (err.message === 'Message not found') {
+      return res.status(404).send({ message: err.message })
+    }
+
+    res.status(500).send({ message: 'Request failed, please try again later.' })
   }
 }
 
+/**
+ * Deletes a message from a chat.
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Route parameters
+ * @param {string} req.params.messageId - ID of the message to delete
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const deleteMessage = async (req, res) => {
   const userId = req.user._id
   const messageId = req.params.messageId
 
   try {
-    const message = await messageModel.findById(messageId)
-    if (!message) {
-      return res.status(404).send({ message: "Message not found" })
-    }
-    if (message.senderId.toString() !== userId.toString()) {
-      return res.status(403).send({ message: "Unauthorized" })
-    }
-    const chat = await chatModel.findById(message.chatId)
-    if (!chat) {
-      return res.status(404).send({ message: "Chat not found" })
-    }
-    if (!chat.members.includes(userId)) {
-      return res.status(403).send({ message: "Unauthorized" })
-    }
-
-    const memberIds = chat.members.map((member) => member.toString())
-
-    await messageModel.findByIdAndDelete(messageId)
+    const { message, chat, memberIds } = await messageService.deleteMessage(messageId, userId)
 
     messageSocket.deleteMessage(message.chatId, messageId, memberIds)
 
-    if (message.type === "file") {
-      fs.unlink(`./uploads/${message.content}`, (err) => {})
-    }
-
-    res.status(200).send({ message: "Message deleted successfully" })
+    res.status(200).send({ message: 'Message deleted successfully' })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: "Request failed, please try again later." })
+
+    if (err.message === 'Message not found' || err.message === 'Chat not found') {
+      return res.status(404).send({ message: err.message })
+    }
+
+    if (err.message === 'Unauthorized') {
+      return res.status(403).send({ message: err.message })
+    }
+
+    res.status(500).send({ message: 'Request failed, please try again later.' })
   }
 }
 
+/**
+ * Creates a file transfer history record.
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.chatId - ID of the chat where file transfer occurred
+ * @param {string} req.body.fileName - Name of the transferred file
+ * @param {number} req.body.fileSize - Size of the transferred file in bytes
+ * @param {string} [req.body.status='completed'] - Status of the file transfer
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const createFileTransferHistory = async (req, res) => {
   const chatId = req.body.chatId
   const user = req.user
   const fileName = req.body.fileName
   const fileSize = req.body.fileSize
-  const status = req.body.status || "completed"
+  const status = req.body.status || 'completed'
 
   try {
-    await ChatHistoryService.createFileTransferHistory(
-      chatId,
-      user,
-      fileName,
-      fileSize,
-      status
-    )
+    await ChatHistoryService.createFileTransferHistory(chatId, user, fileName, fileSize, status)
 
-    res
-      .status(201)
-      .send({ message: "File transfer history created successfully" })
+    res.status(201).send({ message: 'File transfer history created successfully' })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: "Request failed, please try again later." })
+    res.status(500).send({ message: 'Request failed, please try again later.' })
   }
 }
 
+/**
+ * Uploads a file to a chat and creates upload history.
+ * @param {Object} req - Express request object
+ * @param {Object} req.file - Uploaded file object from multer middleware
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.chatId - ID of the chat to upload file to
+ * @param {Object} req.user - Authenticated user object from middleware
+ * @param {Object} res - Express response object
+ */
 const sendFile = async (req, res) => {
   try {
     const file = req.file
     if (!file) {
-      return res.status(400).send({ message: "No file found" })
+      return res.status(400).send({ message: 'No file found' })
     }
 
     await ChatHistoryService.createFileUploadHistory(
@@ -257,13 +218,13 @@ const sendFile = async (req, res) => {
       req.user,
       file.path.slice(8),
       file.size,
-      "completed"
+      'completed'
     )
 
-    res.status(201).send({ message: "File uploaded successfully" })
+    res.status(201).send({ message: 'File uploaded successfully' })
   } catch (err) {
     console.error(err)
-    res.status(500).send({ message: "Request failed, please try again later." })
+    res.status(500).send({ message: 'Request failed, please try again later.' })
   }
 }
 
