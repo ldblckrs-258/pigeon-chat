@@ -310,7 +310,7 @@ const ChatInfo = ({ className, onClose }) => {
 					</button>
 				</div>
 				<p className="absolute bottom-2 text-xs text-gray-400">
-					©2024 pigeon-chat.vercel.app. All rights reserved
+					©2025 chat.ldblckrs.id.vn. All rights reserved
 				</p>
 				{showAddModal && (
 					<MemberModal

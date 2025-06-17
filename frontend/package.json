@@ -28,7 +28,8 @@
 		"react-router-dom": "^6.28.0",
 		"socket.io-client": "^4.8.1",
 		"styled-components": "^6.1.13",
-		"tailwind-merge": "^2.5.4"
+		"tailwind-merge": "^2.5.4",
+		"fluid-tailwind": "^1.0.4"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.2",
@@ -42,7 +43,6 @@
 		"eslint-plugin-react": "^7.37.2",
 		"eslint-plugin-react-hooks": "^5.0.0",
 		"eslint-plugin-react-refresh": "^0.4.14",
-		"fluid-tailwind": "^1.0.4",
 		"globals": "^15.12.0",
 		"postcss": "^8.4.47",
 		"postcss-import": "^16.1.0",
