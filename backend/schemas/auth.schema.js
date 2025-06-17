@@ -104,6 +104,32 @@ const verifySchema = z.object({
   }),
 })
 
+/**
+ * Schema for forgot password request
+ */
+const forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email format'),
+  }),
+})
+
+/**
+ * Schema for password reset
+ */
+const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, 'Reset token is required'),
+    newPassword: z
+      .string()
+      .min(8, 'New password must be at least 8 characters')
+      .max(100, 'New password must be less than 100 characters')
+      .refine(passwordValidation, {
+        message:
+          'New password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 symbol',
+      }),
+  }),
+})
+
 module.exports = {
   registerSchema,
   loginSchema,
@@ -111,4 +137,6 @@ module.exports = {
   updateInfoSchema,
   googleLoginSchema,
   verifySchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 }

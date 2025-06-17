@@ -143,6 +143,34 @@ const googleLogin = catchAsync(async (req, res) => {
   })
 })
 
+/**
+ * Sends forgot password email to user.
+ */
+const forgotPassword = catchAsync(async (req, res) => {
+  const { email } = req.body
+
+  const result = await authService.forgotPassword(email)
+
+  res.status(StatusCodes.OK).json({
+    status: 'success',
+    message: result.message,
+  })
+})
+
+/**
+ * Resets user password using reset token.
+ */
+const resetPassword = catchAsync(async (req, res) => {
+  const { token, newPassword } = req.body
+
+  const result = await authService.resetPassword(token, newPassword)
+
+  res.status(StatusCodes.OK).json({
+    status: 'success',
+    message: result.message,
+  })
+})
+
 module.exports = {
   register,
   login,
@@ -153,4 +181,6 @@ module.exports = {
   googleLogin,
   verify,
   resendVerificationEmail,
+  forgotPassword,
+  resetPassword,
 }

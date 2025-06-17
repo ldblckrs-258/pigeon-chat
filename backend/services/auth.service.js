@@ -28,6 +28,9 @@ class AuthService {
       case 'verify':
         expires = '5m'
         break
+      case 'reset-password':
+        expires = '15m'
+        break
       default:
         expires = '1d'
     }
@@ -221,6 +224,66 @@ class AuthService {
     } catch (error) {
       console.error('Google login error:', error)
       throw createUnauthorizedError('Unauthorized')
+    }
+  }
+
+  /**
+   * Send forgot password email
+   */
+  async forgotPassword(email) {
+    const user = await userModel.findOne({ email })
+
+    if (!user) {
+      throw createNotFoundError('No account found with this email address')
+    }
+
+    if (!user.isVerified) {
+      throw createBadRequestError('Please verify your email first before resetting password')
+    }
+
+    // Generate reset token
+    const resetToken = this.createToken(user._id, 'reset-password')
+
+    // Send reset password email
+    await emailService.sendResetPasswordEmail(user.email, user.name, resetToken)
+
+    return { message: 'Password reset email sent successfully' }
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(token, newPassword) {
+    try {
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      const user = await userModel.findById(decoded._id)
+
+      if (!user) {
+        throw createNotFoundError('User not found')
+      }
+
+      if (!user.isVerified) {
+        throw createBadRequestError('Account not verified')
+      }
+
+      // Hash new password
+      const salt = await bcrypt.genSalt(10)
+      const hash = await bcrypt.hash(newPassword, salt)
+
+      // Update password
+      user.password = hash
+      await user.save()
+
+      return { message: 'Password reset successfully' }
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw createBadRequestError('Password reset token has expired')
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw createBadRequestError('Invalid password reset token')
+      }
+      throw error
     }
   }
 }

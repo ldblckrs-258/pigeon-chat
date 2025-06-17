@@ -9,6 +9,8 @@ const {
   updateInfoSchema,
   googleLoginSchema,
   verifySchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } = require('../schemas/auth.schema')
 const { authLimiter } = require('../middlewares/rateLimiter.middleware')
 
@@ -35,5 +37,17 @@ router.put(
   authController.updateInfo
 )
 router.post('/google', authLimiter, validate(googleLoginSchema), authController.googleLogin)
+router.post(
+  '/forgot-password',
+  authLimiter,
+  validate(forgotPasswordSchema),
+  authController.forgotPassword
+)
+router.post(
+  '/reset-password',
+  authLimiter,
+  validate(resetPasswordSchema),
+  authController.resetPassword
+)
 
 module.exports = router

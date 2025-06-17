@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../hook/useAuth'
-import Checkbox from '../components/Checkbox'
-import TextField from '../components/TextField'
-import { useToast } from '../hook/useToast'
-import { useNavigate } from 'react-router-dom'
 import { GoogleLogin, useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Checkbox from '../components/Checkbox'
+import TextField from '../components/TextField'
+import { useAuth } from '../hook/useAuth'
+import { useToast } from '../hook/useToast'
 
 const emptyData = {
 	email: '',
@@ -117,13 +117,7 @@ const Login = () => {
 						/>
 					</div>
 					<button
-						onClick={() => {
-							toast.info(
-								'Forgot password?',
-								'Please contact your administrator',
-								3000,
-							)
-						}}
+						onClick={() => navigate('/forgot-password')}
 						className="text-sm text-primary-400 hover:underline"
 					>
 						Forgot password?

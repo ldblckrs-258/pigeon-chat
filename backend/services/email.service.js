@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer')
 const VerificationMail = require('../static/verification-mail')
+const ResetPasswordMail = require('../static/reset-password-mail')
 const { createBadRequestError } = require('../utils/errorTypes')
 
 class EmailService {
@@ -37,6 +38,17 @@ class EmailService {
     if (!process.env.ORIGIN) throw createBadRequestError('ORIGIN is not defined')
     const url = `${process.env.ORIGIN}/verify-email?token=${token}`
     const html = VerificationMail(name, url)
+    await this.sendEmail(email, subject, html)
+  }
+
+  /**
+   * Sends a password reset email to the user.
+   */
+  async sendResetPasswordEmail(email, name, token) {
+    const subject = 'Reset Your Password - Pigeon Chat'
+    if (!process.env.ORIGIN) throw createBadRequestError('ORIGIN is not defined')
+    const url = `${process.env.ORIGIN}/reset-password?token=${token}`
+    const html = ResetPasswordMail(name, url)
     await this.sendEmail(email, subject, html)
   }
 }
