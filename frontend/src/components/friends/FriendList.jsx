@@ -1,8 +1,8 @@
+import axios from 'axios'
 import { useEffect } from 'react'
 import { PiChatCircleDotsFill, PiXBold } from 'react-icons/pi'
-import axios from 'axios'
-import { useToast } from '../../hook/useToast'
 import { useChat } from '../../hook/useChat'
+import { useToast } from '../../hook/useToast'
 
 const FriendList = ({ friends, setFriends, onlineUsers, onClose }) => {
 	const toast = useToast()
@@ -51,7 +51,11 @@ const FriendList = ({ friends, setFriends, onlineUsers, onClose }) => {
 			setFriends((prev) => prev.filter((friend) => friend._id !== id))
 			toast.success('Success', 'Friend removed', 3000)
 		} catch (err) {
-			toast.error('Error', 'Please try again later', 3000)
+			toast.error(
+				'Error',
+				err.response?.data?.message || 'Please try again later',
+				3000,
+			)
 		}
 	}
 
@@ -73,24 +77,24 @@ const FriendList = ({ friends, setFriends, onlineUsers, onClose }) => {
 			{friends.map((friend) => (
 				<div
 					key={friend._id}
-					className="flex items-center justify-between gap-2 rounded-md py-2.5 ~px-3/4 hover:bg-gray-200"
+					className="~px-3/4 flex items-center justify-between gap-2 rounded-md py-2.5 hover:bg-gray-200"
 				>
 					<div className="flex w-full items-center gap-2">
 						<div className="relative">
 							<img
 								src={friend.avatar}
 								alt={friend.name}
-								className="rounded-full ~size-8/9"
+								className="~size-8/9 rounded-full"
 							/>
 							{onlineUsers.includes(friend._id) && (
 								<div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500"></div>
 							)}
 						</div>
 						<div className="flex flex-col">
-							<span className="font-semibold ~text-[0.8rem]/[0.9rem] ~leading-4/5">
+							<span className="~text-[0.8rem]/[0.9rem] ~leading-4/5 font-semibold">
 								{friend.name}
 							</span>
-							<span className="text-gray-500 ~text-[0.75rem]/[0.8rem] ~leading-3/4">
+							<span className="~text-[0.75rem]/[0.8rem] ~leading-3/4 text-gray-500">
 								{friend.email}
 							</span>
 						</div>

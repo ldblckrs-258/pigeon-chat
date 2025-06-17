@@ -9,8 +9,16 @@ const { serverInfo } = require('./utils/network.util')
 
 const notFound = require('./middlewares/notFound.middleware')
 const globalErrorHandler = require('./middlewares/errorHandler.middleware')
+const securityMiddleware = require('./middlewares/security.middleware')
+const { generalLimiter } = require('./middlewares/rateLimiter.middleware')
 
 const app = express()
+
+// Security middleware
+app.use(securityMiddleware)
+
+// Rate limiting
+app.use(generalLimiter)
 
 app.use(require('./middlewares/morgan.middleware'))
 app.use(cookieParser())

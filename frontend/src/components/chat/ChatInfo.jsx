@@ -1,22 +1,22 @@
-import { twMerge } from 'tailwind-merge'
-import { motion, AnimatePresence } from 'framer-motion'
-import { isOnline } from '../../utils/validate'
-import { useAuth } from '../../hook/useAuth'
-import { useSocket } from '../../hook/useSocket'
-import { useChat } from '../../hook/useChat'
+import axios from 'axios'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
 import {
+	PiArrowLineRightBold,
 	PiCaretRightBold,
 	PiFloppyDiskBackFill,
 	PiPenFill,
 	PiXBold,
-	PiArrowLineRightBold,
 } from 'react-icons/pi'
-import { useState, useRef, useEffect } from 'react'
+import { twMerge } from 'tailwind-merge'
+import { useAuth } from '../../hook/useAuth'
+import { useChat } from '../../hook/useChat'
+import { useSocket } from '../../hook/useSocket'
 import { useToast } from '../../hook/useToast'
-import axios from 'axios'
+import useWindowSize from '../../hook/useWindowSize'
+import { isOnline } from '../../utils/validate'
 import MemberModal from '../modal/MemberModal'
 import TextField from '../TextField'
-import useWindowSize from '../../hook/useWindowSize'
 
 const ChatInfo = ({ className, onClose }) => {
 	const { currentChat: chatInfo, clearCurrent } = useChat()
@@ -34,7 +34,11 @@ const ChatInfo = ({ className, onClose }) => {
 			toast.success('Success', 'Leave chat successfully', 3000)
 		} catch (error) {
 			console.error(error)
-			toast.error('Error', 'Leave chat failed', 3000)
+			toast.error(
+				'Error',
+				error.response?.data?.message || 'Leave chat failed',
+				3000,
+			)
 		}
 	}
 
@@ -45,7 +49,11 @@ const ChatInfo = ({ className, onClose }) => {
 			toast.success('Success', 'Delete chat successfully', 3000)
 		} catch (error) {
 			console.error(error)
-			toast.error('Error', 'Delete chat failed', 3000)
+			toast.error(
+				'Error',
+				error.response?.data?.message || 'Delete chat failed',
+				3000,
+			)
 		}
 	}
 
@@ -59,7 +67,11 @@ const ChatInfo = ({ className, onClose }) => {
 			toast.success('Success', 'Remove member successfully', 3000)
 		} catch (error) {
 			console.error(error)
-			toast.error('Error', 'Remove member failed', 3000)
+			toast.error(
+				'Error',
+				error.response?.data?.message || 'Remove member failed',
+				3000,
+			)
 		}
 	}
 	const [editChat, setEditChat] = useState(false)
@@ -88,7 +100,11 @@ const ChatInfo = ({ className, onClose }) => {
 		} catch (error) {
 			console.error(error)
 			setEditData({ ...editData, avatar: chatInfo.avatar })
-			toast.error('Error', 'Upload image failed', 3000)
+			toast.error(
+				'Error',
+				error.response?.data?.message || 'Upload image failed',
+				3000,
+			)
 		}
 		setIsLoading(false)
 	}
@@ -108,7 +124,11 @@ const ChatInfo = ({ className, onClose }) => {
 			setEditChat(false)
 		} catch (error) {
 			console.error(error)
-			toast.error('Error', 'Edit chat failed', 3000)
+			toast.error(
+				'Error',
+				error.response?.data?.message || 'Edit chat failed',
+				3000,
+			)
 		}
 	}
 

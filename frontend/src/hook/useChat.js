@@ -1,7 +1,7 @@
-import { useContext } from 'react'
 import axios from 'axios'
-import { useToast } from './useToast'
+import { useContext } from 'react'
 import { ChatContext } from '../contexts/ChatContext'
+import { useToast } from './useToast'
 export const useChat = () => {
 	const {
 		loading,
@@ -52,7 +52,7 @@ export const useChat = () => {
 			console.error(error)
 			toast.error(
 				'Failed to send message',
-				'Please try again later',
+				error.response?.data?.message || 'Please try again later',
 				4000,
 			)
 		}

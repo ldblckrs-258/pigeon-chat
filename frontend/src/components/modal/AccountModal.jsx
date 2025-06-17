@@ -1,9 +1,9 @@
+import axios from 'axios'
 import { useEffect, useRef, useState } from 'react'
-import { useAuth } from '../../hook/useAuth'
 import { PiPenFill, PiXCircleBold } from 'react-icons/pi'
+import { useAuth } from '../../hook/useAuth'
 import { useToast } from '../../hook/useToast'
 import TextField from '../TextField'
-import axios from 'axios'
 
 const AccountModal = ({ onClose }) => {
 	const { user } = useAuth()
@@ -39,7 +39,11 @@ const AccountModal = ({ onClose }) => {
 		} catch (error) {
 			console.error(error)
 			setEditData({ ...editData, avatar: user.avatar })
-			toast.error('Error', 'Upload image failed', 3000)
+			toast.error(
+				'Error',
+				error.response?.data?.message || 'Upload image failed',
+				3000,
+			)
 		}
 		setIsLoading(false)
 	}
@@ -71,8 +75,8 @@ const AccountModal = ({ onClose }) => {
 		} catch (error) {
 			console.error(error)
 			toast.error(
-				'Update information failed',
-				'Please try again later',
+				'Error',
+				error.response?.data?.message || 'Update information failed',
 				3000,
 			)
 		}
@@ -134,7 +138,7 @@ const AccountModal = ({ onClose }) => {
 			className="fixed left-0 top-0 z-20 flex h-dvh w-screen items-center justify-center bg-[#00000033]"
 			onMouseDown={(e) => e.target === e.currentTarget && onClose()}
 		>
-			<div className="mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white px-4 ~w-[24rem]/[28rem] ~py-4/6">
+			<div className="~w-[24rem]/[28rem] ~py-4/6 mx-auto flex max-w-[90vw] flex-col items-center overflow-hidden rounded-lg bg-white px-4">
 				<div className="flex w-full items-center justify-between">
 					<div className="flex items-center gap-1">
 						<button

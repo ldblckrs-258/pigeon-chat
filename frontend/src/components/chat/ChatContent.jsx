@@ -1,23 +1,23 @@
-import { useEffect, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
-import SpinLoader from '../SpinLoader'
-import { useToast } from '../../hook/useToast'
+import mql from '@microlink/mql'
 import axios from 'axios'
-import { useChat } from '../../hook/useChat'
-import { useLightbox } from '../../hook/useLightbox'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import {
 	PiArrowsLeftRightBold,
 	PiDot,
 	PiDownloadBold,
 	PiTrashBold,
 } from 'react-icons/pi'
-import { AnimatePresence, motion } from 'framer-motion'
 import InfiniteScroll from 'react-infinite-scroll-component'
+import { twMerge } from 'tailwind-merge'
 import DefaultImg from '../../assets/default.png'
-import { trimFilename, byteToMb } from '../../utils/format'
-import FileIcon from '../FileIcon'
-import mql from '@microlink/mql'
+import { useChat } from '../../hook/useChat'
+import { useLightbox } from '../../hook/useLightbox'
 import { useSocket } from '../../hook/useSocket'
+import { useToast } from '../../hook/useToast'
+import { byteToMb, trimFilename } from '../../utils/format'
+import FileIcon from '../FileIcon'
+import SpinLoader from '../SpinLoader'
 const ChatContent = ({ className }) => {
 	const toast = useToast()
 	const {
@@ -39,7 +39,11 @@ const ChatContent = ({ className }) => {
 			)
 		} catch (error) {
 			console.log(error)
-			toast.error('Delete message failed', 'Please try again later', 3000)
+			toast.error(
+				'Delete message failed',
+				error.response?.data?.message || 'Please try again later',
+				3000,
+			)
 		}
 	}
 
@@ -82,10 +86,10 @@ const ChatContent = ({ className }) => {
 				className="flex h-full w-full flex-col-reverse overflow-auto pb-2 pt-4"
 			>
 				{loading && !messages?.length ? (
-					<SpinLoader className="m-auto ~size-12/16" />
+					<SpinLoader className="~size-12/16 m-auto" />
 				) : null}
 				{!loading && !messages?.length ? (
-					<div className="m-auto font-semibold text-gray-500 ~text-xl/3xl">
+					<div className="~text-xl/3xl m-auto font-semibold text-gray-500">
 						No messages yet
 					</div>
 				) : null}
@@ -291,8 +295,8 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 						{firstLink && (loading || data) ? (
 							<div className={`flex w-full flex-col`}>
 								{loading ? (
-									<div className="mt-1 flex w-full items-center justify-center bg-gray-200 ~h-[12.3rem]/[15rem]">
-										<SpinLoader className="m-auto ~size-8/10" />
+									<div className="~h-[12.3rem]/[15rem] mt-1 flex w-full items-center justify-center bg-gray-200">
+										<SpinLoader className="~size-8/10 m-auto" />
 									</div>
 								) : (
 									data && (
@@ -310,17 +314,17 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 												}
 											/>
 											<div
-												className={`h-fit w-full py-2 text-gray-950 ~px-3/4 ${message.sender.isMine ? 'bg-gray-100' : 'bg-gray-200'}`}
+												className={`~px-3/4 h-fit w-full py-2 text-gray-950 ${message.sender.isMine ? 'bg-gray-100' : 'bg-gray-200'}`}
 											>
 												<h4
-													className="cursor-pointer pb-1 font-semibold ~text-[0.85rem]/sm ~leading-[1rem]/5 hover:underline"
+													className="~text-[0.85rem]/sm ~leading-[1rem]/5 cursor-pointer pb-1 font-semibold hover:underline"
 													onClick={() =>
 														window.open(firstLink)
 													}
 												>
 													{data?.title}
 												</h4>
-												<p className="line-clamp-2 text-gray-600 ~text-[0.7rem]/xs ~leading-[0.83rem]/[0.9rem]">
+												<p className="~text-[0.7rem]/xs ~leading-[0.83rem]/[0.9rem] line-clamp-2 text-gray-600">
 													{data?.description}
 												</p>
 											</div>
@@ -345,7 +349,7 @@ const TextMessage = ({ message, isGroup, onDelete, isOnline }) => {
 
 const SystemMessage = ({ message }) => {
 	return (
-		<div className="mt-2 flex w-full justify-center text-gray-400 ~text-xs/sm">
+		<div className="~text-xs/sm mt-2 flex w-full justify-center text-gray-400">
 			{message}
 		</div>
 	)
@@ -454,7 +458,7 @@ const FileTransferHistory = ({ message, isGroup, isOnline }) => {
 						</div>
 					)}
 				<div
-					className="relative flex items-center rounded-lg bg-gray-200/50 py-3 ~gap-3/4 ~pr-1.5/3 ~pl-4/6"
+					className="~gap-3/4 ~pr-1.5/3 ~pl-4/6 relative flex items-center rounded-lg bg-gray-200/50 py-3"
 					title={new Date(message.createdAt).toLocaleString()}
 				>
 					<div className="flex size-7 items-center justify-center">
@@ -462,16 +466,16 @@ const FileTransferHistory = ({ message, isGroup, isOnline }) => {
 					</div>
 
 					<div className="">
-						<p className="line-clamp-1 flex-1 font-semibold text-gray-700 ~text-xs/sm ~w-[10rem]/[12.5rem]">
+						<p className="~text-xs/sm ~w-[10rem]/[12.5rem] line-clamp-1 flex-1 font-semibold text-gray-700">
 							{trimFilename(message?.content, 26)}
 						</p>
 						<span>
-							<p className="inline text-gray-600 ~text-[0.7rem]/xs">
+							<p className="~text-[0.7rem]/xs inline text-gray-600">
 								{byteToMb(message?.size)} MB
 							</p>
 							<PiDot className="inline text-gray-600" />
 							<p
-								className={`inline capitalize text-gray-600 ~text-[0.7rem]/xs ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
+								className={`~text-[0.7rem]/xs inline capitalize text-gray-600 ${message?.status === 'completed' && 'text-green-500'} ${message?.status === 'cancelled' && 'text-secondary-500'}`}
 							>
 								{message?.status}
 							</p>
@@ -525,7 +529,7 @@ const FileUploaded = ({ message, isGroup, isOnline, onDelete }) => {
 						</div>
 					)}
 				<div
-					className="relative flex items-center rounded-lg bg-gray-200/50 py-3 ~gap-3/4 ~pr-1.5/3 ~pl-4/6"
+					className="~gap-3/4 ~pr-1.5/3 ~pl-4/6 relative flex items-center rounded-lg bg-gray-200/50 py-3"
 					title={new Date(message.createdAt).toLocaleString()}
 				>
 					<div className="flex size-7 items-center justify-center">
@@ -533,16 +537,16 @@ const FileUploaded = ({ message, isGroup, isOnline, onDelete }) => {
 					</div>
 
 					<div className="">
-						<p className="line-clamp-1 flex-1 font-semibold text-gray-700 ~text-xs/sm ~w-[10rem]/[12.5rem]">
+						<p className="~text-xs/sm ~w-[10rem]/[12.5rem] line-clamp-1 flex-1 font-semibold text-gray-700">
 							{trimFilename(message?.content, 26)}
 						</p>
 						<span>
-							<p className="inline text-gray-600 ~text-[0.7rem]/xs">
+							<p className="~text-[0.7rem]/xs inline text-gray-600">
 								{byteToMb(message?.size)} MB
 							</p>
 							<PiDot className="inline text-gray-600" />
 							<p
-								className={`inline capitalize text-primary-600 ~text-[0.7rem]/xs hover:underline`}
+								className={`~text-[0.7rem]/xs inline capitalize text-primary-600 hover:underline`}
 							>
 								<PiDownloadBold className="mr-1 inline" />
 								Download

@@ -1,23 +1,23 @@
-import { useState, useRef } from 'react'
+import axios from 'axios'
+import EmojiPicker from 'emoji-picker-react'
+import { motion } from 'framer-motion'
+import { useRef, useState } from 'react'
+import { FaThumbsUp } from 'react-icons/fa'
 import {
+	PiArrowsLeftRightBold,
+	PiCircleNotchBold,
 	PiImageFill,
 	PiPaperPlaneTiltFill,
 	PiSmileyFill,
-	PiArrowsLeftRightBold,
-	PiXBold,
 	PiUploadBold,
-	PiCircleNotchBold,
+	PiXBold,
 } from 'react-icons/pi'
-import { FaThumbsUp } from 'react-icons/fa'
-import EmojiPicker from 'emoji-picker-react'
-import FileSender from '../modal/FileSender'
-import { useChat } from '../../hook/useChat'
 import { useAuth } from '../../hook/useAuth'
-import useWindowSize from '../../hook/useWindowSize'
-import { motion } from 'framer-motion'
-import SpinLoader from '../SpinLoader'
-import axios from 'axios'
+import { useChat } from '../../hook/useChat'
 import { useToast } from '../../hook/useToast'
+import useWindowSize from '../../hook/useWindowSize'
+import FileSender from '../modal/FileSender'
+import SpinLoader from '../SpinLoader'
 
 const ChatBoxFooter = ({ userOnline }) => {
 	const [openEmoji, setOpenEmoji] = useState(false)
@@ -89,7 +89,7 @@ const ChatBoxFooter = ({ userOnline }) => {
 				console.error(error)
 				toast.error(
 					'Failed to upload file',
-					'Please try again later',
+					error.response?.data?.message || 'Please try again later',
 					4000,
 				)
 			}
@@ -99,7 +99,7 @@ const ChatBoxFooter = ({ userOnline }) => {
 	}
 
 	return (
-		<div className="z-5 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white ~px-4/6 ~py-3/4">
+		<div className="z-5 ~px-4/6 ~py-3/4 absolute bottom-0 left-0 flex w-full items-center justify-between gap-1 bg-white">
 			{openEmoji && (
 				<div className="absolute -top-0 left-6 z-[100] translate-y-[-100%] text-sm">
 					<EmojiPicker
