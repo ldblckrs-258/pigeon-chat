@@ -1,8 +1,10 @@
 /** @type {import('tailwindcss').Config} */
-import containerQueries from '@tailwindcss/container-queries'
-import fluid, { extract, fontSize, screens } from 'fluid-tailwind'
+const fluid = require('fluid-tailwind')
+const containerQueries = require('@tailwindcss/container-queries')
 
-export default {
+const { extract, screens, fontSize } = fluid
+
+module.exports = {
 	content: {
 		files: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
 		extract,

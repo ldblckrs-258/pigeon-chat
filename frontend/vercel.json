@@ -1,4 +1,11 @@
 {
+	"build": {
+		"env": {
+			"TAILWIND_MODE": "production",
+			"NODE_ENV": "production"
+		}
+	},
+	"buildCommand": "npm run build",
 	"rewrites": [
 		{
 			"source": "/api/:path*",
