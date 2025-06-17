@@ -1,75 +1,154 @@
+const BaseSocketService = require('./base.socket')
 const { getTime } = require('../../utils/time.util')
 
-class Message {
+/**
+ * Message Socket Service
+ * Handles real-time messaging functionality
+ */
+class MessageSocketService extends BaseSocketService {
+  constructor() {
+    super()
+  }
+
+  /**
+   * Initialize socket event handlers for messages
+   * @param {Object} socket - Socket instance
+   */
   handler(socket) {
-    socket.on('sendMsg', (chatId, memberIds) => {
-      const time = getTime()
-      memberIds.forEach(id => {
-        const user = _onlineUsers.find(u => u.userId === id)
-        const type = 'message'
-        if (user) {
-          _io.to(user.socketId).emit('updated', type, time, chatId)
+    // Send message notification to chat members
+    socket.on(
+      'sendMsg',
+      this.safeHandler((chatId, memberIds) => {
+        if (!this.validateParams({ chatId, memberIds }, ['chatId', 'memberIds'])) {
+          socket.emit('error', 'Invalid parameters for sendMsg')
+          return
         }
+
+        const time = getTime()
+        this.emitToUsers(memberIds, 'updated', 'message', time, chatId)
       })
-    })
-    socket.on('updateChat', (chatId, memberIds) => {
-      const time = getTime()
-      memberIds.forEach(id => {
-        const user = _onlineUsers.find(u => u.userId === id)
-        const type = 'chat'
-        if (user) {
-          _io.to(user.socketId).emit('updated', type, time, chatId)
+    )
+
+    // Update chat notification to members
+    socket.on(
+      'updateChat',
+      this.safeHandler((chatId, memberIds) => {
+        if (!this.validateParams({ chatId, memberIds }, ['chatId', 'memberIds'])) {
+          socket.emit('error', 'Invalid parameters for updateChat')
+          return
         }
+
+        const time = getTime()
+        this.emitToUsers(memberIds, 'updated', 'chat', time, chatId)
       })
-    })
+    )
   }
+
+  /**
+   * Send new message to chat members
+   * @param {Object} data - Message data
+   * @param {Array} memberIds - Array of member IDs to notify
+   */
   sendMessage(data, memberIds) {
-    let receivers = _onlineUsers.filter(u => memberIds.includes(u.userId))
-    if (receivers.length === 0) return
-    receivers.forEach(r => {
-      _io.to(r.socketId).emit('newMessage', {
-        ...data,
-        sender: {
-          name: data?.sender?.name,
-          avatar: data?.sender?.avatar,
-          _id: data?.senderId,
-          isMine: data?.senderId?.toString() === r.userId,
-        },
-      })
+    if (!data || !Array.isArray(memberIds)) {
+      this.logger.warn('Invalid parameters for sendMessage')
+      return
+    }
+
+    const receivers = this.getOnlineUsersByIds(memberIds)
+    if (receivers.length === 0) {
+      this.logger.debug('No online receivers for message')
+      return
+    }
+
+    receivers.forEach(receiver => {
+      try {
+        const messageData = {
+          ...data,
+          sender: {
+            name: data?.sender?.name,
+            avatar: data?.sender?.avatar,
+            _id: data?.senderId,
+            isMine: data?.senderId?.toString() === receiver.userId,
+          },
+        }
+
+        this.io.to(receiver.socketId).emit('newMessage', messageData)
+      } catch (error) {
+        this.logger.error(`Error sending message to ${receiver.userId}:`, error)
+      }
     })
   }
 
+  /**
+   * Notify members about message deletion
+   * @param {string} chatId - Chat ID
+   * @param {string} messageId - Message ID to delete
+   * @param {Array} memberIds - Array of member IDs to notify
+   */
   deleteMessage(chatId, messageId, memberIds) {
-    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
-    if (receiverIds.length === 0) return
-    receiverIds.forEach(id => {
-      _io.to(id).emit('deleteMessage', chatId, messageId)
+    if (
+      !this.validateParams({ chatId, messageId, memberIds }, ['chatId', 'messageId', 'memberIds'])
+    ) {
+      this.logger.warn('Invalid parameters for deleteMessage')
+      return
+    }
+
+    const socketIds = this.getSocketIdsByUserIds(memberIds)
+    if (socketIds.length === 0) {
+      this.logger.debug('No online users for message deletion')
+      return
+    }
+
+    socketIds.forEach(socketId => {
+      try {
+        this.io.to(socketId).emit('deleteMessage', chatId, messageId)
+      } catch (error) {
+        this.logger.error(`Error deleting message for socket ${socketId}:`, error)
+      }
     })
   }
 
+  /**
+   * Notify members about chat update
+   * @param {string} chatId - Chat ID
+   * @param {Array} memberIds - Array of member IDs to notify
+   */
   updateChat(chatId, memberIds) {
-    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
-    if (receiverIds.length === 0) return
-    receiverIds.forEach(id => {
-      _io.to(id).emit('updateChat', chatId)
-    })
+    if (!this.validateParams({ chatId, memberIds }, ['chatId', 'memberIds'])) {
+      this.logger.warn('Invalid parameters for updateChat')
+      return
+    }
+
+    this.emitToUsers(memberIds, 'updateChat', chatId)
   }
 
+  /**
+   * Notify members about joining chat
+   * @param {Array} memberIds - Array of member IDs to notify
+   */
   joinChat(memberIds) {
-    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
-    if (receiverIds.length === 0) return
-    receiverIds.forEach(id => {
-      _io.to(id).emit('joinChat')
-    })
+    if (!Array.isArray(memberIds)) {
+      this.logger.warn('Invalid memberIds for joinChat')
+      return
+    }
+
+    this.emitToUsers(memberIds, 'joinChat')
   }
 
+  /**
+   * Notify members about leaving chat
+   * @param {string} chatId - Chat ID
+   * @param {Array} memberIds - Array of member IDs to notify
+   */
   outChat(chatId, memberIds) {
-    let receiverIds = _onlineUsers.filter(u => memberIds.includes(u.userId)).map(u => u.socketId)
-    if (receiverIds.length === 0) return
-    receiverIds.forEach(id => {
-      _io.to(id).emit('outChat', chatId)
-    })
+    if (!this.validateParams({ chatId, memberIds }, ['chatId', 'memberIds'])) {
+      this.logger.warn('Invalid parameters for outChat')
+      return
+    }
+
+    this.emitToUsers(memberIds, 'outChat', chatId)
   }
 }
 
-module.exports = new Message()
+module.exports = new MessageSocketService()

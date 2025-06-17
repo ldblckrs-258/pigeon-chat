@@ -14,7 +14,9 @@ const createMessageSchema = z.object({
       .string()
       .min(1, 'Message content is required')
       .max(5000, 'Message content is too long'),
-    type: z.enum(['text', 'image', 'file', 'audio', 'video']).default('text'),
+    type: z
+      .enum(['text', 'image', 'system', 'emoji', 'fileTransfer', 'voiceCall', 'videoCall', 'file'])
+      .default('text'),
   }),
 })
 

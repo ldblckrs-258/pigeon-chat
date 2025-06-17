@@ -58,6 +58,29 @@ const handleJSONParseError = err => {
 }
 
 /**
+ * Handle Multer Errors (File upload errors)
+ * @param {Error} err - Multer error
+ * @returns {AppError} - Formatted AppError
+ */
+const handleMulterError = err => {
+  let message = 'File upload error'
+
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    message = 'File size must be less than 5MB'
+  } else if (err.code === 'LIMIT_FILE_COUNT') {
+    message = 'Too many files'
+  } else if (err.code === 'LIMIT_FIELD_COUNT') {
+    message = 'Too many fields'
+  } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    message = 'Unexpected file field'
+  } else if (err.message) {
+    message = err.message
+  }
+
+  return new AppError(message, StatusCodes.BAD_REQUEST)
+}
+
+/**
  * Send error response in development mode
  * @param {Error} err - Error object
  * @param {Object} res - Express response object
@@ -106,6 +129,10 @@ const globalErrorHandler = (err, req, res, next) => {
   err.status = err.status || 'error'
 
   if (process.env.NODE_ENV === 'development') {
+    // Handle specific error types in development too
+    if (err.name === 'MulterError') {
+      err = handleMulterError(err)
+    }
     sendErrorDev(err, res)
   } else {
     let error = { ...err }
@@ -118,6 +145,7 @@ const globalErrorHandler = (err, req, res, next) => {
     if (error.name === 'JsonWebTokenError') error = handleJWTError()
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError()
     if (error.type === 'entity.parse.failed') error = handleJSONParseError(error)
+    if (error.name === 'MulterError') error = handleMulterError(error)
 
     sendErrorProd(error, res)
   }

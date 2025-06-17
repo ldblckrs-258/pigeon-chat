@@ -14,4 +14,5 @@ const endVoiceCallSchema = z.object({
 
 module.exports = {
   startVoiceCallSchema,
+  endVoiceCallSchema,
 }

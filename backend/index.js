@@ -8,10 +8,10 @@ const app = require('./app')
 const port = process.env.PORT || 3001
 const server = http.createServer(app)
 
-global._io = socketio(server, socketService.config)
-global._onlineUsers = []
+const io = socketio(server, socketService.config)
+socketService.initialize(io)
 
-global._io.on('connection', socketService.connection)
+io.on('connection', socketService.connection.bind(socketService))
 
 server.listen(port, () => {
   console.log(`Local: http://localhost:${port}`)

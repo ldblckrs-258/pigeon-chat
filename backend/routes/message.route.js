@@ -22,7 +22,14 @@ const storage = multer.diskStorage({
     cb(null, Buffer.from(file.originalname, 'latin1').toString('utf8'))
   },
 })
-const upload = multer({ storage: storage })
+
+// Configure multer with file size limits and error handling
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+})
 
 router.post('/send', authenticate, validate(createMessageSchema), messageController.createMessage)
 router.delete(
@@ -52,8 +59,8 @@ router.post(
 router.post(
   '/sendFile',
   simpleAuth,
-  validate(sendFileSchema),
   upload.single('file'),
+  validate(sendFileSchema),
   messageController.sendFile
 )
 

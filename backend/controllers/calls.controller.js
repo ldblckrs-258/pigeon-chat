@@ -21,7 +21,7 @@ const startVoiceCall = catchAsync(async (req, res) => {
 /**
  * Ends an ongoing voice call in a specific chat.
  */
-const endVoiceCall = async (req, res) => {
+const endVoiceCall = catchAsync(async (req, res) => {
   const userId = req.user._id
   const chatId = req.body.chatId
 
@@ -30,7 +30,7 @@ const endVoiceCall = async (req, res) => {
   voiceCallSocket.voiceCallEnd(chatId, receivers)
 
   res.status(StatusCodes.OK).send({ status: 'success', message: 'Voice call ended' })
-}
+})
 
 module.exports = {
   startVoiceCall,

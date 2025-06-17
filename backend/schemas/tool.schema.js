@@ -4,9 +4,7 @@ const { z } = require('zod')
  * Schema for uploading image
  */
 const uploadImageSchema = z.object({
-  body: z.object({
-    image: z.string().min(1, 'Image is required'),
-  }),
+  file: z.any().refine(file => file?.length > 0, 'Image is required'),
 })
 
 module.exports = {
