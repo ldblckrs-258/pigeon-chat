@@ -1,6 +1,6 @@
-import { PiCheckBold, PiPlusBold } from 'react-icons/pi'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
-import { useToast } from '../../hook/useToast'
+import { PiCheckBold, PiPlusBold } from 'react-icons/pi'
 
 const FindList = ({ users, setUsers }) => {
 	const toast = useToast()
@@ -30,21 +30,21 @@ const FindList = ({ users, setUsers }) => {
 			{users.map((friend) => (
 				<div
 					key={friend._id}
-					className="flex items-center justify-between gap-2 rounded-md py-2.5 ~px-3/4 hover:bg-gray-200"
+					className="~px-3/4 flex items-center justify-between gap-2 rounded-md py-2.5 hover:bg-gray-200"
 				>
 					<div className="flex w-full items-center gap-2">
 						<div className="relative">
 							<img
 								src={friend.avatar}
 								alt={friend.name}
-								className="rounded-full ~size-8/9"
+								className="~size-8/9 rounded-full"
 							/>
 						</div>
 						<div className="flex flex-col">
-							<span className="font-semibold ~text-[0.8rem]/[0.9rem] ~leading-4/5">
+							<span className="~text-[0.8rem]/[0.9rem] ~leading-4/5 font-semibold">
 								{friend.name}
 							</span>
-							<span className="text-gray-500 ~text-[0.75rem]/[0.8rem] ~leading-3/4">
+							<span className="~text-[0.75rem]/[0.8rem] ~leading-3/4 text-gray-500">
 								{friend.email}
 							</span>
 						</div>

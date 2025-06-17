@@ -1,9 +1,9 @@
+import FileReceiver from '@components/modal/FileReceiver'
+import { useNotification } from '@hooks/useNotification'
+import { useSocket } from '@hooks/useSocket'
+import { byteToMb } from '@utils/format'
 import axios from 'axios'
 import { createContext, useEffect, useState } from 'react'
-import FileReceiver from '../components/modal/FileReceiver'
-import { useNotification } from '../hook/useNotification'
-import { useSocket } from '../hook/useSocket'
-import { byteToMb } from '../utils/format'
 export const FileReceiveContext = createContext()
 
 export const FileReceiveContextProvider = ({ children }) => {

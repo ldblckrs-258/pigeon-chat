@@ -7,7 +7,17 @@
 		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": false
+		"forceConsistentCasingInFileNames": false,
+		"baseUrl": "src",
+		"paths": {
+			"@/*": ["*"],
+			"@components/*": ["components/*"],
+			"@pages/*": ["pages/*"],
+			"@hooks/*": ["hooks/*"],
+			"@utils/*": ["utils/*"],
+			"@contexts/*": ["contexts/*"],
+			"@reducers/*": ["reducers/*"]
+		}
 	},
 	"include": ["src"]
 }

@@ -1,6 +1,6 @@
 // VoiceCallPage.jsx
+import VideoCallModal from '@components/modal/VideoCallModal'
 import { useParams } from 'react-router-dom'
-import VideoCallModal from '../components/modal/VideoCallModal'
 
 const VideoCallPage = () => {
 	const { chatId } = useParams() // Lấy chatId từ URL

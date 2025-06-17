@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import ChatBox from '@components/chat/ChatBox'
+import ChatInfo from '@components/chat/ChatInfo'
+import ChatSidebar from '@components/chat/ChatSidebar'
+import CallingModal from '@components/modal/CallingModal'
+import { useChat } from '@hooks/useChat'
 import { AnimatePresence } from 'framer-motion'
-import ChatSidebar from '../components/chat/ChatSidebar'
-import ChatBox from '../components/chat/ChatBox'
-import ChatInfo from '../components/chat/ChatInfo'
-import { useChat } from '../hook/useChat'
-import CallingModal from '../components/modal/CallingModal'
+import { useState } from 'react'
 const Chat = () => {
 	const { currentChat } = useChat()
 	const [isInfoExpand, setIsInfoExpand] = useState(false)

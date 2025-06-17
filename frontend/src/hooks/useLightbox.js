@@ -1,4 +1,4 @@
-import { LightboxContext } from '../contexts/LightboxContext'
+import { LightboxContext } from '@contexts/LightboxContext'
 import { useContext } from 'react'
 
 export const useLightbox = () => {

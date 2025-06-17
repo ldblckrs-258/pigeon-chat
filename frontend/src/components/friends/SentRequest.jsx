@@ -1,6 +1,6 @@
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
 import { PiXBold } from 'react-icons/pi'
-import { useToast } from '../../hook/useToast'
 
 const SentRequest = ({ data, setData }) => {
 	const toast = useToast()

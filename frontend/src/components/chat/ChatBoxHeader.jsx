@@ -1,7 +1,7 @@
-import { twMerge } from 'tailwind-merge'
-import { PiDotsThreeOutlineVerticalFill } from 'react-icons/pi'
+import { useChat } from '@hooks/useChat'
 import { FiPhone, FiPhoneCall, FiVideo } from 'react-icons/fi'
-import { useChat } from '../../hook/useChat'
+import { PiDotsThreeOutlineVerticalFill } from 'react-icons/pi'
+import { twMerge } from 'tailwind-merge'
 
 const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 	const { currentChat } = useChat()
@@ -25,7 +25,7 @@ const ChatBoxHeader = ({ userOnline, onClickInfoButton, isInfoExpand }) => {
 
 	return (
 		<div
-			className={`absolute left-0 top-0 z-10 flex w-full items-center justify-between bg-white shadow-md ~px-5/6 ~py-3/4`}
+			className={`~px-5/6 ~py-3/4 absolute left-0 top-0 z-10 flex w-full items-center justify-between bg-white shadow-md`}
 		>
 			<div className="flex flex-1 items-center justify-start">
 				<div className="relative h-10 w-10 border-gray-300">

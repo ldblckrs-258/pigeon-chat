@@ -1,8 +1,8 @@
+import { useAuth } from '@hooks/useAuth'
+import { useSocket } from '@hooks/useSocket'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
 import { createContext, useEffect, useState } from 'react'
-import { useAuth } from '../hook/useAuth'
-import { useSocket } from '../hook/useSocket'
-import { useToast } from '../hook/useToast'
 export const ChatContext = createContext()
 
 const LIMIT = 15

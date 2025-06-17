@@ -1,6 +1,6 @@
-import { createContext, useState } from 'react'
-import Lightbox from '../components/Lightbox'
+import Lightbox from '@components/Lightbox'
 import { AnimatePresence } from 'framer-motion'
+import { createContext, useState } from 'react'
 
 export const LightboxContext = createContext()
 

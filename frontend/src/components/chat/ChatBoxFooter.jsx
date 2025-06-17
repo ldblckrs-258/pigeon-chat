@@ -1,3 +1,7 @@
+import { useAuth } from '@hooks/useAuth'
+import { useChat } from '@hooks/useChat'
+import { useToast } from '@hooks/useToast'
+import useWindowSize from '@hooks/useWindowSize'
 import axios from 'axios'
 import EmojiPicker from 'emoji-picker-react'
 import { motion } from 'framer-motion'
@@ -12,10 +16,6 @@ import {
 	PiUploadBold,
 	PiXBold,
 } from 'react-icons/pi'
-import { useAuth } from '../../hook/useAuth'
-import { useChat } from '../../hook/useChat'
-import { useToast } from '../../hook/useToast'
-import useWindowSize from '../../hook/useWindowSize'
 import FileSender from '../modal/FileSender'
 import SpinLoader from '../SpinLoader'
 

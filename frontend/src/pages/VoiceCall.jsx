@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
-import { useSocket } from '../hook/useSocket'
-import { useChat } from '../hook/useChat'
+import SpinLoader from '@components/SpinLoader'
+import { useAuth } from '@hooks/useAuth'
+import { useChat } from '@hooks/useChat'
+import { useSocket } from '@hooks/useSocket'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
-import SpinLoader from '../components/SpinLoader'
+import { useEffect, useRef, useState } from 'react'
 import {
 	PiMicrophoneFill,
 	PiMicrophoneSlashFill,
@@ -11,9 +12,7 @@ import {
 	PiSpeakerHighFill,
 	PiSpeakerSimpleXFill,
 } from 'react-icons/pi'
-import { useToast } from '../hook/useToast'
-import { useAuth } from '../hook/useAuth'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 const VoiceCallPage = () => {
 	const { socket } = useSocket()

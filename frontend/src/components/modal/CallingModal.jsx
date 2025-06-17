@@ -1,10 +1,9 @@
-import { PiX } from 'react-icons/pi'
-import { useState, useEffect, useRef } from 'react'
-import { useSocket } from '../../hook/useSocket'
-import { useNotification } from '../../hook/useNotification'
-import { PiPhoneCallFill, PiXBold } from 'react-icons/pi'
-import { useChat } from '../../hook/useChat'
+import { useChat } from '@hooks/useChat'
+import { useNotification } from '@hooks/useNotification'
+import { useSocket } from '@hooks/useSocket'
 import axios from 'axios'
+import { useEffect, useRef, useState } from 'react'
+import { PiPhoneCallFill, PiX, PiXBold } from 'react-icons/pi'
 import CallingSound from '../../assets/calling.mp3'
 
 export default function CallingModal() {

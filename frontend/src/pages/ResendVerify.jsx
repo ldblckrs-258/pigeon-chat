@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { useAuth } from '../hook/useAuth'
-import { useToast } from '../hook/useToast'
+import SpinLoader from '@components/SpinLoader'
+import { useAuth } from '@hooks/useAuth'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
-import SpinLoader from '../components/SpinLoader'
+import { useState } from 'react'
 
 const ResendVerifyPage = () => {
 	const { user, logout } = useAuth()

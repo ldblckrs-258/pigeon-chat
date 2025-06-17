@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { FiPhone, FiMic, FiUserPlus, FiX } from 'react-icons/fi'
-import { useSocket } from '../../hook/useSocket'
-import { useToast } from '../../hook/useToast'
+import { useSocket } from '@hooks/useSocket'
+import { useToast } from '@hooks/useToast'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { FiMic, FiPhone, FiUserPlus, FiX } from 'react-icons/fi'
 
 const VoiceCallModal = ({ chatInfo }) => {
 	const { socket } = useSocket()

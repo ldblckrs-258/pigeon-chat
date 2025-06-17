@@ -1,8 +1,8 @@
+import { useAuth } from '@hooks/useAuth'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
 import { useEffect, useRef, useState } from 'react'
 import { PiPenFill, PiXCircleBold } from 'react-icons/pi'
-import { useAuth } from '../../hook/useAuth'
-import { useToast } from '../../hook/useToast'
 import TextField from '../TextField'
 
 const AccountModal = ({ onClose }) => {

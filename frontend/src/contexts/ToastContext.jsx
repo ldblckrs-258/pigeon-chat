@@ -1,6 +1,6 @@
+import ToastContainer from '@components/ToastContainer'
 import { createContext, useReducer } from 'react'
 import toastReducer from '../reducers/ToastReducer'
-import ToastContainer from '../components/ToastContainer'
 export const ToastContext = createContext()
 
 const defaultState = {

@@ -1,7 +1,7 @@
+import { useChat } from '@hooks/useChat'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
 import { PiCheckBold, PiXBold } from 'react-icons/pi'
-import { useChat } from '../../hook/useChat'
-import { useToast } from '../../hook/useToast'
 
 const Request = ({ data, setData }) => {
 	const toast = useToast()

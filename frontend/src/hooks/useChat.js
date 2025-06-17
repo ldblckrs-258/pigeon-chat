@@ -1,6 +1,6 @@
+import { ChatContext } from '@contexts/ChatContext'
 import axios from 'axios'
 import { useContext } from 'react'
-import { ChatContext } from '../contexts/ChatContext'
 import { useToast } from './useToast'
 export const useChat = () => {
 	const {

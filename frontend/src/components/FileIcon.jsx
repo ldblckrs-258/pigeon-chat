@@ -1,8 +1,8 @@
+import { styleDefObj } from '@utils/fileIconStyle'
 import { FileIcon as FileIconComponent, defaultStyles } from 'react-file-icon'
-import { styleDefObj } from '../utils/fileIconStyle'
 export default function FileIcon({ ext }) {
 	const customDefaultLabelColor = styleDefObj[ext]
-		? styleDefObj[ext]['labelColor'] ?? '#4793af'
+		? (styleDefObj[ext]['labelColor'] ?? '#4793af')
 		: '#4793af'
 
 	const libDefaultGlyphColor =

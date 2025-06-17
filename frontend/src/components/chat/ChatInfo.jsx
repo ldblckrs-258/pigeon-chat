@@ -1,3 +1,9 @@
+import { useAuth } from '@hooks/useAuth'
+import { useChat } from '@hooks/useChat'
+import { useSocket } from '@hooks/useSocket'
+import { useToast } from '@hooks/useToast'
+import useWindowSize from '@hooks/useWindowSize'
+import { isOnline } from '@utils/validate'
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
@@ -9,12 +15,6 @@ import {
 	PiXBold,
 } from 'react-icons/pi'
 import { twMerge } from 'tailwind-merge'
-import { useAuth } from '../../hook/useAuth'
-import { useChat } from '../../hook/useChat'
-import { useSocket } from '../../hook/useSocket'
-import { useToast } from '../../hook/useToast'
-import useWindowSize from '../../hook/useWindowSize'
-import { isOnline } from '../../utils/validate'
 import MemberModal from '../modal/MemberModal'
 import TextField from '../TextField'
 

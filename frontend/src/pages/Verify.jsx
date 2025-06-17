@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import SpinLoader from '@components/SpinLoader'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
-import SpinLoader from '../components/SpinLoader'
+import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useToast } from '../hook/useToast'
 const VerifyPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams()
 	const navigate = useNavigate()

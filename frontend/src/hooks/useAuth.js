@@ -1,7 +1,7 @@
+import { AuthContext } from '@contexts/AuthContext'
 import axios from 'axios'
 import { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AuthContext } from '../contexts/AuthContext'
 import useLoader from './useLoader'
 import { useToast } from './useToast'
 

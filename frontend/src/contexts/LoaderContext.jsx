@@ -1,5 +1,5 @@
+import SpinLoader from '@components/SpinLoader'
 import { createContext, useState } from 'react'
-import SpinLoader from '../components/SpinLoader'
 
 export const LoaderContext = createContext()
 

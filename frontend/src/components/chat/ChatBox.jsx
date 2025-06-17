@@ -1,12 +1,12 @@
+import { useAuth } from '@hooks/useAuth'
+import { useChat } from '@hooks/useChat'
+import { useSocket } from '@hooks/useSocket'
+import { isOnline } from '@utils/validate'
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import ChatContent from './ChatContent'
-import ChatBoxHeader from './ChatBoxHeader'
 import ChatBoxFooter from './ChatBoxFooter'
-import { useAuth } from '../../hook/useAuth'
-import { useSocket } from '../../hook/useSocket'
-import { isOnline } from '../../utils/validate'
-import { useChat } from '../../hook/useChat'
+import ChatBoxHeader from './ChatBoxHeader'
+import ChatContent from './ChatContent'
 const ChatBox = ({ className = '', isInfoExpand, onClickInfoButton }) => {
 	const { user } = useAuth()
 	const { onlineUsers } = useSocket()
@@ -29,7 +29,7 @@ const ChatBox = ({ className = '', isInfoExpand, onClickInfoButton }) => {
 				onClickInfoButton={onClickInfoButton}
 				isInfoExpand={isInfoExpand}
 			/>
-			<div className="relative h-full min-h-0 w-full bg-white pl-4 pr-1 ~mt-[3.875rem]/[4.375rem] ~pb-[4rem]/[4.875rem]">
+			<div className="~mt-[3.875rem]/[4.375rem] ~pb-[4rem]/[4.875rem] relative h-full min-h-0 w-full bg-white pl-4 pr-1">
 				<ChatContent />
 			</div>
 			<ChatBoxFooter userOnline={userOnline} />

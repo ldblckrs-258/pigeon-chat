@@ -1,8 +1,8 @@
+import { useChat } from '@hooks/useChat'
+import { useToast } from '@hooks/useToast'
 import axios from 'axios'
 import { useEffect } from 'react'
 import { PiChatCircleDotsFill, PiXBold } from 'react-icons/pi'
-import { useChat } from '../../hook/useChat'
-import { useToast } from '../../hook/useToast'
 
 const FriendList = ({ friends, setFriends, onlineUsers, onClose }) => {
 	const toast = useToast()

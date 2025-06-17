@@ -1,5 +1,5 @@
+import { useSocket } from '@hooks/useSocket'
 import { useEffect } from 'react'
-import { useSocket } from '../hook/useSocket'
 
 const EndCallPage = () => {
 	const { socket } = useSocket()
