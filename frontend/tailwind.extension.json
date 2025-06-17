@@ -1,6 +1,5 @@
 {
 	"ConfigurationFile": "tailwind.config.js",
-	"ConfigurationFileBackup": "tailwind.config.cjs",
 	"InputCssFile": null,
 	"OutputCssFile": null
 }

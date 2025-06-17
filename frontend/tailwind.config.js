@@ -1,35 +1,11 @@
 /** @type {import('tailwindcss').Config} */
+import fluid, { extract, screens, fontSize } from 'fluid-tailwind'
 import containerQueries from '@tailwindcss/container-queries'
-import fluid, { extract, fontSize, screens } from 'fluid-tailwind'
-
 export default {
 	content: {
 		files: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
 		extract,
 	},
-	// Add safelist to ensure fluid classes are not purged
-	safelist: [
-		// Safelist common fluid patterns
-		{ pattern: /~size-.+/ },
-		{ pattern: /~w-.+/ },
-		{ pattern: /~h-.+/ },
-		{ pattern: /~p-.+/ },
-		{ pattern: /~m-.+/ },
-		{ pattern: /~text-.+/ },
-		{ pattern: /~gap-.+/ },
-		{ pattern: /~space-.+/ },
-		{ pattern: /~rounded-.+/ },
-		// Add specific classes used in your components
-		'~size-2/2.5',
-		'~size-6/7',
-		'~size-8/9',
-		'~size-8/10',
-		'~size-9/10',
-		'~size-10/12',
-		'~size-12/16',
-		'~w-[24rem]/[28rem]',
-		'~py-4/6',
-	],
 	theme: {
 		screens,
 		fontSize,
