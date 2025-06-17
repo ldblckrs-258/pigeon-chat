@@ -1,7 +1,6 @@
 const userModel = require('../models/user.model')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const validator = require('validator')
 const emailService = require('./email.service')
 const securePassword = require('secure-random-password')
 const {
@@ -9,7 +8,6 @@ const {
   createUnauthorizedError,
   createNotFoundError,
   createConflictError,
-  createValidationError,
 } = require('../utils/errorTypes')
 
 class AuthService {
@@ -40,31 +38,6 @@ class AuthService {
   }
 
   /**
-   * Validate registration data
-   */
-  validateRegistration(name, email, password) {
-    if (!name || !email || !password) {
-      throw createBadRequestError('All fields are required')
-    }
-
-    if (!validator.isEmail(email)) {
-      throw createBadRequestError('Invalid email')
-    }
-
-    if (!validator.isStrongPassword(password)) {
-      const error = createValidationError('Password is not strong enough')
-      error.requirements = [
-        'At least 8 characters',
-        'At least 1 lowercase letter',
-        'At least 1 uppercase letter',
-        'At least 1 number',
-        'At least 1 symbol',
-      ]
-      throw error
-    }
-  }
-
-  /**
    * Register a new user
    */
   async registerUser(name, email, password) {
@@ -73,9 +46,6 @@ class AuthService {
     if (existingUser) {
       throw createConflictError('User already exists')
     }
-
-    // Validate input
-    this.validateRegistration(name, email, password)
 
     // Hash password
     const salt = await bcrypt.genSalt(10)
@@ -109,10 +79,6 @@ class AuthService {
 
   // Verify user email
   async verifyEmail(token) {
-    if (!token) {
-      throw createBadRequestError('Token is required')
-    }
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await userModel.findById(decoded._id)
 
@@ -167,18 +133,6 @@ class AuthService {
 
     if (!validPassword) {
       throw createBadRequestError('Old password is incorrect')
-    }
-
-    if (!validator.isStrongPassword(newPassword)) {
-      const error = createValidationError('Password is not strong enough')
-      error.requirements = [
-        'At least 8 characters',
-        'At least 1 lowercase letter',
-        'At least 1 uppercase letter',
-        'At least 1 number',
-        'At least 1 symbol',
-      ]
-      throw error
     }
 
     const salt = await bcrypt.genSalt(10)

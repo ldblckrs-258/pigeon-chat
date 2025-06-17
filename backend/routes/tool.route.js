@@ -2,11 +2,19 @@ const express = require('express')
 const multer = require('multer')
 const toolController = require('../controllers/tool.controller')
 const { simpleAuth } = require('../middlewares/auth.middleware')
+const { validate } = require('../middlewares/validation.middleware')
+const { uploadImageSchema } = require('../schemas/tool.schema')
 
 const router = express.Router()
 const upload = multer({ dest: 'uploads/' })
 
-router.post('/upload/image', simpleAuth, upload.single('image'), toolController.uploadImage)
+router.post(
+  '/upload/image',
+  simpleAuth,
+  validate(uploadImageSchema),
+  upload.single('image'),
+  toolController.uploadImage
+)
 
 /**
  * /api/tools/ice-servers
